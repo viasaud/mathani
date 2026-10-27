@@ -7,17 +7,18 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
 ---
 
 <Base title="البحث في الآيات" description="ابحث عن كلمة أو عبارة في آيات القرآن الكريم." context={{ title: "البحث في الآيات" }}>
-  <main class="gutter">
+  <main class="gutter search-page">
     <section class="search-hero">
-      <h1>البحث في الآيات</h1>
-      <form id="search-form" role="search" data-own-search>
+      <span class="eyebrow" data-reveal>ستة آلاف ومئتان وست وثلاثون آية</span>
+      <h1 data-reveal>البحث في الآيات</h1>
+      <form id="search-form" role="search" data-own-search data-reveal>
         <label class="field big-field">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
           <input id="verse-q" type="search" placeholder="اكتب كلمة أو عبارة" autocomplete="off" aria-label="ابحث في الآيات" />
         </label>
       </form>
-      <p class="search-hint">لا يتأثر البحث بالتشكيل ولا بأشكال الهمزة والتاء المربوطة، فكلمة «الصلاة» تجد «ٱلصَّلَوٰةَ».</p>
-      <div class="suggest" id="suggest">
+      <p class="search-hint" data-reveal>لا يتأثر البحث بالتشكيل ولا بأشكال الهمزة والتاء المربوطة، فكلمة «الصلاة» تجد «ٱلصَّلَوٰةَ».</p>
+      <div class="suggest" id="suggest" data-reveal>
         <div class="recent" id="recent" hidden>
           <span class="suggest-label">بحثت عن</span>
           <div class="quick" id="recent-list"></div>
@@ -84,12 +85,13 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
     list.insertAdjacentHTML(
       "beforeend",
       next
-        .map((h) => {
+        .map((h, i) => {
+          // --i staggers each batch of results in as it arrives (global.css)
           const head = h.s !== prev
-            ? `<li class="r-group"><h2>سورة ${names[h.s - 1]}</h2><span>${ayahs(perSurah.get(h.s)!)}</span></li>`
+            ? `<li class="r-group" style="--i:${i}"><h2>سورة ${names[h.s - 1]}</h2><span>${ayahs(perSurah.get(h.s)!)}</span></li>`
             : "";
           prev = h.s;
-          return head + `<li><a href="/surah/${h.s}#a${h.a}" aria-label="سورة ${names[h.s - 1]}، الآية ${ar(h.a)}">
+          return head + `<li style="--i:${i}"><a href="/surah/${h.s}#a${h.a}" aria-label="سورة ${names[h.s - 1]}، الآية ${ar(h.a)}">
             <span class="r-ref">الآية ${ar(h.a)}</span>
             <span class="r-text">${highlight(h.text, matchRanges(h.text, h.folded, query))}</span></a></li>`;
         })

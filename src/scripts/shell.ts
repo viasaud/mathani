@@ -186,13 +186,25 @@ spreadButtons.forEach((b) =>
 const themeButtons = document.querySelectorAll<HTMLElement>("[data-theme-btn]");
 const syncTheme = () => themeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeBtn === (root.dataset.theme || "auto"))));
 syncTheme();
+// the new theme spreads out from the button as a widening circle (a view transition; global.css), where supported
 themeButtons.forEach((b) =>
   b.addEventListener("click", () => {
     const t = b.dataset.themeBtn!;
-    if (t === "auto") delete root.dataset.theme;
-    else root.dataset.theme = t;
+    const apply = () => {
+      if (t === "auto") delete root.dataset.theme;
+      else root.dataset.theme = t;
+      syncTheme();
+    };
     save("theme", t === "auto" ? null : t);
-    syncTheme();
+    if ((root.dataset.theme || "auto") === t) return;
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
+    const r = b.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    root.style.setProperty("--vx", `${x}px`);
+    root.style.setProperty("--vy", `${y}px`);
+    root.style.setProperty("--vr", `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
+    root.classList.add("theme-vt");
+    document.startViewTransition(apply).finished.finally(() => root.classList.remove("theme-vt"));
   }),
 );
 
@@ -211,8 +223,9 @@ const current = Number(drawer.dataset.current);
 let ixView: "surah" | "juz" = "surah";
 let ixPlace: "" | "m" | "d" = "";
 
-const surahRow = (c: SiteIndex["chapters"][number]) =>
-  `<a class="ix-item" href="/surah/${c.id}"${c.id === current ? ' aria-current="page"' : ""}>
+// --i staggers the rows in when the drawer opens (.drawer-list.fresh in global.css)
+const surahRow = (c: SiteIndex["chapters"][number], i: number) =>
+  `<a class="ix-item" href="/surah/${c.id}" style="--i:${i}"${c.id === current ? ' aria-current="page"' : ""}>
     <span class="badge">${STAR_SVG}<span>${ar(c.id)}</span></span>
     <span class="ix-name">${c.name}<span class="ix-sub">${c.makki ? "مكية" : "مدنية"}، ${ayahs(c.n)}</span></span>
     <span class="ix-page">ص ${ar(c.page)}</span></a>`;
@@ -233,16 +246,17 @@ async function renderIndex() {
     (!q || normalize(c.name).includes(q) || c.en.toLowerCase().includes(q) || String(c.id) === num);
 
   if (ixView === "juz" && !q) {
+    let n = 0;
     ixList.innerHTML = index.juz
       .map(([s, a], i) => {
         const next = index.juz[i + 1];
         const last = next ? (next[1] === 1 ? next[0] - 1 : next[0]) : 114;
-        const rows = index.chapters.slice(s - 1, last).filter(matches).map(surahRow).join("");
+        const rows = index.chapters.slice(s - 1, last).filter(matches).map((c) => surahRow(c, n++)).join("");
         return rows ? `<div class="ix-juz">الجزء ${JUZ_NAMES[i + 1]}: تبدأ من ${index.chapters[s - 1].name}، الآية ${ar(a)}</div>${rows}` : "";
       })
       .join("");
   } else {
-    const rows = index.chapters.filter(matches).map(surahRow).join("");
+    const rows = index.chapters.filter(matches).map((c, i) => surahRow(c, i)).join("");
     const typed = escapeHtml(raw);
     const why = raw ? `لا توجد سورة مطابقة لـ «${typed}».` : "لا توجد سور بهذا التصنيف.";
     const hint = ixPlace || raw ? "غيّر الكلمة أو الفلتر." : "";
@@ -258,6 +272,7 @@ function openDrawer() {
   drawer.classList.add("on");
   drawer.setAttribute("aria-hidden", "false");
   showScrim(closeDrawer);
+  fresh(ixList);
   renderIndex().then(() => ixList.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "center" }));
   // a keyboard on a phone would cover the list, so only a precise pointer gets the field focused
   if (matchMedia("(pointer: fine)").matches) setTimeout(() => ixQ.focus(), 250);
@@ -295,6 +310,13 @@ drawer.querySelectorAll<HTMLElement>("[data-ix-place]").forEach((b) =>
     renderIndex();
   }),
 );
+
+// A list that has just opened lets its rows rise in one after another; typing afterwards redraws it without that.
+function fresh(list: HTMLElement) {
+  list.classList.add("fresh");
+  clearTimeout(Number(list.dataset.freshTimer));
+  list.dataset.freshTimer = String(setTimeout(() => list.classList.remove("fresh"), 900));
+}
 
 // ---------- quick-jump palette ----------
 const palette = $<HTMLDialogElement>("palette");
@@ -338,7 +360,7 @@ function renderItems(groups: [string, Item[]][], state: "wait" | "done" = "done"
     .filter(([, g]) => g.length)
     .map(([label, g]) => `<div role="group"${label ? ` aria-label="${label}"` : ""}>${label ? `<div class="pal-group" aria-hidden="true">${label}</div>` : ""}` + g.map((it) => {
       const i = k++;
-      return `<a class="pal-item${it.verse ? " is-verse" : ""}" role="option" id="pal-opt-${i}" href="${it.href}" data-i="${i}" aria-selected="${i === selected}">
+      return `<a class="pal-item${it.verse ? " is-verse" : ""}" role="option" id="pal-opt-${i}" href="${it.href}" data-i="${i}" style="--i:${i}" aria-selected="${i === selected}">
         <span class="pi">${it.icon}</span><span style="min-width:0"><b>${it.title}</b>${it.verse ? `<span class="verse">${it.sub}</span>` : `<small>${it.sub}</small>`}</span><kbd>↵</kbd></a>`;
     }).join("") + "</div>")
     .join("");
@@ -446,6 +468,7 @@ function openPalette(prefill = "") {
   if (drawer.classList.contains("on")) closeDrawer();
   palQ.value = prefill;
   palette.showModal();
+  fresh(palResults);
   runPalette();
   palQ.focus();
 }

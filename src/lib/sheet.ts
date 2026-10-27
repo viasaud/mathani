@@ -1,4 +1,5 @@
 // The verse sheet: one verse with its tafsir, opened from a mushaf page or a text view.
+import { gsap } from "gsap";
 import { ar } from "./arabic";
 import { $, copyVerse, copyVerseLink, hideScrim, showScrim, trapTab } from "./ui";
 
@@ -81,6 +82,8 @@ function mark(els: HTMLElement[]) {
 export const sheetOpen = () => sheet().classList.contains("on");
 
 export function openSheet(v: SheetVerse, h: Handlers) {
+  // moving to the next or previous verse slides the new one in from its side (RTL: onwards comes from the left)
+  const step = current && sheetOpen() ? Math.sign(v.s - current.s || v.a - current.a) : 0;
   current = v;
   handlers = h;
   $("vs-ref").innerHTML = `<span class="r-s">سورة ${v.surahName}</span> <span class="nowrap">الآية ${ar(v.a)}</span>${v.sub ? ` <small class="nowrap">${v.sub}</small>` : ""}`;
@@ -101,7 +104,11 @@ export function openSheet(v: SheetVerse, h: Handlers) {
     showScrim(closeSheet);
     el.focus({ preventScroll: true }); // so a keyboard user continues inside the sheet, not behind it
   }
-  el.querySelector(".vs-body")!.scrollTop = 0;
+  const body = el.querySelector<HTMLElement>(".vs-body")!;
+  body.scrollTop = 0;
+  if (step && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    gsap.fromTo(body.children, { x: -step * 28, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out", stagger: 0.06, overwrite: true, clearProps: "transform,opacity" });
+  }
   mark(v.marks ?? []);
 }
 
@@ -123,8 +130,8 @@ export function initSheet() {
   $("vs-close").addEventListener("click", closeSheet);
   $("vs-prev").addEventListener("click", () => handlers.prev?.());
   $("vs-next").addEventListener("click", () => handlers.next?.());
-  $("vs-copy").addEventListener("click", () => current && copyVerse(current.plain, current.surahName, current.a));
-  $("vs-link").addEventListener("click", () => current && copyVerseLink(current.s, current.a));
+  $("vs-copy").addEventListener("click", (e) => current && copyVerse(current.plain, current.surahName, current.a, e.currentTarget as Element));
+  $("vs-link").addEventListener("click", (e) => current && copyVerseLink(current.s, current.a, e.currentTarget as Element));
   document.addEventListener("keydown", (e) => {
     if (!sheetOpen()) return;
     if (e.key === "Escape") closeSheet();
@@ -134,20 +141,27 @@ export function initSheet() {
     if (e.key === "ArrowRight" && handlers.prev) { e.preventDefault(); e.stopImmediatePropagation(); handlers.prev(); }
   }, true);
 
-  // drag the handle (or the header) down to dismiss
+  // drag the handle (or the header) down to dismiss: far enough, or a quick flick, lets it go; otherwise it springs
+  // back. Pulled upwards it gives a little and resists.
   const el = sheet();
-  let startY = 0, dy = 0, dragging = false;
-  const start = (y: number) => { dragging = true; startY = y; dy = 0; };
+  let startY = 0, dy = 0, dragging = false, lastY = 0, lastT = 0, speed = 0;
+  const start = (y: number) => { dragging = true; startY = lastY = y; lastT = performance.now(); dy = speed = 0; el.classList.add("dragging"); };
   const move = (y: number) => {
     if (!dragging) return;
-    dy = Math.max(0, y - startY);
+    const now = performance.now();
+    speed = (y - lastY) / Math.max(1, now - lastT);
+    lastY = y;
+    lastT = now;
+    const raw = y - startY;
+    dy = raw > 0 ? raw : raw * 0.18;
     el.style.transform = `translate(-50%, ${dy}px)`;
   };
   const end = () => {
     if (!dragging) return;
     dragging = false;
+    el.classList.remove("dragging");
     el.style.transform = "";
-    if (dy > 90) closeSheet();
+    if (dy > 110 || (dy > 24 && speed > 0.6)) closeSheet();
   };
   for (const target of [$("vs-handle"), el.querySelector(".vs-head")!]) {
     target.addEventListener("touchstart", (e) => start((e as TouchEvent).touches[0].clientY), { passive: true });

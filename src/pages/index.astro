@@ -8,8 +8,14 @@ import { getChapters, getJuz, getVerses } from "../lib/quran";
 const chapters = getChapters();
 const { starts } = getJuz();
 const startPage = chapters.map((c) => getVerses(c.id)[0][1]);
+const endPage = chapters.map((c) => getVerses(c.id).at(-1)![1]);
+const juzPage = starts.map((s) => getVerses(s.surah)[s.ayah - 1][1]);
+// how long each surah runs in the mushaf, on a square-root scale so the short surahs still show
+const span = chapters.map((_, i) => endPage[i] - startPage[i] + 1);
+const maxSpan = Math.max(...span);
 
-// The hero rosette: an eight-fold pattern built from the rub' al-hizb star.
+// The cover's rosette: an eight-fold pattern built from the rub' al-hizb star, in three rings that turn on their own.
+// Every stroke has pathLength 1, so motion.ts can draw it in.
 const C = 300;
 const pt = (r: number, deg: number) => {
   const t = ((deg - 90) * Math.PI) / 180;
@@ -18,38 +24,55 @@ const pt = (r: number, deg: number) => {
 const polygon = (r: number, step: number, offset = 0, n = 8) =>
   "M" + Array.from({ length: n }, (_, i) => pt(r, offset + ((i * step) % n) * (360 / n))).join(" L") + " Z";
 const square = (r: number, rot: number) => "M" + [0, 90, 180, 270].map((d) => pt(r, d + 45 + rot)).join(" L") + " Z";
-const shapes = [
-  { d: square(250, 0), cls: "g" },
-  { d: square(250, 45), cls: "g" },
-  { d: polygon(196, 3, 22.5), cls: "g" },
-  { d: square(120, 22.5), cls: "i" },
-  { d: square(120, 67.5), cls: "i" },
-  ...Array.from({ length: 16 }, (_, k) => ({ d: `M${pt(64, k * 22.5)} L${pt(120, k * 22.5)}`, cls: "g" })),
+const ring = (r: number) => `M${pt(r, 0)} A${r} ${r} 0 1 1 ${pt(r, 180)} A${r} ${r} 0 1 1 ${pt(r, 0)}`;
+const outer = [
+  { d: ring(292), cls: "i" }, { d: ring(250), cls: "g" },
+  { d: square(250, 0), cls: "g" }, { d: square(250, 45), cls: "g" },
   ...Array.from({ length: 8 }, (_, k) => ({ d: `M${pt(214, k * 45)} L${pt(292, k * 45)}`, cls: "i" })),
 ];
-const circles = [
-  { r: 292, cls: "i" }, { r: 250, cls: "g" }, { r: 214, cls: "i" }, { r: 120, cls: "g" }, { r: 64, cls: "g" },
-  ...Array.from({ length: 8 }, (_, k) => ({ r: 22, cls: "i", at: pt(158, k * 45 + 22.5) })),
+const middle = [
+  { d: ring(214), cls: "i" }, { d: polygon(196, 3, 22.5), cls: "g" },
+  ...Array.from({ length: 8 }, (_, k) => ({ d: smallRing(pt(158, k * 45 + 22.5), 22), cls: "i" })),
 ];
-const quick = [
-  { label: "الكهف", href: "/surah/18" }, { label: "يس", href: "/surah/36" }, { label: "الرحمن", href: "/surah/55" },
-  { label: "الملك", href: "/surah/67" }, { label: "آية الكرسي", href: "/surah/2#a255" }, { label: "خواتيم البقرة", href: "/surah/2#a285" },
+function smallRing(at: string, r: number) {
+  const [x, y] = at.split(" ").map(Number);
+  return `M${(x + r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x - r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x + r).toFixed(2)} ${y.toFixed(2)}`;
+}
+const inner = [
+  { d: ring(120), cls: "g" }, { d: ring(64), cls: "g" },
+  { d: square(120, 22.5), cls: "i" }, { d: square(120, 67.5), cls: "i" },
+  ...Array.from({ length: 16 }, (_, k) => ({ d: `M${pt(64, k * 22.5)} L${pt(120, k * 22.5)}`, cls: "g" })),
 ];
+
+// Where most readers begin: each card opens with the first words of its verse in the Uthmani script.
+const opening = (s: number, a = 1, words = 4) => getVerses(s)[a - 1][0].split(" ").slice(0, words).join(" ");
+const picks = [
+  { name: "الكهف", sub: `مكية، ${ayahs(110)}`, href: "/surah/18", s: 18, a: 1 },
+  { name: "يس", sub: `مكية، ${ayahs(83)}`, href: "/surah/36", s: 36, a: 2, words: 3 },
+  { name: "الرحمن", sub: `مدنية، ${ayahs(78)}`, href: "/surah/55", s: 55, a: 1, words: 3 },
+  { name: "الملك", sub: `مكية، ${ayahs(30)}`, href: "/surah/67", s: 67, a: 1 },
+  { name: "آية الكرسي", sub: "البقرة، الآية ٢٥٥", href: "/surah/2#a255", s: 2, a: 255 },
+  { name: "خواتيم البقرة", sub: "البقرة، الآيتان ٢٨٥–٢٨٦", href: "/surah/2#a285", s: 2, a: 285 },
+].map((p) => ({ ...p, verse: opening(p.s, p.a, p.words) }));
+const madani = chapters.filter((c) => c.place === "madinah").length;
 ---
 
-<Base>
+<Base cover>
   <main class="home">
-    <section class="hero gutter">
-      <div class="hero-inner">
-        <div class="hero-copy">
-          <span class="eyebrow">القرآن الكريم · مصحف المدينة النبوية</span>
-          <h1>مثاني</h1>
-          <p class="epigraph">﴿كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾ <small>الزمر ٢٣</small></p>
-          <p class="hero-lead">صفحات المصحف كما طُبعت، سطرًا بسطر. اضغط أي آية لتقرأ تفسيرها الميسّر، وابحث في القرآن كله بكلمة.</p>
+    <!-- ---------- the cover ---------- -->
+    <section class="cover" data-tone="cover" id="cover" aria-labelledby="cover-title">
+      <canvas class="cover-gl" id="cover-gl" aria-hidden="true"></canvas>
+      <div class="cover-veil" aria-hidden="true"></div>
+      <div class="cover-inner gutter">
+        <div class="cover-copy">
+          <span class="eyebrow" data-hero>القرآن الكريم · مصحف المدينة النبوية</span>
+          <h1 id="cover-title" data-hero-title><span>مثاني</span></h1>
+          <p class="epigraph" data-hero>﴿كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾ <small>الزمر ٢٣</small></p>
+          <p class="hero-lead" data-hero data-words>صفحات المصحف كما طُبعت، سطرًا بسطر. اضغط أي آية لتقرأ تفسيرها الميسّر، وابحث في القرآن كله بكلمة.</p>
           <h2 class="sr-only" id="continue-title">تابع القراءة</h2>
-          <a class="continue" id="continue" href="/page/1" data-names={JSON.stringify(chapters.map((c) => c.name))} data-pages={JSON.stringify(startPage)}>
+          <a class="continue" id="continue" href="/page/1" data-hero data-spot data-names={JSON.stringify(chapters.map((c) => c.name))} data-pages={JSON.stringify(startPage)} data-juz-pages={JSON.stringify(juzPage)}>
             <div class="ring" aria-hidden="true">
-              <svg viewBox="0 0 88 88"><circle class="track" cx="44" cy="44" r="38" fill="none" stroke-width="6"></circle><circle class="bar" id="ring-bar" cx="44" cy="44" r="38" fill="none" stroke-width="6" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"></circle></svg>
+              <svg viewBox="0 0 88 88"><circle class="track" cx="44" cy="44" r="38" fill="none" stroke-width="5"></circle><circle class="bar" id="ring-bar" cx="44" cy="44" r="38" fill="none" stroke-width="5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"></circle></svg>
               <b><span id="ring-pct" hidden></span><Star class="ring-star" filled /></b>
             </div>
             <div class="continue-copy">
@@ -57,71 +80,102 @@ const quick = [
               <strong id="continue-title-text">سورة الفاتحة</strong>
               <span id="continue-sub">الصفحة ١ من ٦٠٤</span>
             </div>
-            <span class="go" aria-hidden="true"><span id="continue-cta">ابدأ القراءة</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"></path></svg></span>
+            <span class="go" aria-hidden="true" data-magnetic><span id="continue-cta">ابدأ القراءة</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"></path></svg></span>
           </a>
-          <button type="button" class="hero-search" data-open="palette" data-own-search aria-keyshortcuts="Meta+K Control+K">
+          <button type="button" class="hero-search" data-open="palette" data-own-search data-hero aria-keyshortcuts="Meta+K Control+K">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
             <span>ابحث عن سورة أو صفحة أو كلمة</span>
-            <kbd aria-hidden="true">⌘K</kbd>
+            <kbd aria-hidden="true" data-mod-k>⌘K</kbd>
           </button>
-          <nav class="quick" aria-label="وصول سريع">
-            {quick.map((q) => <a class="chip" href={q.href}>{q.label}</a>)}
-          </nav>
         </div>
-        <div class="hero-art" aria-hidden="true">
-          <svg viewBox="0 0 600 600">
-            <g class="rosette" fill="none" stroke-width="1.2" stroke-linejoin="round">
-              {circles.map((c) => {
-                const [cx, cy] = c.at ? c.at.split(" ") : [C, C];
-                return <circle class={c.cls} cx={cx} cy={cy} r={c.r}></circle>;
-              })}
-              {shapes.map((s) => <path class={s.cls} d={s.d}></path>)}
-              <path class="c" d={square(26, 0) + square(26, 45)} stroke="none"></path>
+        <div class="cover-art" aria-hidden="true">
+          <div class="halo"></div>
+          <svg viewBox="0 0 600 600" class="rosette" id="rosette">
+            <g class="ro ro-outer" fill="none" stroke-width="1.1" stroke-linejoin="round">
+              {outer.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
             </g>
+            <g class="ro ro-middle" fill="none" stroke-width="1.1" stroke-linejoin="round">
+              {middle.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
+            </g>
+            <g class="ro ro-inner" fill="none" stroke-width="1.2" stroke-linejoin="round">
+              {inner.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
+            </g>
+            <path class="ro-core" d={square(26, 0) + square(26, 45)}></path>
           </svg>
         </div>
       </div>
+      <a class="scroll-cue" href="#start" aria-label="إلى المحتوى"><i></i></a>
     </section>
 
-    <div class="wrap gutter">
-
-      <section class="section" aria-labelledby="juz-title">
-        <div class="section-head">
+    <div class="wrap gutter" id="start">
+      <!-- ---------- where to begin ---------- -->
+      <section class="section" aria-labelledby="picks-title">
+        <div class="section-head" data-reveal>
           <div>
-            <h2 id="juz-title">الأجزاء</h2>
-            <p>ثلاثون جزءًا، تحت كل رقم السورة والآية التي يبدأ بها.</p>
+            <span class="eyebrow">وصول سريع</span>
+            <h2 id="picks-title">من أين تبدأ</h2>
           </div>
         </div>
-        <div class="juz-grid">
-          {starts.map((s) => (
-            <a class="juz-tile" href={`/surah/${s.surah}${s.ayah > 1 ? `#a${s.ayah}` : ""}`}
-              aria-label={`الجزء ${JUZ_NAMES[s.juz]}، من سورة ${chapters[s.surah - 1].name}، الآية ${ar(s.ayah)}`}>
-              <span class="juz-num">{ar(s.juz)}</span>
-              <span class="juz-from">{chapters[s.surah - 1].name} <span class="num">{ar(s.ayah)}</span></span>
+        <div class="picks">
+          {picks.map((p, i) => (
+            <a class="pick" href={p.href} data-reveal data-spot>
+              <span class="pick-n" aria-hidden="true">{ar(i + 1)}</span>
+              <span class="pick-verse" aria-hidden="true">{p.verse}…</span>
+              <span class="pick-name">{p.name}</span>
+              <span class="pick-sub">{p.sub}</span>
+              <span class="pick-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"></path></svg></span>
             </a>
           ))}
         </div>
       </section>
 
-      <section class="section" aria-labelledby="surah-title">
-        <div class="section-head">
+      <!-- ---------- the thirty juz ---------- -->
+      <section class="section" aria-labelledby="juz-title">
+        <div class="section-head" data-reveal>
           <div>
-            <h2 id="surah-title">السور</h2>
-            <p>مئة وأربع عشرة سورة بترتيب المصحف.</p>
+            <span class="eyebrow">الأجزاء</span>
+            <h2 id="juz-title">ثلاثون جزءًا</h2>
+            <p>تحت كل رقم السورة والآية التي يبدأ بها الجزء.</p>
           </div>
+          <span class="big-num" aria-hidden="true" data-count="30">{ar(30)}</span>
+        </div>
+        <div class="juz-grid" id="juz-grid">
+          {starts.map((s, i) => (
+            <a class="juz-tile" href={`/surah/${s.surah}${s.ayah > 1 ? `#a${s.ayah}` : ""}`} data-reveal data-spot data-page={juzPage[i]}
+              aria-label={`الجزء ${JUZ_NAMES[s.juz]}، من سورة ${chapters[s.surah - 1].name}، الآية ${ar(s.ayah)}`}>
+              <span class="juz-num">{ar(s.juz)}</span>
+              <span class="juz-from">{chapters[s.surah - 1].name} <span class="num">{ar(s.ayah)}</span></span>
+              <span class="juz-here" aria-hidden="true">أنت هنا</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- ---------- the surahs ---------- -->
+      <section class="section" aria-labelledby="surah-title">
+        <div class="section-head" data-reveal>
+          <div>
+            <span class="eyebrow">السور</span>
+            <h2 id="surah-title">مئة وأربع عشرة سورة</h2>
+            <p>بترتيب المصحف. الخط تحت كل سورة يدل على طولها في الصفحات.</p>
+          </div>
+          <span class="big-num" aria-hidden="true" data-count="114">{ar(114)}</span>
+        </div>
+        <div class="surah-tools" data-reveal>
           <div class="filters seg" role="group" aria-label="تصفية السور">
             <button type="button" data-filter="" aria-pressed="true">الكل <span class="n">{ar(chapters.length)}</span></button>
-            <button type="button" data-filter="makkah" aria-pressed="false">مكية <span class="n">{ar(chapters.filter((c) => c.place === "makkah").length)}</span></button>
-            <button type="button" data-filter="madinah" aria-pressed="false">مدنية <span class="n">{ar(chapters.filter((c) => c.place === "madinah").length)}</span></button>
+            <button type="button" data-filter="makkah" aria-pressed="false">مكية <span class="n">{ar(chapters.length - madani)}</span></button>
+            <button type="button" data-filter="madinah" aria-pressed="false">مدنية <span class="n">{ar(madani)}</span></button>
           </div>
         </div>
         <p class="sr-only" id="surah-count" role="status" aria-live="polite"></p>
         <div class="surah-grid" id="surah-grid">
           {chapters.map((c, i) => (
-            <a class="surah-card" href={`/surah/${c.id}`} data-place={c.place}>
+            <a class="surah-card" href={`/surah/${c.id}`} data-place={c.place} data-reveal data-spot style={`--len:${Math.sqrt(span[i] / maxSpan).toFixed(3)}`}>
               <span class="badge"><Star /><span>{ar(c.id)}</span></span>
               <span class="txt"><span class="nm">{c.name}</span><span class="meta">{placeLabel(c.place)}، {ayahs(c.n)}</span></span>
               <span class="pg">ص {ar(startPage[i])}</span>
+              <span class="len" aria-hidden="true"><i></i></span>
             </a>
           ))}
         </div>

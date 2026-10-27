@@ -1,23 +1,25 @@
 /* Reading screens: the mushaf page view and the two text views. Tokens and shared parts live in global.css. */
 /* ---------- mushaf reader ---------- */
-/* gold for small text: the plain gold token is only ~3:1 on the light themes, so ink is mixed in to reach AA */
-.read { --gold-text: color-mix(in srgb, var(--gold) 62%, var(--ink)); }
 /* The pages view fits the screen: the page (or the open pair) is sized to the space between the top and bottom
    controls, so it never scrolls. Every page has the printed proportion, 1 : 1.6, and its fifteen lines share the
    height evenly. */
 html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
 body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the dock here */
+/* a soft pool of light behind the page, so the sheet sits on the desk rather than floats in nothing */
+body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--gold-soft) 55%, transparent), transparent 70%), var(--bg); }
 .reader-main.fit {
   --r: 1.6; --r-max: 1.8; /* the printed 1 : 1.6, let out to 1 : 1.8 on tall phone screens so the lines breathe instead of leaving bands of empty paper */
-  /* the space the bottom bar takes: two rows on a phone, one on wider screens */
-  --dock-h: 84px;
+  --dock-h: 90px; /* the space the bottom controls take */
+  position: relative; perspective: 1600px;
   height: calc(100dvh - var(--top)); padding-block: 0 calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
   display: grid; place-items: center; container-type: size;
 }
 .stage {
   position: relative; width: min(100cqw, 100cqh / var(--r)); height: min(100cqh, min(100cqw, 100cqh / var(--r)) * var(--r-max));
-  display: flex;
+  display: flex; transition: transform var(--t-3) var(--e-out);
 }
+/* the page that was showing, leaving as the next one arrives (page.ts) */
+.stage.ghost { position: absolute; pointer-events: none; z-index: 2; transition: none; }
 .fit .mpage { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
 .fit .mpage.facing { display: none; }
 .fit .mlines { flex: 1; display: flex; flex-direction: column; }
@@ -25,50 +27,67 @@ body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the doc
 .fit .centered .mlines { justify-content: center; }
 .fit .centered .ml { flex: none; height: 1.95em; }
 
-/* two pages, open like the printed mushaf: the odd page on the right. Only when
-   the reading area is wider than it is tall, so each page stays large. */
+/* two pages, open like the printed mushaf: the odd page on the right, the pair bound at a spine between them. Only
+   when the reading area is wider than it is tall, so each page stays large. */
 @container (min-width: 700px) and (min-aspect-ratio: 11 / 10) {
-  /* a plain space between the two pages, counted in the pair's width so each page keeps its proportions */
   html[data-spread="on"] .fit .stage {
-    --gap: clamp(24px, 4cqw, 64px); gap: var(--gap);
+    --gap: 0px;
     width: min(100cqw, 100cqh / var(--r) * 2 + var(--gap));
     height: min(100cqh, (min(100cqw, 100cqh / var(--r) * 2 + var(--gap)) - var(--gap)) / 2 * var(--r-max));
   }
   html[data-spread="on"] .fit .mpage.facing { display: flex; }
-  /* each page of the pair carries its own running head and number, as in print */
-  html[data-spread="on"] .fit .mhead, html[data-spread="on"] .fit .mfoot { display: flex; }
+  html[data-spread="on"] .fit .mhead { display: flex; }
   html[data-spread="on"] .fit .mfoot { display: grid; }
+  /* the spine: each page darkens a little toward the fold, the corners there are square */
+  html[data-spread="on"] .fit .mpage:first-child { border-radius: 4px 14px 14px 4px; background: linear-gradient(to left, var(--page) 86%, color-mix(in srgb, var(--page) 90%, #3a2a08)); }
+  html[data-spread="on"] .fit .mpage:last-child { border-radius: 14px 4px 4px 14px; background: linear-gradient(to right, var(--page) 86%, color-mix(in srgb, var(--page) 90%, #3a2a08)); }
+  html[data-spread="on"] .fit .stage::after { /* the crease */
+    content: ""; position: absolute; inset: 1% auto 1% 50%; width: 1px; translate: -50% 0; z-index: 1;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 18%, transparent) 15%, color-mix(in srgb, var(--ink) 18%, transparent) 85%, transparent);
+  }
 }
+/* the page: a sheet of paper in a gilt double rule */
 .mpage {
-  /* no card: the text sits straight on the screen's own background */
-  container-type: inline-size; position: relative;
+  container-type: inline-size; position: relative; isolation: isolate;
+  background: var(--page); border-radius: 14px; box-shadow: var(--shadow-page);
   /* percentages of the page's own width (cqi here would fall back to the window's), so the margins keep print proportions at any size */
-  padding: 5.5% 6% 4.5%;
+  padding: 5.5% 7.2% 4.5%;
+}
+.mpage::before {
+  content: ""; position: absolute; inset: 2.2% 2.6%; z-index: -1; pointer-events: none; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent);
+  box-shadow: inset 0 0 0 3px var(--page), inset 0 0 0 4px color-mix(in srgb, var(--gold-2) 28%, transparent);
 }
 .mhead, .mfoot { position: relative; font-size: max(11px, 2.3cqi); color: var(--muted); }
 .mhead { display: flex; justify-content: space-between; font-family: var(--f-display); font-weight: 700; padding: 0 1cqi 1.6cqi; }
 .mfoot { display: grid; place-items: center; padding-top: 1.4cqi; }
 .mfoot span { position: relative; width: 9.6cqi; height: 9.6cqi; display: grid; place-items: center; font-size: max(11px, 2.2cqi); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .mfoot svg { position: absolute; inset: 0; color: var(--gold-2); }
-/* above 1000px the top bar already shows the surah, the page and the juz (global.css), so the page doesn't repeat them */
+/* above 1000px the top bar already shows the surah, the page and the juz (global.css), so a single page doesn't repeat them */
 @media (min-width: 1001px) { .mhead, .mfoot { display: none; } }
 /* the star's centre ring would sit behind the digits */
 .mfoot svg circle, .read .badge svg circle { display: none; }
 .mlines { font-family: var(--pf), serif; font-size: 6cqi; line-height: 1; color: var(--ink); }
 .ml { display: flex; justify-content: space-between; align-items: center; height: 1.95em; white-space: nowrap; }
 .centered .mlines { padding-block: 2cqi; font-size: 8cqi; }
-/* while the page font is still loading the glyphs are invisible: show faint line placeholders instead of a blank page */
-.mpage:not(.ready) .ml:not(.sh) { background: linear-gradient(var(--line-2), var(--line-2)) center / 94% 0.07em no-repeat; }
+/* while the page font is still loading the glyphs are invisible: faint rules stand in, with light running along them */
+.mpage:not(.ready) .ml:not(.sh) {
+  background:
+    linear-gradient(90deg, transparent 30%, color-mix(in srgb, var(--gold-2) 60%, transparent) 50%, transparent 70%) 0 center / 300% 0.07em no-repeat,
+    linear-gradient(var(--line-2), var(--line-2)) center / 94% 0.07em no-repeat;
+  animation: shimmer 1.6s linear infinite;
+}
+@keyframes shimmer { from { background-position: 150% center, center; } to { background-position: -50% center, center; } }
 .centered .ml, .ml.short { justify-content: center; gap: 0.08em; }
 /* the page stays plain like print; hovering recolors the letters (a box would cut through the tall glyphs) */
-.g { cursor: pointer; }
-.flash { color: var(--gold); }
+.g { cursor: pointer; transition: color var(--t-1) ease; }
 .g.hover, .g.sel { color: var(--accent); }
 .ayah.sel, .v.sel .v-text { color: var(--accent); }
-/* the verse a link pointed to: gold that settles back into ink */
+/* the verse a link pointed to: a glint of gold that settles back into ink */
+.flash { animation: glint 1.6s var(--e-out); }
+@keyframes glint { 0%, 35% { color: var(--gold); text-shadow: 0 0 18px color-mix(in srgb, var(--gold) 55%, transparent); } }
 /* the heading stands taller than its line, so the line below is pushed down to leave clear space under it */
 .ml.sh { justify-content: center; margin-bottom: 0.35em; }
-/* the heading spans the text block, the same width as the lines; the line keeps its place in the flow */
 .sh-band { position: absolute; inset-inline: 6%; height: 1.95em; display: flex; justify-content: center; align-items: center; container-type: inline-size; }
 /* the heading glyph is the whole printed band, 3.246em of ink by 0.39em: sized off the band's width so the ink fills it */
 .sh-band span { position: relative; font-family: "surah-header"; font-size: calc(100cqi / 3.246); line-height: 1; color: var(--gold); }
@@ -77,42 +96,49 @@ body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the doc
 .ml.bism-line { justify-content: center; gap: 0.08em; }
 
 /* ---------- the page controls ----------
-   No bar: three separate controls float over the page, each on its own surface, easy to read and press at any age.
-   The previous and next page as large round buttons, and between them the surah being read (its number in the rub'
-   star) with the page and juz under it; tapping the surah opens the surah strip. Nothing moves when pressed. */
+   Three controls float over the desk on glass: the previous and next page as large round buttons, and between them
+   the surah being read (its number in the rub' star) with the page and juz under it and, along its foot, how far
+   into the mushaf this page is. Tapping the surah opens the surah strip. */
 .dock-row {
-  position: fixed; left: 0; right: 0; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 40; padding-inline: 12px;
+  position: fixed; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 40; padding-inline: 12px;
   display: flex; justify-content: center; pointer-events: none;
+  transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-spring);
 }
 .dock-row > * { pointer-events: auto; }
-.dock { width: min(480px, 100%); display: flex; align-items: center; gap: 12px; }
+.dock { width: min(500px, 100%); display: flex; align-items: center; gap: 12px; }
 .dround {
-  flex: none; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: var(--ink);
-  background: var(--sheet); border: 1px solid var(--line-2); box-shadow: var(--shadow-2);
+  position: relative; flex: none; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: var(--ink);
 }
-.dround svg { width: 26px; height: 26px; stroke-width: 2.4; }
-.dround.next { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.dround:hover { background: color-mix(in srgb, var(--ink) 6%, var(--sheet)); }
-.dround.next:hover { background: color-mix(in srgb, var(--ink) 12%, var(--accent)); }
-.dround:active { filter: brightness(0.9); }
+.dround svg { width: 26px; height: 26px; stroke-width: 2.4; transition: transform var(--t-3) var(--e-spring); }
+.dround.next { background: var(--accent); border-color: transparent; color: var(--accent-ink); box-shadow: 0 14px 30px -14px var(--accent), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.dround:hover { background: color-mix(in srgb, var(--ink) 6%, var(--glass-solid)); }
+.dround.next:hover { background: color-mix(in srgb, #fff 10%, var(--accent)); }
+#prev:hover svg { transform: translateX(3px); }
+#next:hover svg { transform: translateX(-3px); }
+.dround:active { transform: scale(0.9); }
 .dround[aria-disabled] { opacity: 0.35; cursor: default; filter: none; }
 .dround:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
 
 .dsurah {
-  flex: 1; min-width: 0; height: 58px; padding-inline: 8px 14px; border-radius: 29px; display: flex; align-items: center; gap: 10px;
-  text-align: start; background: var(--sheet); border: 1px solid var(--line-2); box-shadow: var(--shadow-2);
+  position: relative; overflow: hidden;
+  flex: 1; min-width: 0; height: 58px; padding-inline: 8px 14px; border-radius: 29px; display: flex; align-items: center; gap: 10px; text-align: start;
 }
-.dsurah:hover, .dsurah[aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 4%, var(--sheet)); }
+.dsurah:hover, .dsurah[aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 5%, var(--glass-solid)); }
+.dsurah:active { transform: scale(0.97); }
 .dsurah:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 29px; }
 .dstar { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }
-.dstar svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); }
+.dstar svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); transition: transform 800ms var(--e-spring); }
+.dsurah:hover .dstar svg { transform: rotate(90deg); }
 .dstar svg circle { display: none; }
 .dstar b { position: relative; font: 700 14px var(--f-ui); color: var(--ink); font-variant-numeric: tabular-nums; }
 .dtxt { flex: 1; min-width: 0; display: grid; gap: 1px; line-height: 1.25; }
 .dtxt b { font-family: var(--f-display); font-weight: 700; font-size: 19px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dtxt small { font-size: 13.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
-.dmore { flex: none; color: var(--muted); display: grid; }
+.dmore { flex: none; color: var(--muted); display: grid; transition: transform var(--t-3) var(--e-spring); }
 .dsurah[aria-expanded="true"] .dmore { transform: rotate(180deg); }
+/* how far into the mushaf: a gold hairline along the foot, from the right */
+.dprog { position: absolute; inset: auto 22px 0; height: 2px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--line-2) 50%, transparent); }
+.dprog i { display: block; height: 100%; background: linear-gradient(to left, var(--gold-2), var(--gold-3)); transform-origin: right; transform: scaleX(var(--p, 0)); transition: transform 700ms var(--e-out); }
 @media (max-width: 479px) { /* on a phone the surah, page and juz need the room */
   .dmore { display: none; }
   .dock { gap: 10px; }
@@ -131,26 +157,23 @@ body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the doc
 
 /* ---------- the surah strip ---------- */
 .surahs {
-  position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); width: min(820px, calc(100vw - 16px));
-  padding: 14px 0 12px; border-radius: 30px; background: var(--sheet); border: 1px solid var(--line-2); box-shadow: var(--shadow-2);
+  position: absolute; bottom: calc(100% + 12px); left: 50%; translate: -50% 0; width: min(840px, calc(100vw - 16px));
+  padding: 14px 0 12px; border-radius: 30px; transform-origin: 50% 100%;
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease, display var(--t-2) allow-discrete;
 }
+.surahs[hidden] { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(4px); }
+@starting-style { .surahs:not([hidden]) { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(4px); } }
 .sx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-inline: 18px 10px; margin-bottom: 6px; }
 .sx-head h2 { margin: 0; flex: none; font-family: var(--f-display); font-weight: 700; font-size: 21px; }
 .sx-find { position: relative; flex: 1; min-width: 0; }
 .sx-find.field input { height: 46px; border-radius: 23px; background: var(--bg); }
-.sx-find svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; }
-.sx-find input {
-  width: 100%; height: 46px; border-radius: 23px; border: 1px solid var(--line-2); background: var(--bg); padding: 0 42px 0 14px;
-  font-size: 16px; color: var(--ink); outline: none;
-}
-.sx-find input:focus { border-color: var(--accent); }
 .sx-head .ib { width: 46px; height: 46px; }
 @media (max-width: 419px) { /* narrow phones: the search takes its own full row under the title */
   .sx-head h2 { flex: 1; }
   .sx-find { order: 3; flex-basis: 100%; margin-inline-end: 8px; }
 }
 /* the row: snaps a card to the middle; the side padding lets the first and last surah reach the middle too */
-.sx-strip {
+.sx-strip { perspective: 900px;
   display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
   padding: 10px calc(50% - 70px) 6px; scrollbar-width: none;
   mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
@@ -161,13 +184,14 @@ body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the doc
 .sx-card {
   --d: 1; flex: none; width: 140px; scroll-snap-align: center; display: grid; justify-items: center; gap: 4px; padding: 14px 8px 12px;
   border-radius: 24px; background: var(--bg); border: 1px solid var(--line); text-align: center;
-  transform: scale(calc(1 - var(--d) * 0.14)); opacity: calc(1 - var(--d) * 0.45);
+  transform: scale(calc(1 - var(--d) * 0.14)) rotateY(calc(var(--d) * var(--side, 0) * 1deg)); opacity: calc(1 - var(--d) * 0.45);
+  transition: border-color var(--t-1) ease, background-color var(--t-1) ease;
 }
 .sx-card[aria-current] { background: var(--gold-soft); border-color: var(--gold-2); }
 .sx-card:hover { border-color: var(--gold-2); }
 .sx-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 24px; }
 .sx-star { position: relative; width: 46px; height: 46px; display: grid; place-items: center; }
-.sx-star svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); }
+.sx-star svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); transform: rotate(calc(var(--d) * 90deg)); }
 .sx-star svg circle { display: none; }
 .sx-star b { position: relative; font: 700 15px var(--f-ui); color: var(--ink); }
 .sx-card strong { font-family: var(--f-display); font-weight: 700; font-size: 24px; line-height: 1.3; color: var(--ink); white-space: nowrap; }
@@ -176,81 +200,99 @@ body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the doc
 .sx-hint { margin: 4px 0 0; text-align: center; font-size: 14px; color: var(--ink-2); }
 
 /* a sheet or panel rising from the bottom takes the controls' place there */
-body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(16px); pointer-events: none; }
-@media (max-width: 640px) { body:has(.settings:not([hidden])) .dock-row { opacity: 0; transform: translateY(16px); pointer-events: none; } }
+body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(24px); pointer-events: none; }
+@media (max-width: 640px) { body:has(.settings:not([hidden])) .dock-row { opacity: 0; transform: translateY(24px); pointer-events: none; } }
 
 /* ---------- text views ---------- */
+.read { --gold-text: color-mix(in srgb, var(--gold) 62%, var(--ink)); }
 /* how far into the surah: a gold hairline along the top edge that stays when the header slides away */
 .progress { position: fixed; inset: env(safe-area-inset-top, 0px) 0 auto; z-index: 45; height: 3px; pointer-events: none; }
-.progress i { display: block; height: 100%; background: linear-gradient(to left, var(--gold-2), var(--gold)); transform-origin: right; transform: scaleX(var(--p, 0)); }
-.read { width: 100%; max-width: 820px; margin: 0 auto; padding-block: 32px 96px; }
-.surah-head { display: grid; gap: 14px; justify-items: center; padding: 32px 0 6px; text-align: center; }
-/* a gold band between double rules with a diamond at each end, as the surah titles are set in print */
+.progress i { display: block; height: 100%; background: linear-gradient(to left, var(--gold-2), var(--gold-3)); transform-origin: right; transform: scaleX(var(--p, 0)); box-shadow: 0 0 10px var(--gold-2); }
+.read { width: 100%; max-width: 860px; margin: 0 auto; padding-block: 24px 96px; }
+.surah-head { display: grid; gap: 16px; justify-items: center; padding: 28px 0 8px; text-align: center; }
+/* a gold band between double rules with a diamond at each end, as the surah titles are set in print; the rules draw
+   out from the middle as the page opens */
 .plate {
   --rule: color-mix(in srgb, var(--gold-2) 45%, transparent);
-  position: relative; width: min(100%, 640px); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
-  padding: 16px clamp(30px, 6vw, 56px); border-block: 1px solid var(--gold-2);
-  background:
-    linear-gradient(var(--rule), var(--rule)) 0 4px / 100% 1px no-repeat,
-    linear-gradient(var(--rule), var(--rule)) 0 calc(100% - 4px) / 100% 1px no-repeat,
-    linear-gradient(90deg, transparent, var(--gold-soft) 16%, var(--gold-soft) 84%, transparent);
+  position: relative; width: min(100%, 680px); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  padding: 20px clamp(30px, 6vw, 60px);
+  background: linear-gradient(90deg, transparent, var(--gold-soft) 16%, var(--gold-soft) 84%, transparent);
 }
+.plate > i { position: absolute; inset-inline: 0; height: 1px; background: var(--gold-2); animation: draw-rule 1.1s var(--e-out) both; }
+.plate > i:nth-of-type(1) { top: 0; }
+.plate > i:nth-of-type(2) { top: 4px; background: var(--rule); animation-delay: 80ms; }
+.plate > i:nth-of-type(3) { bottom: 4px; background: var(--rule); animation-delay: 80ms; }
+.plate > i:nth-of-type(4) { bottom: 0; }
+@keyframes draw-rule { from { transform: scaleX(0); } }
 .plate::before, .plate::after {
   content: ""; position: absolute; top: 50%; width: 11px; height: 11px; border: 1px solid var(--gold); background: var(--bg);
-  transform: translateY(-50%) rotate(45deg);
+  transform: translateY(-50%) rotate(45deg); animation: pop 700ms var(--e-spring) 600ms both;
 }
 .plate::before { right: 8px; }
 .plate::after { left: 8px; }
-.plate h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6.4vw, 60px); line-height: 1.25; white-space: nowrap; }
-.plate-side { display: grid; justify-items: center; line-height: 1.25; color: var(--gold-text); }
+.plate h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 7vw, 66px); line-height: 1.25; white-space: nowrap; animation: rise-in 900ms var(--e-out) 120ms both; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); filter: blur(8px); } }
+.plate-side { display: grid; justify-items: center; line-height: 1.25; color: var(--gold-text); animation: rise-in 900ms var(--e-out) 320ms both; }
 .plate-side small { font-size: 12px; color: var(--muted); }
-.plate-side b { font-family: var(--f-display); font-size: clamp(17px, 2.4vw, 22px); font-variant-numeric: tabular-nums; }
-.surah-meta { margin: 0; display: flex; gap: 10px; justify-content: center; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.plate-side b { font-family: var(--f-display); font-size: clamp(17px, 2.4vw, 23px); font-variant-numeric: tabular-nums; }
+.surah-meta { margin: 0; display: flex; gap: 10px; justify-content: center; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; animation: rise-in 900ms var(--e-out) 420ms both; }
 .surah-meta span { color: var(--gold-2); }
-.text-sheet { background: var(--sheet); border-radius: var(--r-lg); box-shadow: var(--shadow-1); padding: clamp(22px, 5vw, 56px); margin-top: 22px; border: 1px solid var(--line); }
+.text-sheet {
+  position: relative; background: var(--page); border-radius: var(--r-lg); box-shadow: var(--shadow-page); padding: clamp(24px, 5.4vw, 60px); margin-top: 24px;
+  animation: rise-in 900ms var(--e-out) 260ms both;
+}
+.text-sheet::before { /* the same gilt double rule as a mushaf page */
+  content: ""; position: absolute; inset: 10px; pointer-events: none; border-radius: calc(var(--r-lg) - 8px);
+  border: 1px solid color-mix(in srgb, var(--gold-2) 40%, transparent);
+  box-shadow: inset 0 0 0 3px var(--page), inset 0 0 0 4px color-mix(in srgb, var(--gold-2) 20%, transparent);
+}
 .bism { font-family: var(--f-quran); font-size: calc(var(--qsize) * 1.05); text-align: center; line-height: 2.2; margin: 0 0 12px; color: var(--ink); }
 .flow { font-family: var(--f-quran); font-size: var(--qsize); line-height: 2.3; text-align: justify; text-align-last: center; }
-.ayah { cursor: pointer; border-radius: 8px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.ayah:hover { color: var(--accent); }
+.ayah { cursor: pointer; border-radius: 8px; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: color var(--t-1) ease, background-color var(--t-2) ease; }
+.ayah:hover { color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
 .end { color: var(--gold); white-space: nowrap; padding-inline: 2px; }
 .page-break { display: flex; align-items: center; gap: 14px; color: var(--muted); font-family: var(--f-ui); font-size: 13px; margin: 18px 0; line-height: 1; font-variant-numeric: tabular-nums; }
 .page-break::before, .page-break::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2), transparent); }
 .sajda { font-family: var(--f-ui); font-size: 12.5px; color: var(--gold-text); border: 1px solid var(--gold-2); border-radius: 999px; padding: 1px 9px; vertical-align: middle; margin-inline: 4px; line-height: 1.6; }
 .rub { color: var(--gold); }
 .verses { display: grid; }
-.v { display: grid; gap: 12px; padding: 22px 0; border-top: 1px solid var(--line); }
+.v { position: relative; display: grid; gap: 12px; padding: 24px 0; border-top: 1px solid var(--line); }
 .v:first-child { border-top: 0; padding-top: 4px; }
 .v-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .v-num { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .v-num .badge { width: 42px; height: 42px; font-size: 12px; }
+.v:hover .badge svg { transform: rotate(90deg); }
 .v-meta { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-.v-rub { display: inline-flex; align-items: center; gap: 4px; padding-inline-start: 10px; border-inline-start: 1px solid var(--line-2); color: var(--gold-text); line-height: 1.2; }
-.v-rub { position: relative; }
-/* on the narrowest phones the mark alone stands for «بداية ربع» (still read out) */
+.v-rub { position: relative; display: inline-flex; align-items: center; gap: 4px; padding-inline-start: 10px; border-inline-start: 1px solid var(--line-2); color: var(--gold-text); line-height: 1.2; }
 @media (max-width: 359px) { .v-rub-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
 .v-rub .rub-mark { font: 400 20px/1 var(--f-quran); }
-.v-tools { display: flex; gap: 2px; opacity: 0.7; }
+.v-tools { display: flex; gap: 2px; opacity: 0.55; transition: opacity var(--t-2) ease; }
 .v-tools .ib { width: 44px; height: 44px; }
 /* the 44px hit areas reach 13px past the 17px icons: pull them out so the icons line up with the text column's edge */
 .v-tools { margin-inline-end: -13.5px; }
 .v:hover .v-tools, .v-tools:focus-within { opacity: 1; }
 @media (hover: none) { .v-tools { opacity: 1; } }
-.v-text { font-family: var(--f-quran); font-size: var(--qsize); line-height: 2.2; text-wrap: pretty; }
-.tafsir { font-size: 16px; line-height: 2; color: var(--ink-2); background: var(--bg); border-radius: 16px; padding: 14px 18px; max-width: 68ch; }
+.v-text { font-family: var(--f-quran); font-size: var(--qsize); line-height: 2.2; text-wrap: pretty; transition: color var(--t-2) ease; }
+.tafsir {
+  position: relative; font-size: 16px; line-height: 2; color: var(--ink-2); background: var(--bg); border-radius: 18px; padding: 14px 20px; max-width: 70ch;
+  border-inline-start: 2px solid var(--gold-2);
+}
 .tafsir b { display: block; color: var(--gold-text); font-size: 13px; font-weight: 500; margin-bottom: 2px; }
 .tafsir p { margin: 0; }
-.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
 .pager a {
-  display: grid; gap: 2px; padding: 16px 20px; border-radius: 16px; background: var(--sheet); border: 1px solid var(--line);
+  position: relative; display: grid; gap: 2px; padding: 18px 22px; border-radius: 20px; background: var(--sheet); border: 1px solid var(--line);
+  transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
 }
-.pager a:hover { border-color: var(--gold-2); transform: translateY(-2px); }
+.pager a:hover { transform: translateY(-3px); box-shadow: var(--shadow-1); border-color: transparent; }
+.pager a:active { transform: scale(0.98); }
 .pager a[rel="next"] { text-align: end; grid-column: 2; }
 .pager small { color: var(--muted); font-size: 13px; }
-.pager strong { font-family: var(--f-display); font-weight: 700; font-size: 22px; }
+.pager strong { font-family: var(--f-display); font-weight: 700; font-size: 24px; }
 
 /* tajweed */
-.legend { display: none; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 14px; font-size: 13.5px; background: var(--bg); }
-html[data-tajweed="on"] .legend { display: block; }
+.legend { display: none; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 16px; font-size: 13.5px; background: var(--bg); }
+html[data-tajweed="on"] .legend { display: block; animation: rise-in 500ms var(--e-out); }
 .legend summary { cursor: pointer; display: list-item; line-height: 24px; padding: 10px 16px; color: var(--accent); font-weight: 500; }
 .legend-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 24px; padding: 4px 16px 16px; }
 .legend-group b { display: block; font-size: 13px; color: var(--gold-text); margin-bottom: 4px; font-weight: 500; }
@@ -258,6 +300,8 @@ html[data-tajweed="on"] .legend { display: block; }
 .legend li:has(.tj-hw) { grid-column: 1 / -1; }
 .legend li { display: flex; align-items: center; gap: 8px; color: var(--ink-2); }
 .legend .chipc { width: 12px; height: 12px; border-radius: 4px; flex: none; background: currentColor; }
+/* the colors come in softly when tajweed is switched on */
+[class^="tj-"] { transition: color var(--t-3) ease; }
 html[data-tajweed="on"] .tj-hw, html[data-tajweed="on"] .tj-sl, html[data-tajweed="on"] .tj-ls, .chipc.tj-hw { color: var(--tj-silent); }
 html[data-tajweed="on"] .tj-mn, .chipc.tj-mn { color: var(--tj-madd-2); }
 html[data-tajweed="on"] .tj-mp, .chipc.tj-mp { color: var(--tj-madd-246); }
@@ -275,14 +319,15 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
 
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
-  .read { padding-top: 12px; }
-  .surah-head { padding-top: 16px; }
+  .read { padding-top: 8px; }
+  .surah-head { padding-top: 14px; }
   .flow { text-align: right; text-align-last: auto; }
-  .reader-main { padding-top: 14px; }
-  .pager strong { font-size: 18px; }
-  /* thirty juz marks in a phone-width track read as a barcode: shorter and quieter */
+  .reader-main { padding-top: 10px; }
+  .mpage { border-radius: 10px; }
+  .pager strong { font-size: 19px; }
   /* the text runs edge to edge on a phone: the Quran gets the width a card's inset would take */
-  body:has(.text-sheet) { --fade: var(--sheet); } /* the text is edge to edge here, so it fades into its own paper */
-  .text-sheet { margin-inline: -16px; border-radius: 0; border-inline: 0; box-shadow: none; padding-inline: 20px; }
+  body:has(.text-sheet) { --fade: var(--page); }
+  .text-sheet { margin-inline: -16px; border-radius: 0; box-shadow: none; padding-inline: 20px; }
+  .text-sheet::before { display: none; }
   .v-tools { margin-inline-end: -12px; }
 }

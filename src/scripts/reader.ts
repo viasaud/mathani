@@ -47,10 +47,10 @@ text.addEventListener("click", (e) => {
   const copy = target.closest<HTMLElement>(".copy");
   if (copy) {
     const i = Number(copy.dataset.i);
-    return copyVerse(verseIn(listView, i)!.querySelector(".t")!.textContent!, name, i + 1);
+    return copyVerse(verseIn(listView, i)!.querySelector(".t")!.textContent!, name, i + 1, copy);
   }
   const link = target.closest<HTMLElement>(".link");
-  if (link) return copyVerseLink(surah, Number(link.dataset.i) + 1);
+  if (link) return copyVerseLink(surah, Number(link.dataset.i) + 1, link);
   const ayah = target.closest<HTMLElement>(".ayah");
   if (ayah) show(Number(ayah.dataset.i));
 });

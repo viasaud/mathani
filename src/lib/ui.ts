@@ -24,16 +24,24 @@ export function toast(message: string, ms = 1800) {
   t.dataset.timer = String(setTimeout(() => (t!.hidden = true), ms));
 }
 
-export function copyText(text: string, done = "نُسخت الآية") {
+// the button pressed shows a check for a moment (.ib.done in global.css)
+export function copyText(text: string, done = "نُسخت الآية", button?: Element | null) {
   const fail = () => toast("تعذّر النسخ، حدّد النص وانسخه يدويًا");
   if (!navigator.clipboard) return fail();
-  navigator.clipboard.writeText(text).then(() => toast(done), fail);
+  navigator.clipboard.writeText(text).then(() => {
+    toast(done);
+    if (!button) return;
+    button.classList.add("done");
+    clearTimeout(Number((button as HTMLElement).dataset.doneTimer));
+    (button as HTMLElement).dataset.doneTimer = String(setTimeout(() => button.classList.remove("done"), 1400));
+  }, fail);
 }
 
-export const copyVerse = (text: string, surahName: string, a: number) =>
-  copyText(`${text} ﴿${ar(a)}﴾\n[سورة ${surahName}: ${ar(a)}]`);
+export const copyVerse = (text: string, surahName: string, a: number, button?: Element | null) =>
+  copyText(`${text} ﴿${ar(a)}﴾\n[سورة ${surahName}: ${ar(a)}]`, undefined, button);
 
-export const copyVerseLink = (s: number, a: number) => copyText(`${location.origin}/surah/${s}#a${a}`, "نُسخ رابط الآية");
+export const copyVerseLink = (s: number, a: number, button?: Element | null) =>
+  copyText(`${location.origin}/surah/${s}#a${a}`, "نُسخ رابط الآية", button);
 
 // A verse a link pointed to is marked in gold for a moment when the page opens on it.
 export function flash(els: Element[]) {

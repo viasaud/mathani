@@ -1,10 +1,12 @@
 // Interactions on a mushaf page: verse sheet, page turning (buttons, arrows, swipes), the surah strip, line balancing, last-read memory. Pages turn in place: the next page is fetched and swapped into this one,
 // so the controls stay put and every press counts, however quickly they come.
+import { gsap } from "gsap";
 import { ar, ayahs, normalize, westernDigits } from "../lib/arabic";
 import { closeSheet, initSheet, openSheet, sheetOpen } from "../lib/sheet";
 import { siteIndex } from "../lib/site-index";
 import { load, save } from "../lib/storage";
 import { $, flash, isTyping, STAR_SVG, toast } from "../lib/ui";
+import { moving } from "./motion";
 
 type PageData = { verses: Record<string, [text: string, label: string, tafsir: string]>; names: Record<string, string> };
 let data = JSON.parse($("page-data").textContent!) as PageData;
@@ -153,6 +155,7 @@ function layout() {
   dockNum.textContent = `سورة ${lead.dataset.surah}`;
   dockSno.textContent = ar(Number(lead.dataset.sno));
   dockSub.textContent = `${label} · الجزء ${ar(Number(lead.dataset.juz))}`;
+  $("dock-prog").style.setProperty("--p", (firstOf(pageNo, two) / 604).toFixed(4));
 }
 layout();
 new ResizeObserver(layout).observe(root);
@@ -217,6 +220,8 @@ function swap(doc: Document, to: number, push: boolean) {
   if (!next || !json) return void (location.href = `/page/${to}`);
   closeSheet();
   setStrip(false);
+  const from = pageNo;
+  const ghost = moving() ? leaving() : null;
   root.dataset.page = next.dataset.page;
   root.dataset.first = next.dataset.first;
   stage.style.transform = "";
@@ -233,8 +238,37 @@ function swap(doc: Document, to: number, push: boolean) {
   document.title = doc.title;
   if (push) history.pushState({ page: pageNo }, "", `/page/${pageNo}`);
   layout();
+  if (ghost) turning(ghost, pageNo > from ? 1 : -1);
   remember(firstS, firstA);
   afterShown(prefetch);
+}
+
+// ---------- the turn itself ----------
+// The page being left is copied and laid over the new one, then each goes its way: onwards (in a right-to-left
+// mushaf, the next page lies to the left) the old page slides off to the right and the new one comes in from the left.
+// A turn pressed while one is still running cuts it short, so a fast flick never queues.
+let ghostEl: HTMLElement | null = null;
+function leaving() {
+  ghostEl?.remove();
+  gsap.killTweensOf(articles);
+  const g = stage.cloneNode(true) as HTMLElement;
+  g.classList.add("ghost");
+  g.removeAttribute("data-fit-shift");
+  g.setAttribute("aria-hidden", "true");
+  Object.assign(g.style, { left: `${stage.offsetLeft}px`, top: `${stage.offsetTop}px`, width: `${stage.offsetWidth}px`, height: `${stage.offsetHeight}px`, transform: "" });
+  root.append(g);
+  return (ghostEl = g);
+}
+function turning(g: HTMLElement, dir: 1 | -1) {
+  const shift = Math.min(90, stage.offsetWidth * 0.12);
+  gsap.to(g, {
+    x: dir * shift, rotationY: dir * -8, opacity: 0, filter: "blur(3px)", duration: 0.42, ease: "power2.in",
+    transformOrigin: dir > 0 ? "100% 50%" : "0% 50%",
+    onComplete: () => { g.remove(); if (ghostEl === g) ghostEl = null; },
+  });
+  gsap.fromTo(articles,
+    { x: -dir * shift, opacity: 0, rotationY: dir * 6 },
+    { x: 0, opacity: 1, rotationY: 0, duration: 0.6, ease: "power3.out", delay: 0.06, stagger: { each: 0.05, from: dir > 0 ? "end" : "start" }, clearProps: "transform,opacity" });
 }
 
 // The neighbours wait until the pages on screen have their fonts, so on a slow connection they never compete with
@@ -315,6 +349,7 @@ function dial() {
     if (b.right < r.left - 200 || b.left > r.right + 200) continue;
     const d = Math.min(1, Math.abs(b.left + b.width / 2 - mid) / (r.width / 2));
     c.style.setProperty("--d", d.toFixed(3));
+    c.style.setProperty("--side", String(Math.sign(b.left + b.width / 2 - mid) * -28));
   }
 }
 row.addEventListener("scroll", () => {

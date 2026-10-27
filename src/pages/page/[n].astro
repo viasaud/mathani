@@ -129,25 +129,27 @@ const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fil
     </div>
   </main>
 
-  <!-- Bottom controls, one compact row: the previous and next page as large round buttons at the ends, and at the
-       centre the surah being read, its number in the rub' star. Tapping the surah opens the surah strip: all 114
-       surahs in a row to flick through quickly and tap to open. The same shape on every page, so nothing shifts. -->
+  <!-- Bottom controls, one compact row on glass: the previous and next page as large round buttons at the ends, and at
+       the centre the surah being read, its number in the rub' star, with how far into the mushaf this page is along
+       its foot. Tapping the surah opens the surah strip: all 114 surahs in a row to flick through quickly and tap to
+       open. The same shape on every page, so nothing shifts. -->
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
-      <a class="dround" id="prev" aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6")} />
-      <button class="dsurah" id="dock-page" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="surahs">
+      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6")} />
+      <button class="dsurah glass" id="dock-page" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="surahs">
         <span class="dstar" aria-hidden="true"><Star /><b id="dock-sno">{ar(first.s)}</b></span>
         <span class="dtxt">
           <b id="dock-num">سورة {surahName}</b>
           <small id="dock-sub">صفحة {ar(n)} · الجزء {ar(juz)}</small>
         </span>
+        <span class="dprog" aria-hidden="true"><i id="dock-prog" style={`--p:${(n / 604).toFixed(4)}`}></i></span>
         <span class="dmore" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></span>
       </button>
-      <a class="dround next" id="next" aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6")} />
+      <a class="dround next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6")} />
     </nav>
 
     <!-- the surah strip: the fast way to any surah -->
-    <section class="surahs" id="surahs" role="dialog" aria-labelledby="sx-title" hidden>
+    <section class="surahs glass glass-panel" id="surahs" role="dialog" aria-labelledby="sx-title" hidden>
       <div class="sx-head">
         <h2 id="sx-title">انتقل إلى سورة</h2>
         <label class="sx-find field">

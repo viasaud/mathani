@@ -9,6 +9,7 @@ interface Props {
   current?: number; // surah to mark in the index
   context?: { title: string; meta?: string[] };
   reader?: boolean; // immersive reading: the header slides away while scrolling down
+  cover?: boolean; // the page opens on the dark cover (home), so the header starts in its light-on-dark tone
 }
 
 const SITE_NAME = "مثاني";
@@ -18,14 +19,16 @@ const {
   current = 0,
   context,
   reader = false,
+  cover = false,
 } = Astro.props;
 const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية وتفسير"]];
+const year = new Date().getFullYear();
 ---
 
 <!doctype html>
-<html lang="ar" dir="rtl" data-mode="pages" data-tajweed="off">
+<html lang="ar" dir="rtl" data-mode="pages" data-tajweed="off" class={cover ? "on-cover" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -34,15 +37,17 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/thmanyah/thmanyahseriftext-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta name="theme-color" content="#edefea" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a100e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#090e0c" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ar_AR" />
     <meta property="og:url" content={canonical} />
-    <!-- Apply the saved theme, view, tajweed and size before first paint so nothing flashes. -->
+    <!-- Apply the saved theme, view, tajweed and size before first paint so nothing flashes. html.motion turns on the
+         entrance choreography (motion.ts); if that script never runs, the content is shown anyway after a moment. -->
     <script is:inline>
       try {
         var d = document.documentElement;
@@ -54,6 +59,10 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
         d.dataset.tajweed = g("tajweed") || "off";
         d.style.setProperty("--qsize", (g("size") || (innerWidth < 500 ? 25 : 28)) + "px");
       } catch (e) {}
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.documentElement.classList.add("motion");
+        setTimeout(function () { if (!window.__motion) document.documentElement.classList.remove("motion"); }, 2500);
+      }
     </script>
     <slot name="head" />
   </head>
@@ -86,7 +95,7 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
         </button>
         <div class="settings-wrap">
           <button class="cap glass cap-circle" id="settings-btn" aria-expanded="false" aria-controls="settings" aria-label="إعدادات القراءة" title="إعدادات القراءة">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"></path><circle cx="15" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path class="k1" d="M4 7h9M17 7h3"></path><path class="k2" d="M4 17h3M11 17h9"></path><circle class="k1" cx="15" cy="7" r="2"></circle><circle class="k2" cx="9" cy="17" r="2"></circle></svg>
           </button>
           <div class="settings glass glass-panel" id="settings" hidden role="dialog" aria-label="إعدادات القراءة">
             <h3>طريقة العرض</h3>
@@ -133,6 +142,27 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
 
     <slot />
 
+    {!reader && (
+      <footer class="foot" data-tone="cover">
+        <div class="foot-inner gutter">
+          <div class="foot-brand">
+            <Star class="foot-star" />
+            <div>
+              <strong>مثاني</strong>
+              <p>﴿ٱللَّهُ نَزَّلَ أَحۡسَنَ ٱلۡحَدِيثِ كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾ <small>الزمر ٢٣</small></p>
+            </div>
+          </div>
+          <nav class="foot-links" aria-label="روابط">
+            <a href="/page/1">الصفحة الأولى</a>
+            <a href="/search">البحث في الآيات</a>
+            <button type="button" data-open="drawer">فهرس السور</button>
+            <button type="button" data-open="palette">انتقل إلى…</button>
+          </nav>
+          <p class="foot-note">نص المصحف بخطوط مجمع الملك فهد لطباعة المصحف الشريف، والتفسير الميسّر. <span class="num">{new Intl.NumberFormat("ar-EG", { useGrouping: false }).format(year)}</span></p>
+        </div>
+      </footer>
+    )}
+
     <div class="scrim" id="scrim"></div>
 
     <aside class="drawer glass glass-panel" id="drawer" role="dialog" aria-modal="true" aria-label="فهرس السور" data-current={current} aria-hidden="true" tabindex="-1">
@@ -148,12 +178,11 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
           <input id="ix-q" type="search" placeholder="اسم السورة أو رقمها" autocomplete="off" aria-label="ابحث عن سورة" />
         </label>
         <div class="drawer-tabs">
-          <div role="group" aria-label="ترتيب الفهرس" style="display:contents">
-            <button class="chip" data-ix="surah" aria-pressed="true">السور</button>
-            <button class="chip" data-ix="juz" aria-pressed="false">الأجزاء</button>
+          <div class="seg seg-sm" role="group" aria-label="ترتيب الفهرس">
+            <button data-ix="surah" aria-pressed="true">السور</button>
+            <button data-ix="juz" aria-pressed="false">الأجزاء</button>
           </div>
-          <span class="tabs-sep" aria-hidden="true"></span>
-          <div role="group" aria-label="مكان النزول" style="display:contents">
+          <div class="drawer-place" role="group" aria-label="مكان النزول">
             <button class="chip" data-ix-place="m" aria-pressed="false">مكية</button>
             <button class="chip" data-ix-place="d" aria-pressed="false">مدنية</button>
           </div>
@@ -182,6 +211,7 @@ const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية �
 
     <script>
       import "../scripts/shell.ts";
+      import "../scripts/motion.ts";
     </script>
   </body>
 </html>
