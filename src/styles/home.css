@@ -1,0 +1,143 @@
+/* Home page: hero, continue reading, juz and surah grids. Tokens and shared parts live in global.css. */
+/* ---------- home ---------- */
+.home {
+  padding-bottom: 80px;
+  /* text-safe tints: the plain gold / muted / faint tokens fall under 4.5:1 for small text on the page background */
+  --gold-text: color-mix(in srgb, var(--gold) 70%, var(--ink));
+  --muted-text: color-mix(in srgb, var(--muted) 78%, var(--ink));
+}
+/* the hero runs to the very top edge, under the floating controls */
+.hero { margin-top: calc(var(--top) * -1); padding-top: var(--top); position: relative; overflow: hidden; border-bottom: 1px solid var(--line); background: radial-gradient(1200px 500px at 15% 50%, var(--gold-soft), transparent 60%), var(--bg); }
+.hero-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; gap: 32px; padding-block: 56px 64px; }
+.hero-art { position: relative; aspect-ratio: 1; max-width: 520px; width: 100%; justify-self: center; }
+.hero-art svg { width: 100%; height: 100%; overflow: visible; }
+.rosette .g { stroke: var(--gold); }
+.rosette .i { stroke: var(--ink); opacity: 0.18; }
+.rosette .c { fill: var(--gold); opacity: 0.9; }
+/* one measure for the whole column: every block shares the same start and end edge */
+.hero-copy { display: grid; gap: 18px; align-content: center; width: 100%; max-width: 520px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--gold-text); font-weight: 500; }
+.eyebrow::before { content: ""; width: 28px; height: 1px; background: currentColor; }
+/* the dots and tail of ي hang about .32em below this line box; reserve that room so they never touch the verse */
+.hero h1 { margin: 0; padding-block-end: 0.34em; font-family: var(--f-display); font-weight: 700; font-size: clamp(76px, 12vw, 148px); line-height: 1.05; letter-spacing: -0.01em; color: var(--ink); }
+.epigraph { margin: 0; font-family: var(--f-quran); font-size: clamp(22px, 2.6vw, 30px); line-height: 1.9; color: var(--accent); }
+.epigraph small { display: block; margin-top: 2px; font-family: var(--f-ui); font-size: 15px; font-weight: 500; line-height: 1.5; color: var(--muted-text); }
+.hero-lead { margin: 0; font-size: 17px; color: var(--muted-text); line-height: 1.9; }
+.hero-search {
+  display: flex; align-items: center; gap: 12px; min-height: 56px; padding-block: 0; padding-inline: 18px 12px; border-radius: 16px; width: 100%;
+  background: var(--sheet); border: 1px solid var(--line); box-shadow: var(--shadow-1); color: var(--muted); font-size: 16px;
+}
+.hero-search span { flex: 1; text-align: start; }
+.hero-search svg { color: var(--gold); flex: none; }
+.hero-search:focus-visible { border-radius: 16px; }
+.hero-search:hover { border-color: var(--gold-2); box-shadow: 0 0 0 4px var(--gold-soft), var(--shadow-1); }
+.quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick .chip { min-height: 34px; height: auto; }
+.quick .chip { flex: 1 1 auto; justify-content: center; }
+.chip:focus-visible { border-radius: 999px; }
+
+.wrap { max-width: 1180px; margin: 0 auto; }
+.section { padding-top: 56px; }
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.section-head h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.2; }
+.section-head p { margin: 4px 0 0; color: var(--muted-text); font-size: 15px; }
+
+.continue {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; padding: 22px 24px;
+  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
+}
+.continue:hover { box-shadow: var(--shadow-2); border-color: var(--gold-2); }
+.hero .continue { gap: 18px; padding: 16px 16px 16px 16px; padding-inline-start: 18px; border-radius: 20px; }
+.hero .ring { width: 68px; height: 68px; }
+.hero .ring b { font-size: 15px; }
+.hero .continue-copy strong { font-size: 24px; }
+.hero .continue .go { height: 46px; padding-inline: 20px 14px; font-size: 15px; }
+.ring { position: relative; width: 88px; height: 88px; }
+/* the ring starts at twelve o'clock and fills counter-clockwise, the way the eye reads right to left */
+.ring svg { width: 100%; height: 100%; transform: rotate(90deg) scaleX(-1); }
+.ring .track { stroke: color-mix(in srgb, var(--gold) 24%, var(--sheet)); }
+.ring .bar { stroke: var(--gold); stroke-linecap: round; opacity: 0; }
+/* an empty ring must stay empty: a round cap on a zero-length dash would draw a dot at twelve o'clock */
+.ring.on .bar { opacity: 1; }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.continue-copy { min-width: 0; }
+.continue-copy small { color: var(--gold-text); font-size: 13px; font-weight: 500; }
+.continue-copy strong { display: block; font-family: var(--f-display); font-weight: 700; font-size: 28px; line-height: 1.3; }
+.continue-copy span { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.continue .go {
+  display: inline-flex; align-items: center; gap: 8px; height: 50px; padding-inline: 24px 18px; border-radius: 14px; white-space: nowrap;
+  background: var(--accent); color: var(--accent-ink); font-size: 16px; font-weight: 500; box-shadow: 0 10px 24px -12px var(--accent);
+}
+.continue:hover .go { box-shadow: 0 14px 28px -12px var(--accent); }
+.continue:hover .go svg { transform: translateX(-4px); }
+.ring .ring-star { width: 38%; height: 38%; transform: none; color: var(--gold); }
+
+/* column counts that divide thirty, so the last row is never a stray pair: 10, 6, 5, then 3 on phones */
+.juz-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
+.juz-tile {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 92px; padding: 12px 6px 10px;
+  border-radius: 14px; background: var(--sheet); border: 1px solid var(--line); overflow: hidden; isolation: isolate; text-align: center;
+}
+.juz-tile::after {
+  content: ""; position: absolute; inset: auto -40% -70%; height: 110px; z-index: -1;
+  background: radial-gradient(circle, var(--gold-soft), transparent 70%); opacity: 0;
+}
+.juz-tile:hover { transform: translateY(-3px); border-color: var(--gold-2); box-shadow: var(--shadow-1); }
+.juz-tile:hover::after { opacity: 1; }
+.juz-num { font-family: var(--f-display); font-weight: 700; font-size: 30px; line-height: 1; color: var(--gold-text); font-variant-numeric: tabular-nums; }
+.juz-from { font-size: 13px; line-height: 1.4; color: var(--muted-text); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* the Makki / Madani filter: one segmented capsule */
+.filters { flex: none; }
+.filters button { display: inline-flex; align-items: center; gap: 6px; padding-inline: 16px; }
+.filters .n { font-size: 12px; color: var(--muted-text); font-variant-numeric: tabular-nums; }
+.surah-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.surah-card {
+  display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px;
+  background: var(--sheet); border: 1px solid var(--line);
+}
+.surah-card:hover { transform: translateY(-2px); border-color: var(--gold-2); box-shadow: var(--shadow-1); }
+.surah-card:hover .badge svg { transform: rotate(45deg); }
+.surah-card .txt { display: grid; min-width: 0; }
+.surah-card .nm { font-family: var(--f-display); font-weight: 700; font-size: 21px; line-height: 1.3; }
+.surah-card .meta { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.surah-card .pg { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.page-end { display: flex; justify-content: center; padding-top: 56px; }
+.to-top {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding-inline: 16px 12px; border-radius: 999px;
+  border: 1px solid var(--line-2); background: var(--sheet); color: var(--ink-2); font-size: 14px;
+  /* hidden but holding its place until the reader has rested at the bottom (home.ts), so nothing shifts when it appears */
+  opacity: 0; visibility: hidden; transform: translateY(8px);
+}
+.to-top.on { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { border-color: var(--gold-2); color: var(--ink); }
+.to-top:hover svg { transform: translateY(-2px); }
+.to-top:focus-visible { border-radius: 999px; }
+@media (pointer: coarse) { .to-top { min-height: 44px; } }
+
+@media (max-width: 1100px) { .juz-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .juz-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .juz-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: minmax(0, 1fr); padding-block: 28px 44px; gap: 8px; }
+  .hero-art { position: absolute; inset-block-start: -14%; inset-inline-end: -58%; width: 115%; max-width: none; opacity: 0.26; pointer-events: none; z-index: 0; }
+  .hero-copy { position: relative; z-index: 1; }
+}
+@media (max-width: 640px), (pointer: coarse) {
+  .quick .chip { min-height: 44px; padding-inline: 18px; }
+  .quick { gap: 8px; }
+}
+@media (hover: none) {
+  .hero-search kbd { display: none; }
+  .hero-search { padding-inline-end: 18px; }
+}
+@media (max-width: 640px) {
+  .continue, .hero .continue { grid-template-columns: auto 1fr; gap: 14px 16px; padding: 16px; }
+  .continue .go { grid-column: 1 / -1; justify-content: center; width: 100%; }
+  .ring, .hero .ring { width: 64px; height: 64px; }
+  .continue-copy strong, .hero .continue-copy strong { font-size: 22px; }
+  .section { padding-top: 44px; }
+  .juz-tile { min-height: 84px; }
+  .juz-num { font-size: 28px; }
+}

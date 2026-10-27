@@ -1,0 +1,36 @@
+---
+// Color key for the tajweed rules; visible only while tajweed coloring is on.
+const groups: { title: string; rules: [code: string, name: string][] }[] = [
+  {
+    title: "المدود",
+    rules: [["mx", "مد لازم ٦"], ["mo", "مد واجب ٤–٥"], ["mp", "مد جائز ٢–٤–٦"], ["mn", "مد طبيعي ٢"]],
+  },
+  {
+    title: "النون والميم",
+    rules: [
+      ["gh", "غنة"], ["ik", "إخفاء"], ["is", "إخفاء شفوي"], ["iq", "إقلاب"],
+      ["dg", "إدغام بغنة"], ["dw", "إدغام بلا غنة"], ["ds", "إدغام شفوي"],
+    ],
+  },
+  {
+    title: "أحكام أخرى",
+    rules: [["qq", "قلقلة"], ["dj", "إدغام متجانسين"], ["dq", "إدغام متقاربين"], ["hw", "همزة وصل، ولام شمسية، وما لا يُنطق"]],
+  },
+];
+---
+
+<details class="legend">
+  <summary>دليل ألوان التجويد</summary>
+  <div class="legend-body">
+    {groups.map((g) => (
+      <div class="legend-group">
+        <b>{g.title}</b>
+        <ul>
+          {g.rules.map(([code, name]) => (
+            <li><i class={`chipc tj-${code}`}></i>{name}</li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</details>

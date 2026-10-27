@@ -1,0 +1,33 @@
+---
+// The sheet that rises from the bottom with a verse and its tafsir. Filled by src/lib/sheet.ts.
+---
+
+<section class="vsheet" id="vsheet" role="dialog" aria-modal="true" aria-labelledby="vs-ref" aria-hidden="true" tabindex="-1">
+  <div class="vs-handle" id="vs-handle" aria-hidden="true"></div>
+  <div class="vs-head">
+    <div class="vs-ref" id="vs-ref" aria-live="polite"></div>
+    <button class="ib" id="vs-copy" aria-label="نسخ الآية" title="نسخ الآية">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+    </button>
+    <button class="ib" id="vs-link" aria-label="نسخ رابط الآية" title="نسخ رابط الآية">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg>
+    </button>
+    <button class="ib" id="vs-close" aria-label="إغلاق">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </div>
+  <div class="vs-body">
+    <div class="vs-verse" id="vs-verse"></div>
+    <div class="vs-taf"><b id="vs-label">التفسير الميسّر</b><p id="vs-taf"></p></div>
+  </div>
+  <div class="vs-foot">
+    <button id="vs-prev" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg>
+      الآية السابقة
+    </button>
+    <button id="vs-next" type="button">
+      الآية التالية
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"></path></svg>
+    </button>
+  </div>
+</section>

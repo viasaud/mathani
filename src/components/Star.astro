@@ -1,0 +1,16 @@
+---
+// The eight-pointed star of the rub' al-hizb (۞): the site's mark, and the frame of every number badge.
+interface Props {
+  class?: string;
+  filled?: boolean;
+}
+const { class: cls, filled = false } = Astro.props;
+---
+
+<svg class={cls} viewBox="0 0 48 48" aria-hidden="true">
+  <g fill={filled ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+    <rect x="10.5" y="10.5" width="27" height="27"></rect>
+    <rect x="10.5" y="10.5" width="27" height="27" transform="rotate(45 24 24)"></rect>
+  </g>
+  {!filled && <circle cx="24" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.7"></circle>}
+</svg>

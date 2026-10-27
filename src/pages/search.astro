@@ -1,0 +1,169 @@
+---
+import Base from "../layouts/Base.astro";
+import { getChapters } from "../lib/quran";
+
+const names = getChapters().map((c) => c.name);
+const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة", "اليتيم", "الشكر"];
+---
+
+<Base title="البحث في الآيات" description="ابحث عن كلمة أو عبارة في آيات القرآن الكريم." context={{ title: "البحث في الآيات" }}>
+  <main class="gutter">
+    <section class="search-hero">
+      <h1>البحث في الآيات</h1>
+      <form id="search-form" role="search" data-own-search>
+        <label class="field big-field">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="verse-q" type="search" placeholder="اكتب كلمة أو عبارة" autocomplete="off" aria-label="ابحث في الآيات" />
+        </label>
+      </form>
+      <p class="search-hint">لا يتأثر البحث بالتشكيل ولا بأشكال الهمزة والتاء المربوطة، فكلمة «الصلاة» تجد «ٱلصَّلَوٰةَ».</p>
+      <div class="suggest" id="suggest">
+        <div class="recent" id="recent" hidden>
+          <span class="suggest-label">بحثت عن</span>
+          <div class="quick" id="recent-list"></div>
+        </div>
+        <div>
+          <span class="suggest-label">اقتراحات</span>
+          <div class="quick">{suggestions.map((s) => <button class="chip" data-q={s}>{s}</button>)}</div>
+        </div>
+      </div>
+      <p class="search-status" id="search-status" aria-live="polite"></p>
+    </section>
+    <ol class="results" id="results" data-names={JSON.stringify(names)}></ol>
+    <button class="btn btn-ghost more" id="more" hidden>عرض المزيد</button>
+  </main>
+</Base>
+
+<script>
+  import { ar, ayahs } from "../lib/arabic";
+  import { fold, matchRanges, verseIndex, type VerseEntry } from "../lib/search";
+  import { load, save } from "../lib/storage";
+  import { escapeHtml } from "../lib/ui";
+
+  const PAGE = 40;
+  const input = document.getElementById("verse-q") as HTMLInputElement;
+  const status = document.getElementById("search-status")!;
+  const list = document.getElementById("results")!;
+  const more = document.getElementById("more")!;
+  const suggest = document.getElementById("suggest")!;
+  const names: string[] = JSON.parse(list.dataset.names!);
+
+  function highlight(text: string, ranges: [number, number][]) {
+    let out = "", at = 0;
+    for (const [a, b] of ranges) {
+      out += escapeHtml(text.slice(at, a)) + `<mark>${escapeHtml(text.slice(a, b))}</mark>`;
+      at = b;
+    }
+    return out + escapeHtml(text.slice(at));
+  }
+
+  // the last few searches that found something, newest first, kept in this browser
+  const recentBox = document.getElementById("recent")!;
+  const recentList = document.getElementById("recent-list")!;
+  let recent = load<string[]>("recent-searches", []);
+  const CLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  function showRecent() {
+    recentBox.hidden = !recent.length;
+    recentList.innerHTML = recent.map((q) => `<button class="chip" data-q="${escapeHtml(q)}">${CLOCK}${escapeHtml(q)}</button>`).join("");
+  }
+  function keep(q: string) {
+    recent = [q, ...recent.filter((r) => r !== q)].slice(0, 6);
+    save("recent-searches", recent);
+  }
+  showRecent();
+
+  let hits: VerseEntry[] = [];
+  let query = "";
+  let shown = 0;
+
+  // results come in mushaf order, so each surah's verses sit under one heading with its count
+  let perSurah = new Map<number, number>();
+  function renderMore() {
+    const next = hits.slice(shown, shown + PAGE);
+    let prev = hits[shown - 1]?.s;
+    list.insertAdjacentHTML(
+      "beforeend",
+      next
+        .map((h) => {
+          const head = h.s !== prev
+            ? `<li class="r-group"><h2>سورة ${names[h.s - 1]}</h2><span>${ayahs(perSurah.get(h.s)!)}</span></li>`
+            : "";
+          prev = h.s;
+          return head + `<li><a href="/surah/${h.s}#a${h.a}" aria-label="سورة ${names[h.s - 1]}، الآية ${ar(h.a)}">
+            <span class="r-ref">الآية ${ar(h.a)}</span>
+            <span class="r-text">${highlight(h.text, matchRanges(h.text, h.folded, query))}</span></a></li>`;
+        })
+        .join(""),
+    );
+    shown += next.length;
+    more.hidden = shown >= hits.length;
+    more.textContent = `عرض المزيد (${ar(hits.length - shown)} متبقية)`;
+  }
+
+  let seq = 0;
+  async function run() {
+    const raw = input.value.trim();
+    const mine = ++seq;
+    try {
+      history.replaceState(null, "", raw ? `?q=${encodeURIComponent(raw)}` : location.pathname);
+    } catch {}
+    query = fold(raw).text;
+    list.innerHTML = "";
+    more.hidden = true;
+    suggest.hidden = !!raw;
+    if (query.length < 2) {
+      status.textContent = raw ? "اكتب حرفين على الأقل للبحث." : "";
+      if (!raw) showRecent();
+      return;
+    }
+    status.textContent = "جارٍ البحث…";
+    let entries: VerseEntry[];
+    try {
+      entries = await verseIndex();
+    } catch {
+      status.textContent = "تعذّر تحميل نص الآيات. تحقق من الاتصال وحاول مرة أخرى.";
+      return;
+    }
+    if (mine !== seq) return;
+    hits = entries.filter((e) => e.folded.text.includes(query));
+    perSurah = new Map();
+    for (const h of hits) perSurah.set(h.s, (perSurah.get(h.s) ?? 0) + 1);
+    shown = 0;
+    status.textContent = hits.length
+      ? `${hits.length === 1 ? "آية واحدة فيها" : hits.length === 2 ? "آيتان فيهما" : `${ayahs(hits.length)} فيها`} «${raw}»`
+      : `لا توجد آية فيها «${raw}». جرّب كلمة أخرى أو جزءًا من الكلمة، أو اختر من الاقتراحات.`;
+    suggest.hidden = hits.length > 0;
+    renderMore();
+    if (hits.length) keep(raw);
+  }
+
+  let timer = 0;
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(run, 180);
+  });
+  document.getElementById("search-form")!.addEventListener("submit", (e) => {
+    e.preventDefault();
+    run();
+  });
+  suggest.addEventListener("click", (e) => {
+    const b = (e.target as Element).closest<HTMLElement>("[data-q]");
+    if (!b) return;
+    input.value = b.dataset.q!;
+    run();
+  });
+  more.addEventListener("click", () => {
+    const before = shown;
+    renderMore();
+    // keep the keyboard's place: continue from the first new result
+    (list.children[before]?.querySelector("a") as HTMLElement | undefined)?.focus({ preventScroll: true });
+  });
+
+  const initial = new URLSearchParams(location.search).get("q");
+  if (initial) {
+    input.value = initial;
+    run();
+  } else verseIndex().catch(() => {});
+  // on a phone the keyboard would hide the suggestions, so only a precise pointer starts in the field
+  if (matchMedia("(pointer: fine)").matches) input.focus();
+</script>

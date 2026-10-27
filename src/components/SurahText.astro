@@ -1,0 +1,67 @@
+---
+// Both text views are rendered; the html[data-mode] attribute decides which one shows.
+import { ar, BISMILLAH } from "../lib/arabic";
+import { getNav, tafsirLabel, tafsirSpans, verseHtml, type Chapter, type VerseRow } from "../lib/quran";
+import Star from "./Star.astro";
+import TajweedLegend from "./TajweedLegend.astro";
+
+interface Props {
+  chapter: Chapter;
+  verses: VerseRow[];
+}
+
+const { chapter: c, verses } = Astro.props;
+const spans = tafsirSpans(verses);
+const { rubStarts } = getNav();
+const html = verses.map(verseHtml);
+const endMark = (n: number) => `۝${ar(n)}`;
+const startsRub = (i: number) => rubStarts.has(`${c.id}:${i + 1}`);
+---
+
+<article class="text-sheet" id="surah-text">
+  <svg hidden>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></g></symbol>
+  </svg>
+  <TajweedLegend />
+  {c.bism && <div class="bism">{BISMILLAH}</div>}
+
+  <div class="flow flow-view">
+    {verses.map(([, page, juz, rub, sajda], i) => (
+      <Fragment>
+        {i > 0 && page !== verses[i - 1][1] && <span class="page-break">صفحة {ar(page)}</span>}
+        <span class="ayah" tabindex="0" role="button" aria-haspopup="dialog" data-i={i} data-p={page} data-j={juz} data-r={rub}>
+          {startsRub(i) && <span class="rub" title="بداية ربع حزب">۞ </span>}<span class="t" set:html={html[i]} />{sajda ? <span class="sajda">سجدة</span> : null}{"\u00a0"}<span class="end">{endMark(i + 1)}</span>
+        </span>{" "}
+      </Fragment>
+    ))}
+  </div>
+
+  <div class="verses list-view">
+    {verses.map(([, page, juz, rub, sajda], i) => {
+      const s = spans[i];
+      return (
+        <section class="v" data-i={i} data-p={page} data-j={juz} data-r={rub} data-g={s.start}>
+          <div class="v-top">
+            <span class="v-num">
+              <span class="badge"><Star /><span>{ar(i + 1)}</span></span>
+              <span class="v-meta"><span>صفحة {ar(page)}</span>{startsRub(i) && <span class="v-rub" title="بداية ربع حزب"><b class="rub-mark" aria-hidden="true">۞</b> <span class="v-rub-text">بداية ربع</span></span>}</span>
+            </span>
+            <div class="v-tools" role="group" aria-label={`أدوات الآية ${ar(i + 1)}`}>
+              <button class="ib copy" data-i={i} aria-label={`نسخ الآية ${ar(i + 1)}`} title="نسخ الآية">
+                <svg width="17" height="17"><use href="#i-copy"></use></svg>
+              </button>
+              <button class="ib link" data-i={i} aria-label={`نسخ رابط الآية ${ar(i + 1)}`} title="نسخ رابط الآية">
+                <svg width="17" height="17"><use href="#i-link"></use></svg>
+              </button>
+            </div>
+          </div>
+          <div class="v-text"><span class="t" set:html={html[i]} />{sajda ? <span class="sajda">سجدة</span> : null}{"\u00a0"}<span class="end">{endMark(i + 1)}</span></div>
+          {s.text && s.end === i && (
+            <div class="tafsir" id={`t${s.start}`}><b>{tafsirLabel(s)}</b><p>{s.text}</p></div>
+          )}
+        </section>
+      );
+    })}
+  </div>
+</article>

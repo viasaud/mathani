@@ -1,0 +1,525 @@
+// Runs on every page: the header that steps aside while reading, the index drawer, the quick-jump palette,
+// reading settings and keyboard shortcuts.
+import { ar, ayahs, JUZ_NAMES, normalize, westernDigits } from "../lib/arabic";
+import { fold, matchRanges, verseIndex } from "../lib/search";
+import { warmPage } from "../lib/page-fonts";
+import { pageOfVerse, siteIndex, type SiteIndex } from "../lib/site-index";
+import { lastReadHref, load, save, type LastRead } from "../lib/storage";
+import { $, escapeHtml, hideScrim, isTyping, showScrim, STAR_SVG, trapTab, whenIdle } from "../lib/ui";
+
+const root = document.documentElement;
+const header = $("hd");
+const INDEX_FAILED = `<div class="ix-empty">تعذّر تحميل الفهرس. تحقق من الاتصال وحاول مرة أخرى.</div>`;
+
+// Warm the navigation index while the reader looks at the page; everything below reads from it.
+let linkIndex: SiteIndex | undefined;
+whenIdle(() => siteIndex().then((index) => {
+  linkIndex = index;
+  routeAll();
+}).catch(() => {}));
+
+// ---------- surah links open the mushaf page itself ----------
+// In the page view a /surah/N link would load the text view only to be sent on to the page (surah/[id].astro), and
+// hovering it would prefetch that whole text view. Once the index is in, such links point straight at the page, and
+// pointing at or pressing one starts its page fonts downloading. Each link keeps its own address in data-surah, so
+// switching back to a text view restores it.
+const pagesMode = () => (root.dataset.mode || "pages") === "pages";
+function toPage(href: string) {
+  const m = /^\/surah\/(\d{1,3})(?:#a(\d{1,3}))?$/.exec(href);
+  const c = m && linkIndex?.chapters[Number(m[1]) - 1];
+  if (!c || !pagesMode()) return null;
+  const a = Math.min(Number(m![2] ?? 1), c.n);
+  const page = pageOfVerse(linkIndex!, c.id, a);
+  return { page, href: `/page/${page}${a > 1 ? `#v${c.id}-${a}` : ""}` };
+}
+const SURAH_LINK = "a[href^='/surah/'], a[data-surah]";
+function route(a: HTMLAnchorElement) {
+  const own = (a.dataset.surah ??= a.getAttribute("href")!);
+  const to = toPage(own);
+  a.setAttribute("href", to ? to.href : own);
+  return to?.page;
+}
+const routeAll = () => document.querySelectorAll<HTMLAnchorElement>(SURAH_LINK).forEach(route);
+window.addEventListener("mushaf:mode", routeAll);
+// Links drawn later (the drawer, the palette, search results) are routed as they are reached. pointerover comes
+// before the mouseenter that Astro's hover prefetch listens for, so that prefetch fetches the page, not the text view.
+for (const type of ["pointerover", "focusin", "click"]) {
+  document.addEventListener(type, (e) => {
+    const a = (e.target as Element).closest?.<HTMLAnchorElement>(SURAH_LINK);
+    if (!a) return;
+    const page = route(a);
+    if (page && type !== "click") warmPage(page);
+  }, { capture: true, passive: true });
+}
+// links to a mushaf page; not a page's own next/previous buttons, which turn in place and load their fonts (page.ts)
+document.addEventListener("pointerover", (e) => {
+  const m = /^\/page\/(\d{1,3})/.exec((e.target as Element).closest?.("a:not(#prev, #next)")?.getAttribute("href") ?? "");
+  if (m) warmPage(Number(m[1]));
+}, { passive: true });
+
+// ⌘K on a Mac, Ctrl K elsewhere
+if (!/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+  document.querySelectorAll("[data-mod-k]").forEach((k) => (k.textContent = "Ctrl K"));
+}
+
+const settingsBtn = $("settings-btn");
+const settings = $("settings");
+
+// ---------- the controls recede while reading ----------
+// Scrolling down folds them away (html.recede); scrolling up, reaching an end, or tapping what is left brings them
+// back. html.scrolled turns on the soft fade where content slides under them.
+{
+  const dock = document.getElementById("dock");
+  let last = scrollY;
+  let ticking = false;
+  const recede = (on: boolean) => root.classList.toggle("recede", on);
+  const receded = () => root.classList.contains("recede");
+  // a tap on a folded control unfolds the controls first and does nothing else
+  const restore = (e: MouseEvent) => {
+    // only a real tap: keyboard shortcuts click these controls from code (detail 0) and must still work
+    if (!receded() || !e.isTrusted || e.detail === 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    recede(false);
+  };
+  for (const el of [header, dock]) {
+    el?.addEventListener("click", restore, true);
+    // keyboard focus must never land on a hidden control
+    el?.addEventListener("focusin", (e) => (e.target as Element).matches(":focus-visible") && recede(false));
+  }
+  const onScroll = () => {
+    ticking = false;
+    const y = scrollY;
+    root.classList.toggle("scrolled", y > 4);
+    const nearEnd = y + innerHeight > document.documentElement.scrollHeight - 80;
+    if (y < 80 || nearEnd || y < last - 8) recede(false);
+    else if (y > last + 8 && !settingsOpen && !document.querySelector(".vsheet.on, .drawer.on")) recede(true);
+    last = y;
+  };
+  window.addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(onScroll);
+  }, { passive: true });
+  root.classList.toggle("scrolled", scrollY > 4);
+}
+
+// ---------- the light on the glass follows the pointer across a capsule ----------
+document.addEventListener("pointermove", (e) => {
+  if (e.pointerType !== "mouse") return;
+  const cap = (e.target as Element).closest?.<HTMLElement>(".cap.glass");
+  if (!cap) return;
+  const r = cap.getBoundingClientRect();
+  cap.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  cap.style.setProperty("--my", `${e.clientY - r.top}px`);
+}, { passive: true });
+
+// ---------- a page with its own search field hides the search capsule while that field is in view ----------
+const ownSearch = document.querySelector("[data-own-search]");
+if (ownSearch) {
+  new IntersectionObserver(([e]) => root.classList.toggle("own-search", e.isIntersecting)).observe(ownSearch);
+}
+
+// ---------- settings ----------
+// The header's backdrop blur would trap a fixed panel inside it, so the panel lives at the end of the page.
+document.body.append(settings);
+let settingsOpen = false;
+const setSettings = (open: boolean, restoreFocus = false) => {
+  const wasOpen = settingsOpen;
+  settingsOpen = open;
+  settingsBtn.setAttribute("aria-expanded", String(open));
+  if (open && !wasOpen) settings.hidden = false;
+  if (!open && wasOpen) settings.hidden = true;
+  if (open && !wasOpen) settings.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
+  if (!open && wasOpen && (restoreFocus || settings.contains(document.activeElement))) settingsBtn.focus({ preventScroll: true });
+};
+// the panel sits at the end of the page, so Tab at its edges goes back to the button instead of wandering off
+settings.addEventListener("keydown", (e) => trapTab(settings, e, settingsBtn));
+settingsBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setSettings(!settingsOpen);
+});
+document.addEventListener("click", (e) => {
+  if (settingsOpen && !(e.target as Element).closest("#settings, #settings-btn")) setSettings(false);
+});
+
+// view: the open page decides what a switch means (another kind of page, or the other text view)
+const modeButtons = document.querySelectorAll<HTMLElement>("[data-mode-btn]");
+const syncMode = () => modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.modeBtn === (root.dataset.mode || "pages"))));
+syncMode();
+modeButtons.forEach((b) =>
+  b.addEventListener("click", () => {
+    if (b.dataset.modeBtn === root.dataset.mode) return;
+    window.dispatchEvent(new Event("mushaf:beforemode"));
+    root.dataset.mode = b.dataset.modeBtn;
+    save("mode", b.dataset.modeBtn);
+    syncMode();
+    window.dispatchEvent(new Event("mushaf:mode"));
+  }),
+);
+
+// size: one slider scales the Quran text, and the mushaf page with it
+const size = $<HTMLInputElement>("size");
+const currentSize = () => parseFloat(getComputedStyle(root).getPropertyValue("--qsize")) || 28;
+const paintSize = () => size.style.setProperty("--fill", `${((+size.value - +size.min) / (+size.max - +size.min)) * 100}%`);
+size.value = String(currentSize());
+paintSize();
+size.addEventListener("input", () => {
+  root.style.setProperty("--qsize", `${size.value}px`);
+  paintSize();
+});
+size.addEventListener("change", () => save("size", Number(size.value)));
+
+// one page or two, in the pages view
+const spreadButtons = document.querySelectorAll<HTMLElement>("[data-spread-btn]");
+const syncSpread = () => spreadButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.spreadBtn === (root.dataset.spread || "on"))));
+syncSpread();
+spreadButtons.forEach((b) =>
+  b.addEventListener("click", () => {
+    root.dataset.spread = b.dataset.spreadBtn;
+    save("spread", b.dataset.spreadBtn);
+    syncSpread();
+    window.dispatchEvent(new Event("mushaf:spread"));
+  }),
+);
+
+const themeButtons = document.querySelectorAll<HTMLElement>("[data-theme-btn]");
+const syncTheme = () => themeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeBtn === (root.dataset.theme || "auto"))));
+syncTheme();
+themeButtons.forEach((b) =>
+  b.addEventListener("click", () => {
+    const t = b.dataset.themeBtn!;
+    if (t === "auto") delete root.dataset.theme;
+    else root.dataset.theme = t;
+    save("theme", t === "auto" ? null : t);
+    syncTheme();
+  }),
+);
+
+const tajweed = $<HTMLInputElement>("opt-tajweed");
+tajweed.checked = root.dataset.tajweed === "on";
+tajweed.addEventListener("change", () => {
+  root.dataset.tajweed = tajweed.checked ? "on" : "off";
+  save("tajweed", root.dataset.tajweed);
+});
+
+// ---------- index drawer ----------
+const drawer = $("drawer");
+const ixList = $("ix-list");
+const ixQ = $<HTMLInputElement>("ix-q");
+const current = Number(drawer.dataset.current);
+let ixView: "surah" | "juz" = "surah";
+let ixPlace: "" | "m" | "d" = "";
+
+const surahRow = (c: SiteIndex["chapters"][number]) =>
+  `<a class="ix-item" href="/surah/${c.id}"${c.id === current ? ' aria-current="page"' : ""}>
+    <span class="badge">${STAR_SVG}<span>${ar(c.id)}</span></span>
+    <span class="ix-name">${c.name}<span class="ix-sub">${c.makki ? "مكية" : "مدنية"}، ${ayahs(c.n)}</span></span>
+    <span class="ix-page">ص ${ar(c.page)}</span></a>`;
+
+async function renderIndex() {
+  let index: SiteIndex;
+  try {
+    index = await siteIndex();
+  } catch {
+    ixList.innerHTML = INDEX_FAILED;
+    return;
+  }
+  const raw = ixQ.value.trim();
+  const q = normalize(raw);
+  const num = westernDigits(q);
+  const matches = (c: SiteIndex["chapters"][number]) =>
+    (!ixPlace || (ixPlace === "m") === c.makki) &&
+    (!q || normalize(c.name).includes(q) || c.en.toLowerCase().includes(q) || String(c.id) === num);
+
+  if (ixView === "juz" && !q) {
+    ixList.innerHTML = index.juz
+      .map(([s, a], i) => {
+        const next = index.juz[i + 1];
+        const last = next ? (next[1] === 1 ? next[0] - 1 : next[0]) : 114;
+        const rows = index.chapters.slice(s - 1, last).filter(matches).map(surahRow).join("");
+        return rows ? `<div class="ix-juz">الجزء ${JUZ_NAMES[i + 1]}: تبدأ من ${index.chapters[s - 1].name}، الآية ${ar(a)}</div>${rows}` : "";
+      })
+      .join("");
+  } else {
+    const rows = index.chapters.filter(matches).map(surahRow).join("");
+    const typed = escapeHtml(raw);
+    const why = raw ? `لا توجد سورة مطابقة لـ «${typed}».` : "لا توجد سور بهذا التصنيف.";
+    const hint = ixPlace || raw ? "غيّر الكلمة أو الفلتر." : "";
+    const inVerses = raw ? `<button class="btn btn-ghost" data-ix-verses>ابحث عن «${typed}» في الآيات</button>` : "";
+    ixList.innerHTML = rows || `<div class="ix-empty"><p>${why} ${hint}</p>${inVerses}</div>`;
+  }
+}
+
+let drawerOpener: HTMLElement | null = null;
+function openDrawer() {
+  setSettings(false);
+  drawerOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  drawer.classList.add("on");
+  drawer.setAttribute("aria-hidden", "false");
+  showScrim(closeDrawer);
+  renderIndex().then(() => ixList.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "center" }));
+  // a keyboard on a phone would cover the list, so only a precise pointer gets the field focused
+  if (matchMedia("(pointer: fine)").matches) setTimeout(() => ixQ.focus(), 250);
+  else drawer.focus({ preventScroll: true });
+}
+function closeDrawer() {
+  if (!drawer.classList.contains("on")) return;
+  const hadFocus = drawer.contains(document.activeElement);
+  drawer.classList.remove("on");
+  drawer.setAttribute("aria-hidden", "true");
+  hideScrim();
+  if (hadFocus && drawerOpener?.isConnected) drawerOpener.focus({ preventScroll: true });
+  drawerOpener = null;
+}
+drawer.addEventListener("keydown", (e) => trapTab(drawer, e));
+ixQ.addEventListener("input", renderIndex);
+ixList.addEventListener("click", (e) => {
+  if (!(e.target as Element).closest("[data-ix-verses]")) return;
+  const q = ixQ.value.trim();
+  closeDrawer();
+  openPalette(q);
+});
+drawer.querySelectorAll<HTMLElement>("[data-ix]").forEach((b) =>
+  b.addEventListener("click", () => {
+    ixView = b.dataset.ix as "surah" | "juz";
+    drawer.querySelectorAll("[data-ix]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderIndex();
+  }),
+);
+drawer.querySelectorAll<HTMLElement>("[data-ix-place]").forEach((b) =>
+  b.addEventListener("click", () => {
+    const p = b.dataset.ixPlace as "m" | "d";
+    ixPlace = ixPlace === p ? "" : p;
+    drawer.querySelectorAll<HTMLElement>("[data-ix-place]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.ixPlace === ixPlace)));
+    renderIndex();
+  }),
+);
+
+// ---------- quick-jump palette ----------
+const palette = $<HTMLDialogElement>("palette");
+const palQ = $<HTMLInputElement>("pal-q");
+const palResults = $("pal-results");
+const palLive = $("pal-live");
+type Item = { href: string; icon: string; title: string; sub: string; verse?: boolean };
+let items: Item[] = [];
+let selected = 0;
+
+const ICON = {
+  page: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M9 13h6M9 17h4"/></svg>',
+  verse: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  juz: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>',
+  star: `<span style="width:20px;height:20px;display:block">${STAR_SVG}</span>`,
+  resume: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+};
+
+function excerpt(text: string, ranges: [number, number][]) {
+  const [a, b] = ranges[0];
+  const lead = innerWidth < 640 ? 24 : 40; // a phone shows fewer words, so the match must come early
+  const from = Math.max(0, text.lastIndexOf(" ", Math.max(0, a - lead)));
+  const to = Math.min(text.length, b + 50);
+  return (from > 0 ? "… " : "") + escapeHtml(text.slice(from, a)) + `<mark>${escapeHtml(text.slice(a, b))}</mark>` + escapeHtml(text.slice(b, to)) + (to < text.length ? " …" : "");
+}
+
+function setActive() {
+  const els = palResults.querySelectorAll(".pal-item");
+  els.forEach((el, i) => el.setAttribute("aria-selected", String(i === selected)));
+  const on = els[selected];
+  if (on) palQ.setAttribute("aria-activedescendant", on.id);
+  else palQ.removeAttribute("aria-activedescendant");
+}
+
+// state: "wait" while the verses are still being searched, "done" when nothing more will come
+function renderItems(groups: [string, Item[]][], state: "wait" | "done" = "done", raw = "") {
+  items = groups.flatMap(([, g]) => g);
+  selected = Math.min(selected, Math.max(0, items.length - 1));
+  let k = 0;
+  const list = groups
+    .filter(([, g]) => g.length)
+    .map(([label, g]) => `<div role="group"${label ? ` aria-label="${label}"` : ""}>${label ? `<div class="pal-group" aria-hidden="true">${label}</div>` : ""}` + g.map((it) => {
+      const i = k++;
+      return `<a class="pal-item${it.verse ? " is-verse" : ""}" role="option" id="pal-opt-${i}" href="${it.href}" data-i="${i}" aria-selected="${i === selected}">
+        <span class="pi">${it.icon}</span><span style="min-width:0"><b>${it.title}</b>${it.verse ? `<span class="verse">${it.sub}</span>` : `<small>${it.sub}</small>`}</span><kbd>↵</kbd></a>`;
+    }).join("") + "</div>")
+    .join("");
+  const tail =
+    state === "wait" ? `<div class="pal-status">جارٍ البحث في الآيات…</div>`
+    : !items.length ? `<div class="pal-empty"><b>لا توجد نتائج لـ «${escapeHtml(raw)}»</b><p>${/\d/.test(westernDigits(raw)) ? "الصفحات من ١ إلى ٦٠٤، والسور من ١ إلى ١١٤، والأجزاء من ١ إلى ٣٠." : fold(raw).text.length < 2 ? "اكتب حرفين على الأقل للبحث في الآيات." : "جرّب كلمة أخرى، أو اسم سورة، أو رقم صفحة."}</p></div>`
+    : "";
+  palResults.innerHTML = (items.length ? `<div role="listbox" id="pal-list" aria-label="النتائج">${list}</div>` : "") + tail;
+  palQ.setAttribute("aria-expanded", String(items.length > 0));
+  setActive();
+  palLive.textContent = state === "wait" ? "" : items.length ? `${ar(items.length)} نتيجة` : "لا توجد نتائج";
+}
+
+let seq = 0;
+async function runPalette() {
+  const raw = palQ.value.trim();
+  const mine = ++seq;
+  selected = 0;
+  let index: SiteIndex;
+  try {
+    index = await siteIndex();
+  } catch {
+    palResults.innerHTML = INDEX_FAILED;
+    return;
+  }
+  if (mine !== seq) return;
+  const name = (s: number) => index.chapters[s - 1].name;
+
+  if (!raw) {
+    // before typing: where the reader left off and the most visited places, ready for ↑ ↓ and Enter
+    const last = load<LastRead | null>("last", null);
+    const resume: Item[] = last && index.chapters[last.s - 1]
+      ? [{
+          href: lastReadHref(last),
+          icon: ICON.resume, title: `سورة ${name(last.s)}، الآية ${ar(last.a)}`, sub: last.p ? `الصفحة ${ar(last.p)}` : "من حيث توقفت",
+        }]
+      : [];
+    const places: Item[] = [
+      { href: "/surah/18", icon: ICON.star, title: "سورة الكهف", sub: `مكية، ${ayahs(110)}` },
+      { href: "/surah/36", icon: ICON.star, title: "سورة يس", sub: `مكية، ${ayahs(83)}` },
+      { href: "/surah/67", icon: ICON.star, title: "سورة الملك", sub: `مكية، ${ayahs(30)}` },
+      { href: "/surah/2#a255", icon: ICON.star, title: "آية الكرسي", sub: "سورة البقرة، الآية ٢٥٥" },
+    ];
+    renderItems([["تابع القراءة", resume], ["وصول سريع", places]]);
+    palResults.insertAdjacentHTML("beforeend", `<div class="pal-hint"><p>أو اكتب:</p>
+      ${["٢:٢٥٥", "صفحة ٥٠٠", "جزء ٣٠", "الصبر"].map((t) => `<button class="chip" data-try="${t}">${t}</button>`).join("")}</div>`);
+    palLive.textContent = "";
+    return;
+  }
+
+  // «صفحة» on its own (the page dock opens the palette with it): wait for the number
+  if (/^(?:ال)?(?:صفحة|ص)$/.test(raw)) {
+    items = [];
+    palQ.setAttribute("aria-expanded", "false");
+    palResults.innerHTML = `<div class="pal-empty"><b>اكتب رقم الصفحة</b><p>من ١ إلى ٦٠٤</p></div>`;
+    return;
+  }
+
+  const w = westernDigits(raw).replace(/\s+/g, " ");
+  const jump: Item[] = [];
+  let m: RegExpMatchArray | null;
+  if ((m = w.match(/^(\d{1,3})\s*[:：.\/]\s*(\d{1,3})$/))) {
+    const s = +m[1], a = +m[2];
+    if (s >= 1 && s <= 114 && a >= 1 && a <= index.chapters[s - 1].n) jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.star, title: `سورة ${name(s)}، الآية ${ar(a)}`, sub: "انتقل إلى الآية" });
+  } else if ((m = w.match(/^(?:ال)?(?:جزء|ج)\s*(\d{1,2})$/))) {
+    const j = +m[1];
+    if (j >= 1 && j <= 30) { const [s, a] = index.juz[j - 1]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الجزء ${JUZ_NAMES[j]}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
+  } else if ((m = w.match(/^(?:ال)?(?:حزب|ح)\s*(\d{1,2})$/))) {
+    const h = +m[1];
+    if (h >= 1 && h <= 60) { const [s, a] = index.rubs[(h - 1) * 4]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الحزب ${ar(h)}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
+  } else if ((m = w.match(/^(?:ال)?(?:صفحة|ص)?\s*(\d{1,3})$/))) {
+    const n = +m[1];
+    if (n >= 1 && n <= 604) { const [s] = index.pages[n - 1]; jump.push({ href: `/page/${n}`, icon: ICON.page, title: `الصفحة ${ar(n)}`, sub: `سورة ${name(s)}` }); }
+    if (n >= 1 && n <= 114 && !/^(?:ال)?(?:صفحة|ص)/.test(w)) { const c = index.chapters[n - 1]; jump.push({ href: `/surah/${n}`, icon: ICON.star, title: `سورة ${c.name}`, sub: `السورة رقم ${ar(n)}، ${ayahs(c.n)}` }); }
+  }
+
+  const q = normalize(raw);
+  const surahs: Item[] = /\d/.test(w) ? [] : index.chapters
+    .filter((c) => normalize(c.name).includes(q) || c.en.toLowerCase().includes(q.toLowerCase()))
+    .slice(0, 5)
+    .map((c) => ({ href: `/surah/${c.id}`, icon: ICON.star, title: `سورة ${c.name}`, sub: `${c.makki ? "مكية" : "مدنية"}، ${ayahs(c.n)}، تبدأ في الصفحة ${ar(c.page)}` }));
+  const needle = fold(raw).text;
+  const searchVerses = needle.length >= 2 && !/^\d+$/.test(w.replace(/\s/g, ""));
+  renderItems([["انتقال", jump], ["السور", surahs]], searchVerses ? "wait" : "done", raw);
+  if (!searchVerses) return;
+  let all;
+  try {
+    all = await verseIndex();
+  } catch {
+    renderItems([["انتقال", jump], ["السور", surahs]], "done", raw);
+    return;
+  }
+  if (mine !== seq) return;
+  const hits = all.filter((v) => v.folded.text.includes(needle));
+  const found: Item[] = hits.slice(0, 6).map((v) => ({
+    href: `/surah/${v.s}#a${v.a}`, icon: ICON.verse, verse: true,
+    title: `سورة ${name(v.s)}، الآية ${ar(v.a)}`, sub: excerpt(v.text, matchRanges(v.text, v.folded, needle)),
+  }));
+  if (hits.length > found.length) found.push({ href: `/search?q=${encodeURIComponent(raw)}`, icon: ICON.verse, title: `عرض كل النتائج (${ar(hits.length)})`, sub: `البحث عن «${escapeHtml(raw)}» في الآيات` });
+  renderItems([["انتقال", jump], ["السور", surahs], ["في الآيات", found]], "done", raw);
+}
+
+function openPalette(prefill = "") {
+  setSettings(false);
+  if (drawer.classList.contains("on")) closeDrawer();
+  palQ.value = prefill;
+  palette.showModal();
+  runPalette();
+  palQ.focus();
+}
+let palTimer = 0;
+palQ.addEventListener("input", () => {
+  clearTimeout(palTimer);
+  palTimer = window.setTimeout(() => ((palTimer = 0), runPalette()), 90);
+});
+palQ.addEventListener("keydown", (e) => {
+  const move = (d: number) => {
+    if (!items.length) return;
+    selected = (selected + d + items.length) % items.length;
+    setActive();
+    palResults.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  };
+  // a search field would clear itself on Esc and swallow it, so the palette takes it
+  if (e.key === "Escape") { e.preventDefault(); palette.close(); }
+  if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+  if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    // typed faster than the results: let them catch up first («صفحة ١٠٠» then Enter goes to the page)
+    if (palTimer) {
+      clearTimeout(palTimer);
+      palTimer = 0;
+      runPalette().then(() => palQ.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" })));
+      return;
+    }
+    const it = items[selected];
+    if (it) go(it.href);
+    else if (palQ.value.trim()) go(`/search?q=${encodeURIComponent(palQ.value.trim())}`);
+  }
+});
+palResults.addEventListener("click", (e) => {
+  const tryIt = (e.target as Element).closest<HTMLElement>("[data-try]");
+  if (tryIt) {
+    palQ.value = tryIt.dataset.try!;
+    runPalette();
+    palQ.focus();
+    return;
+  }
+  const a = (e.target as Element).closest<HTMLAnchorElement>(".pal-item");
+  if (a) { e.preventDefault(); go(a.getAttribute("href")!); }
+});
+palette.addEventListener("click", (e) => e.target === palette && palette.close());
+$("pal-close").addEventListener("click", () => palette.close());
+
+// Jumping to a verse on the page already open only needs the hash to change.
+function go(href: string) {
+  palette.close();
+  href = toPage(href)?.href ?? href;
+  const url = new URL(href, location.href);
+  if (url.pathname === location.pathname && url.hash) {
+    if (location.hash === url.hash) window.dispatchEvent(new HashChangeEvent("hashchange"));
+    else location.hash = url.hash;
+  } else location.href = href;
+}
+
+// ---------- open buttons and keyboard shortcuts ----------
+document.querySelectorAll<HTMLElement>("[data-open]").forEach((b) =>
+  b.addEventListener("click", () => (b.dataset.open === "drawer" ? openDrawer() : openPalette())),
+);
+document.querySelectorAll<HTMLElement>("[data-close='drawer']").forEach((b) => b.addEventListener("click", closeDrawer));
+window.addEventListener("mushaf:palette", (e) => openPalette((e as CustomEvent<string>).detail ?? ""));
+
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    palette.open ? palette.close() : openPalette();
+  } else if (e.key === "/" && !isTyping(e) && !palette.open) {
+    e.preventDefault();
+    openPalette();
+  } else if (e.key === "Escape") {
+    setSettings(false, true);
+    if (drawer.classList.contains("on")) closeDrawer();
+  }
+});

@@ -1,0 +1,171 @@
+---
+// One printed Madinah mushaf page (1421 H edition), drawn with the King Fahd Complex page font for that page.
+import Base from "../../layouts/Base.astro";
+import "../../styles/reader.css";
+import Star from "../../components/Star.astro";
+import VerseSheet from "../../components/VerseSheet.astro";
+import { ar, JUZ_NAMES } from "../../lib/arabic";
+import { pageFontUrl as fontUrl } from "../../lib/page-fonts";
+import { getChapters, getLayout, getMushafPages, getVerses, tafsirLabel, tafsirSpans, type MushafPage } from "../../lib/quran";
+
+export function getStaticPaths() {
+  return getMushafPages().map((page) => ({ params: { n: String(page.page) }, props: { page } }));
+}
+
+interface Props {
+  page: MushafPage;
+}
+
+const { page } = Astro.props;
+const n = page.page;
+const chapters = getChapters();
+const font = (p: number) => `qcf-${String(p).padStart(3, "0")}`;
+
+// The facing page: the printed mushaf opens on pairs 1|2, 3|4 … 603|604, the odd page on the right. It is drawn
+// too and shown beside this one when the two-page view is on and the screen is wide enough (reader.css).
+const all = getMushafPages();
+const partner = all[(n % 2 ? n + 1 : n - 1) - 1];
+const spread = n % 2 ? [page, partner] : [partner, page]; // reading order: right page first
+const wordsOf = (pg: MushafPage) => pg.lines.flatMap((l) => (l.kind === "words" ? l.glyphs : []));
+
+const glyphs = wordsOf(page);
+const first = glyphs[0];
+const firstRow = getVerses(first.s)[first.a - 1];
+const juz = firstRow[2];
+const hizb = Math.ceil(firstRow[3] / 4);
+const hasBism = spread.some((pg) => pg.lines.some((l) => l.kind === "bism"));
+const hasTitle = spread.some((pg) => pg.lines.some((l) => l.kind === "surah"));
+// The printed surah headings, frame and name together, from the King Fahd Complex's surah header font (QCF_SurahHeader_COLOR,
+// via QUL). One glyph per surah, at these code points. Served from /fonts: its CDN sends no CORS header.
+const HEADER_FONT = "/fonts/qpc/surah-header.woff2";
+const HEADER_CP = [0xfc45, 0xfc46, 0xfc47, 0xfc4a, 0xfc4b, 0xfc4e, 0xfc4f, 0xfc51, 0xfc52, 0xfc53, 0xfc55, 0xfc56, 0xfc58, 0xfc5a, 0xfc5b, 0xfc5c, 0xfc5d, 0xfc5e, 0xfc61, 0xfc62, 0xfc64, 0xfb51, 0xfb52, 0xfb54, 0xfb55, 0xfb57, 0xfb58, 0xfb5a, 0xfb5b, 0xfb5d, 0xfb5e, 0xfb60, 0xfb61, 0xfb63, 0xfb64, 0xfb66, 0xfb67, 0xfb69, 0xfb6a, 0xfb6c, 0xfb6d, 0xfb6f, 0xfb70, 0xfb72, 0xfb73, 0xfb75, 0xfb76, 0xfb78, 0xfb79, 0xfb7b, 0xfb7c, 0xfb7e, 0xfb7f, 0xfb81, 0xfb82, 0xfb84, 0xfb85, 0xfb87, 0xfb88, 0xfb8a, 0xfb8b, 0xfb8d, 0xfb8e, 0xfb90, 0xfb91, 0xfb93, 0xfb94, 0xfb96, 0xfb97, 0xfb99, 0xfb9a, 0xfb9c, 0xfb9d, 0xfb9f, 0xfba0, 0xfba2, 0xfba3, 0xfba5, 0xfba6, 0xfba8, 0xfba9, 0xfbab, 0xfbac, 0xfbae, 0xfbaf, 0xfbb1, 0xfbb2, 0xfbb4, 0xfbb5, 0xfbb7, 0xfbb8, 0xfbba, 0xfbbb, 0xfbbd, 0xfbbe, 0xfbc0, 0xfbc1, 0xfbd3, 0xfbd4, 0xfbd6, 0xfbd7, 0xfbd9, 0xfbda, 0xfbdc, 0xfbdd, 0xfbdf, 0xfbe0, 0xfbe2, 0xfbe3, 0xfbe5, 0xfbe6, 0xfbe8, 0xfbe9, 0xfbeb];
+const heading = (s: number) => String.fromCodePoint(HEADER_CP[s - 1]);
+// The basmala is drawn with the glyphs of Al-Fatiha 1:1 from page 1's font (its verse-end marker left out).
+const bismGlyphs = getLayout(1)[0].slice(0, -1).map(([g]) => g).join(" ");
+
+// Verse text and tafsir for every verse on both pages, in reading order, for the verse sheet and copying.
+const verses: Record<string, [text: string, label: string, tafsir: string]> = {};
+for (const g of spread.flatMap(wordsOf)) {
+  const key = `${g.s}:${g.a}`;
+  if (verses[key]) continue;
+  const rows = getVerses(g.s);
+  const span = tafsirSpans(rows)[g.a - 1];
+  verses[key] = [rows[g.a - 1][0], tafsirLabel(span), span.text];
+}
+const surahsHere = [...new Set(spread.flatMap(wordsOf).map((g) => g.s))];
+// each page's own running head: the surah it opens with, and its juz
+const headOf = (pg: MushafPage) => {
+  const g = wordsOf(pg)[0];
+  return { s: g.s, surah: chapters[g.s - 1].name, juz: getVerses(g.s)[g.a - 1][2] };
+};
+const pageVerses = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s}:${g.a}`))].map((k) => verses[k][0]);
+const names = Object.fromEntries(surahsHere.map((s) => [s, chapters[s - 1].name]));
+const surahName = chapters[first.s - 1].name;
+const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+---
+
+<Base
+  title={`صفحة ${ar(n)}، سورة ${surahName}`}
+  description={`الصفحة ${ar(n)} من مصحف المدينة النبوية.`}
+  current={first.s}
+  context={{ title: `سورة ${surahName}`, meta: [`صفحة ${ar(n)}`, `الجزء ${JUZ_NAMES[juz]}`, `الحزب ${ar(hizb)}`] }}
+  reader
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <style set:html={spread.map((pg) => `@font-face{font-family:"${font(pg.page)}";src:url("${fontUrl(pg.page)}") format("truetype");font-display:block}`).join("") +
+      (hasBism && !spread.some((pg) => pg.page === 1) ? `@font-face{font-family:"${font(1)}";src:url("${fontUrl(1)}") format("truetype");font-display:block}` : "") +
+      (hasTitle ? `@font-face{font-family:"surah-header";src:url("${HEADER_FONT}") format("woff2");font-display:block}` : "")} />
+    {hasTitle && <link rel="preload" href={HEADER_FONT} as="font" type="font/woff2" crossorigin />}
+    <!-- the page's own font comes first: nothing on the page can be read without it -->
+    <link rel="preload" href={fontUrl(n)} as="font" type="font/ttf" crossorigin fetchpriority="high" />
+    <!-- in the two-page view the facing page's font is needed at once -->
+    <script is:inline define:vars={{ partnerFont: fontUrl(partner.page) }}>
+      if (document.documentElement.dataset.spread !== "off" && innerWidth >= 900 && innerWidth > innerHeight) {
+        var l = document.createElement("link");
+        l.rel = "preload"; l.as = "font"; l.type = "font/ttf"; l.crossOrigin = ""; l.fetchPriority = "high"; l.href = partnerFont;
+        document.head.append(l);
+      }
+    </script>
+  </Fragment>
+
+  <main class="reader-main fit gutter" id="mushaf" data-page={n} data-first={`${first.s}:${first.a}`}>
+    <div class="stage" data-fit-shift>
+      {spread.map((pg) => {
+        const h = headOf(pg);
+        const here = pg.page === n;
+        return (
+          <article class={["mpage", pg.centered && "centered", !here && "facing"].filter(Boolean).join(" ")} data-page={pg.page}
+            style={`--pf:"${font(pg.page)}"`} data-sno={h.s} data-surah={h.surah} data-juz={h.juz} aria-label={`الصفحة ${ar(pg.page)}`} aria-hidden={here ? undefined : "true"}>
+            <div class="mhead">
+              <span>سورة {h.surah}</span>
+              <span>الجزء {JUZ_NAMES[h.juz]}</span>
+            </div>
+            <!-- The page font maps private code points to whole words, so screen readers get the plain text instead. -->
+            <div class="sr-only">{pageVerses(pg).map((text) => <p>{text}</p>)}</div>
+            <div class="mlines" aria-hidden="true">
+              {pg.lines.map((line) =>
+                line.kind === "surah" ? (
+                  <div class="ml sh"><span class="sh-band"><span data-h={heading(line.surah)}>{heading(line.surah)}</span></span></div>
+                ) : line.kind === "bism" ? (
+                  <div class="ml bism-line" style={`font-family:"${font(1)}"`}>{bismGlyphs}</div>
+                ) : (
+                  <div class="ml">
+                    {line.glyphs.map((g) =>
+                      g.w < 0 ? (
+                        <span class="g e" data-v={`${g.s}:${g.a}`}>{g.glyph}</span>
+                      ) : (
+                        <span class="g" data-v={`${g.s}:${g.a}`} data-w={g.w}>{g.glyph}</span>
+                      ),
+                    )}
+                  </div>
+                ),
+              )}
+            </div>
+            <div class="mfoot"><span><Star />{ar(pg.page)}</span></div>
+          </article>
+        );
+      })}
+    </div>
+  </main>
+
+  <!-- Bottom controls, one compact row: the previous and next page as large round buttons at the ends, and at the
+       centre the surah being read, its number in the rub' star. Tapping the surah opens the surah strip: all 114
+       surahs in a row to flick through quickly and tap to open. The same shape on every page, so nothing shifts. -->
+  <div class="dock-row" id="dock">
+    <nav class="dock" aria-label="التنقل في المصحف">
+      <a class="dround" id="prev" aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6")} />
+      <button class="dsurah" id="dock-page" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="surahs">
+        <span class="dstar" aria-hidden="true"><Star /><b id="dock-sno">{ar(first.s)}</b></span>
+        <span class="dtxt">
+          <b id="dock-num">سورة {surahName}</b>
+          <small id="dock-sub">صفحة {ar(n)} · الجزء {ar(juz)}</small>
+        </span>
+        <span class="dmore" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></span>
+      </button>
+      <a class="dround next" id="next" aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6")} />
+    </nav>
+
+    <!-- the surah strip: the fast way to any surah -->
+    <section class="surahs" id="surahs" role="dialog" aria-labelledby="sx-title" hidden>
+      <div class="sx-head">
+        <h2 id="sx-title">انتقل إلى سورة</h2>
+        <label class="sx-find field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="sx-q" type="search" placeholder="ابحث باسم السورة" autocomplete="off" enterkeyhint="go" aria-label="ابحث عن سورة باسمها أو رقمها" />
+        </label>
+        <button class="ib" id="sx-close" type="button" aria-label="إغلاق">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+      <!-- filled from /index.json the first time the strip opens (page.ts) -->
+      <div class="sx-strip" id="sx-strip" role="list"></div>
+      <p class="sx-hint">اسحب لتتصفح السور، ثم اضغط السورة لتفتحها</p>
+    </section>
+  </div>
+
+  <script type="application/json" id="page-data" set:html={JSON.stringify({ verses, names })} />
+  <VerseSheet />
+</Base>
+
+<script src="../../scripts/page.ts"></script>
