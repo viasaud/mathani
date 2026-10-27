@@ -26,44 +26,34 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 .fit .centered .mlines { justify-content: center; }
 .fit .centered .ml { flex: none; height: 1.95em; }
 
-/* two pages, open like the printed mushaf: the odd page on the right, the pair bound at a spine between them. Only
-   when the reading area is wider than it is tall, so each page stays large. */
+/* two pages, open like the printed mushaf: the odd page on the right, each in its own frame with a narrow gutter
+   between them. Only when the reading area is wider than it is tall, so each page stays large. */
 @container (min-width: 700px) and (min-aspect-ratio: 11 / 10) {
   html[data-spread="on"] .fit .stage {
-    --gap: 0px;
+    --gap: 14px; gap: var(--gap);
     width: min(100cqw, 100cqh / var(--r) * 2 + var(--gap));
     height: min(100cqh, (min(100cqw, 100cqh / var(--r) * 2 + var(--gap)) - var(--gap)) / 2 * var(--r-max));
   }
   html[data-spread="on"] .fit .mpage.facing { display: flex; }
   html[data-spread="on"] .fit .mhead { display: flex; }
   html[data-spread="on"] .fit .mfoot { display: grid; }
-  /* the spine: each page darkens a little toward the fold, the corners there are square */
-  html[data-spread="on"] .fit .mpage:first-child { border-radius: 4px 14px 14px 4px; background: linear-gradient(to left, var(--page) 86%, color-mix(in srgb, var(--page) 90%, #3a2a08)); }
-  html[data-spread="on"] .fit .mpage:last-child { border-radius: 14px 4px 4px 14px; background: linear-gradient(to right, var(--page) 86%, color-mix(in srgb, var(--page) 90%, #3a2a08)); }
-  html[data-spread="on"] .fit .stage::after { /* the crease */
-    content: ""; position: absolute; inset: 1% auto 1% 50%; width: 1px; translate: -50% 0; z-index: 1;
-    background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 18%, transparent) 15%, color-mix(in srgb, var(--ink) 18%, transparent) 85%, transparent);
-  }
 }
-/* the page: a sheet of paper in a gilt double rule */
+/* the page: a sheet of paper whose edge is its one gilt rule, with no blank margin of paper outside it. The text is
+   sized in cqi, which here measures the page's content box, so it grows into the room a margin would take while
+   every line stays exactly as full */
 .mpage {
   container-type: inline-size; position: relative; isolation: isolate;
-  background: var(--page); border-radius: 14px; box-shadow: var(--shadow-page);
+  background: var(--page); border: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent); border-radius: 8px; box-shadow: var(--shadow-page);
   /* percentages of the page's own width (cqi here would fall back to the window's), so the margins keep print proportions at any size */
-  padding: 5.5% 7.2% 4.5%;
-}
-.mpage::before {
-  content: ""; position: absolute; inset: 2.2% 2.6%; z-index: -1; pointer-events: none; border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent);
-  box-shadow: inset 0 0 0 3px var(--page), inset 0 0 0 4px color-mix(in srgb, var(--gold-2) 28%, transparent);
+  padding: 4.4% 4.6% 3.6%;
 }
 .mhead, .mfoot { position: relative; font-size: max(11px, 2.3cqi); color: var(--muted); }
+/* the running head in a muted gold: page furniture, like the star around the page number */
+.mhead { color: color-mix(in srgb, var(--gold-text) 78%, var(--muted)); }
 .mhead { display: flex; justify-content: space-between; font-family: var(--f-display); font-weight: 700; padding: 0 1cqi 1.6cqi; }
 .mfoot { display: grid; place-items: center; padding-top: 1.4cqi; }
 .mfoot span { position: relative; width: 9.6cqi; height: 9.6cqi; display: grid; place-items: center; font-size: max(11px, 2.2cqi); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .mfoot svg { position: absolute; inset: 0; color: var(--gold-2); }
-/* above 1000px the top bar already shows the surah, the page and the juz (global.css), so a single page doesn't repeat them */
-@media (min-width: 1001px) { .mhead, .mfoot { display: none; } }
 /* the star's centre ring would sit behind the digits */
 .mfoot svg circle, .read .badge svg circle { display: none; }
 .mlines { font-family: var(--pf), serif; font-size: 6cqi; line-height: 1; color: var(--ink); }
@@ -80,6 +70,8 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 .centered .ml, .ml.short { justify-content: center; gap: 0.08em; }
 /* the page stays plain like print; hovering recolors the letters (a box would cut through the tall glyphs) */
 .g { cursor: pointer; transition: color var(--t-1) ease; }
+/* the verse-end markers in gold, as printed mushafs colour them, so the eye finds where each verse ends */
+.g.e { color: var(--gold-text); }
 .g.hover, .g.sel { color: var(--accent); }
 .ayah.sel, .v.sel .v-text { color: var(--accent); }
 /* the verse a link pointed to: a glint of gold that settles back into ink */
@@ -90,7 +82,7 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 /* it reaches over the lines next to it, so it lets the pointer through to their words (hover, tap) */
 .sh-band { position: absolute; inset-inline: 6%; height: 1.95em; display: flex; justify-content: center; align-items: center; container-type: inline-size; pointer-events: none; }
 /* the heading glyph is the whole printed band, 3.246em of ink by 0.39em: sized off the band's width so the ink fills it */
-.sh-band span { position: relative; font-family: "surah-header"; font-size: calc(100cqi / 3.246); line-height: 1; color: var(--gold); }
+.sh-band span { position: relative; font-family: "surah-header"; font-size: calc(100cqi / 3.246); line-height: 1; color: var(--band, var(--gold)); }
 /* frame and name are one glyph: a second copy in ink, clipped to the box every surah name sits in, well inside the cartouche */
 .sh-band span::after { content: attr(data-h); position: absolute; inset: 0; color: var(--ink); clip-path: inset(0.36em 1.1em 0.36em 1.15em); }
 .ml.bism-line { justify-content: center; gap: 0.08em; }
@@ -127,45 +119,44 @@ html.side-arrows .dround {
 html.side-arrows #prev { right: calc(var(--side) / 2); translate: 50% -50%; }
 html.side-arrows #next { left: calc(var(--side) / 2); translate: -50% -50%; }
 html.side-arrows .dround svg { width: 26px; height: 26px; }
-/* there each arrow says what it does under it: which way, and the page it turns to */
+/* there each arrow says under it what it does, in full; the words wrap to fit the space beside the pages */
 .dcap { display: none; }
 html.side-arrows .dcap {
-  position: absolute; top: calc(100% + 10px); left: 50%; translate: -50% 0; display: flex; flex-direction: column; align-items: center;
-  white-space: nowrap; line-height: 1.35; pointer-events: none;
+  position: absolute; top: calc(100% + 12px); left: 50%; translate: -50% 0; width: max-content; max-width: calc(var(--side) - 20px);
+  display: block; text-align: center; pointer-events: none;
+  font-family: var(--f-display); font-weight: 700; font-size: 13px; line-height: 1.3; color: var(--muted); transition: color var(--t-2) ease;
 }
-.dcap b { font-family: var(--f-display); font-weight: 700; font-size: 13px; color: var(--ink-2); transition: color var(--t-2) ease; }
-.dcap-p { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.dround:not([aria-disabled]):hover .dcap b { color: var(--gold-text); }
+.dround:not([aria-disabled]):hover .dcap { color: var(--gold-text); }
 
 /* ---------- the line of surahs ----------
    No box. One line per surah, all the same size and colour but the line of the surah being read, which is gold, and
-   all 114 at once, the first on the right. The page being read and the last page flank the row like an audio player's
-   time. Above the gold line its surah's name sits in a pill, joined to the line by a short gold link: --tx is the line,
-   --lx the pill, kept inside the ruler at either end (page.ts) */
-.ruler { --lx: 50%; --tx: 50%; --wave: 40px; --line: 22px; --time: 40px; --pill: 28px; position: relative; flex: 1; min-width: 0; height: 74px; }
+   all 114 at once, the first on the right. No page numbers at its ends: the row counts surahs, not pages. Above the gold line its surah's name sits on a gold tag pointing down at it: --tx is the line, --lx the tag,
+   kept inside the ruler at either end (page.ts) */
+/* --inset keeps the end lines under the tag's straight edge, where its point can sit */
+.ruler { --lx: 50%; --tx: 50%; --wave: 40px; --line: 22px; --inset: 14px; --pill: 26px; position: relative; flex: 1; min-width: 0; height: 72px; }
 .ruler:has(.rl-track:focus-visible) { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
 .rl-label {
-  position: absolute; top: 0; left: var(--lx); translate: -50% 0; height: var(--pill); padding-inline: 13px; display: flex; align-items: center;
-  border: 1px solid var(--gold-2); border-radius: 999px; background: color-mix(in srgb, var(--gold-soft) 72%, var(--sheet));
+  position: absolute; top: 0; left: var(--lx); translate: -50% 0; z-index: 1; height: var(--pill); padding-inline: 12px; display: flex; align-items: center;
+  border-radius: 999px; background: var(--gold-2); color: #1d1607; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
   white-space: nowrap; pointer-events: none;
-  transition: left 520ms var(--e-out), border-color var(--t-2) ease, background-color var(--t-2) ease;
+  transition: left 520ms var(--e-out), background-color var(--t-2) ease, color var(--t-2) ease;
 }
-.rl-label b { font-family: var(--f-display); font-weight: 700; font-size: 14px; line-height: 1; translate: 0 -0.06em; color: var(--ink); }
-/* the link: from the pill down to the top of the gold line */
+.rl-label b { font-family: var(--f-display); font-weight: 700; font-size: 13.5px; line-height: 1; translate: 0 -0.06em; }
+/* the tag's point, under the tag and aimed at the gold line (at --tx, so it stays on the line when the tag is held
+   inside the ruler at either end) */
 .rl-link {
-  position: absolute; top: calc(var(--pill) - 1px); bottom: calc(4px + var(--wave) / 2 + var(--line) * 0.59 - 1px); left: var(--tx);
-  width: 1.5px; translate: -50% 0; border-radius: 1px; background: var(--gold-2); pointer-events: none;
+  position: absolute; top: calc(var(--pill) - 6px); left: var(--tx); width: 9px; height: 9px; translate: -50% 0; rotate: 45deg;
+  border-radius: 0 0 2px 0; background: var(--gold-2); pointer-events: none;
   transition: left 520ms var(--e-out), background-color var(--t-2) ease;
 }
-/* pointing at another surah: the pill and its link go quiet, the gold stays on the surah being read */
-.ruler.pointing .rl-label { border-color: color-mix(in srgb, var(--ink) 26%, transparent); background: var(--sheet); }
-.ruler.pointing .rl-link { background: color-mix(in srgb, var(--ink) 40%, transparent); bottom: calc(4px + var(--wave) / 2 + var(--line) * 0.57 - 1px); }
-/* the time either side of the row: the page being read (gold, at the start) and the last page */
-.rl-now, .rl-total { position: absolute; bottom: calc(4px + var(--wave) / 2); translate: 0 50%; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: none; }
-.rl-now { right: 0; color: var(--gold-text); font-weight: 700; }
-.rl-total { left: 0; color: var(--faint); }
+/* pointing at another surah: the tag turns ink and names it, the gold line stays on the surah being read */
+.ruler.pointing :is(.rl-label, .rl-link) { background: var(--ink-2); }
+.ruler.pointing .rl-label { color: var(--sheet); }
+/* following the pointer the tag keeps up with it; it glides only when the pages turn or it goes back */
+.ruler.pointing .rl-label { transition: left 70ms linear, background-color var(--t-2) ease, color var(--t-2) ease; }
+.ruler.pointing .rl-link { transition: left 70ms linear, background-color var(--t-2) ease; }
 .rl-track {
-  position: absolute; inset: auto var(--time) 4px; height: var(--wave); display: flex; align-items: center;
+  position: absolute; inset: auto var(--inset) 4px; height: var(--wave); display: flex; align-items: center;
   cursor: pointer; touch-action: none; outline: none; user-select: none;
 }
 .rl-track i { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -181,11 +172,9 @@ html.motion .rl-track i::after { animation: wave-in 900ms var(--e-out) both; ani
 @keyframes wave-in { from { transform: scaleY(0.04); } }
 .ruler.dragging :is(.rl-label, .rl-link), .ruler.dragging .rl-track i::after { transition: none; }
 /* narrower screens: finer, shorter lines, so all 114 still fit */
-@media (max-width: 900px) { .ruler { --line: 18px; --wave: 36px; --time: 32px; --pill: 26px; height: 68px; } .rl-track i::after { width: 2px; } }
-/* a phone: hairlines with clear space between them; the counters step aside */
+@media (max-width: 900px) { .ruler { --line: 18px; --wave: 36px; height: 66px; } .rl-track i::after { width: 2px; } }
+/* a phone: hairlines with clear space between them */
 @media (max-width: 640px) { .rl-track i::after { width: 1px; } }
-/* (a small inset keeps the end lines under the pill's straight edge, where its link can meet it) */
-@media (max-width: 479px) { .ruler { --time: 14px; } .rl-now, .rl-total { display: none; } }
 @media (max-width: 479px) {
   .dock { gap: 10px; }
   .dround { width: 46px; height: 46px; }
@@ -320,7 +309,7 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .surah-head { padding-top: 14px; }
   .flow { text-align: right; text-align-last: auto; }
   .reader-main { padding-top: 10px; }
-  .mpage { border-radius: 10px; }
+  .mpage { border-radius: 6px; }
   .pager strong { font-size: 19px; }
   /* the text runs edge to edge on a phone: the Quran gets the width a card's inset would take */
   .text-sheet { margin-inline: -16px; border-radius: 0; box-shadow: none; padding-inline: 20px; }

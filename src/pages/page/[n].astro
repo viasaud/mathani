@@ -32,9 +32,6 @@ const wordsOf = (pg: MushafPage) => pg.lines.flatMap((l) => (l.kind === "words" 
 
 const glyphs = wordsOf(page);
 const first = glyphs[0];
-const firstRow = getVerses(first.s)[first.a - 1];
-const juz = firstRow[2];
-const hizb = Math.ceil(firstRow[3] / 4);
 const hasBism = spread.some((pg) => pg.lines.some((l) => l.kind === "bism"));
 const hasTitle = spread.some((pg) => pg.lines.some((l) => l.kind === "surah"));
 // The printed surah headings, frame and name together, from the King Fahd Complex's surah header font (QCF_SurahHeader_COLOR,
@@ -63,16 +60,18 @@ const headOf = (pg: MushafPage) => {
 const pageVerses = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s}:${g.a}`))].map((k) => verses[k][0]);
 const names = Object.fromEntries(surahsHere.map((s) => [s, chapters[s - 1].name]));
 const surahName = chapters[first.s - 1].name;
+// The header gets no context (title, page, juz): the printed page names its surah, juz and page itself, and the dock
+// the surah, so the header just offers the index.
 const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
-// beside the pages each arrow says what it does: which way, and the page it turns to (page.ts keeps the page current)
-const cap = (word: string, to: number) => `<span class="dcap" aria-hidden="true"><b>${word}</b><span class="dcap-p">${to >= 1 && to <= 604 ? `ص ${ar(to)}` : ""}</span></span>`;
+// beside the pages each arrow says what it does, in full (page.ts says two pages in the two-page view); the page
+// numbers are left to the pages' own footers
+const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</span>`;
 ---
 
 <Base
   title={`صفحة ${ar(n)}، سورة ${surahName}`}
   description={`الصفحة ${ar(n)} من مصحف المدينة النبوية.`}
   current={first.s}
-  context={{ title: `سورة ${surahName}`, meta: [`صفحة ${ar(n)}`, `الجزء ${JUZ_NAMES[juz]}`, `الحزب ${ar(hizb)}`] }}
   reader
 >
   <Fragment slot="head">
@@ -135,23 +134,25 @@ const cap = (word: string, to: number) => `<span class="dcap" aria-hidden="true"
 
   <!-- Bottom controls across the whole width: the previous and next page at the ends, and between them the mushaf as a
        row of lines, one per surah, all alike, all 114 at once (the first on the right); the line of the surah being
-       read is gold, its name above it in a pill joined to it. The page being read and the last page flank the row like an audio player's
-       time. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). -->
+       read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). -->
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
-      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("السابقة", n - 1)} />
+      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("الصفحة السابقة")} />
       <div class="ruler" id="ruler">
         <div class="rl-label" aria-hidden="true"><b id="rl-name">سورة {surahName}</b></div>
         <span class="rl-link" aria-hidden="true"></span>
-        <span class="rl-now" id="rl-now" aria-hidden="true">{ar(n)}</span>
-        <span class="rl-total" aria-hidden="true">{ar(604)}</span>
         <div class="rl-track" id="rl-track" role="slider" tabindex="0" aria-label="انتقل إلى سورة" aria-valuemin="1" aria-valuemax="114" aria-valuenow={first.s} aria-valuetext={`سورة ${surahName}`}>
           {chapters.map((c, i) => <i data-s={c.id} data-p={startPages[i]} data-name={c.name} style={`--i:${i}`}></i>)}
         </div>
       </div>
-      <a class="dround glass next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6") + cap("التالية", n + 1)} />
+      <a class="dround glass next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6") + cap("الصفحة التالية")} />
     </nav>
   </div>
+
+  <Fragment slot="keys">
+    <div><dt>على شريط السور: سورة بعد سورة</dt><dd><kbd>←</kbd><kbd>→</kbd></dd></div>
+    <div><dt>على شريط السور: الأولى والأخيرة</dt><dd><kbd>Home</kbd><kbd>End</kbd></dd></div>
+  </Fragment>
 
   <script type="application/json" id="page-data" set:html={JSON.stringify({ verses, names })} />
   <VerseSheet />

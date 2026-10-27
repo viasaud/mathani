@@ -562,8 +562,24 @@ document.querySelectorAll<HTMLElement>("[data-open]").forEach((b) =>
 document.querySelectorAll<HTMLElement>("[data-close='drawer']").forEach((b) => b.addEventListener("click", closeDrawer));
 window.addEventListener("mushaf:palette", (e) => openPalette((e as CustomEvent<string>).detail ?? ""));
 
+// ---------- the keyboard shortcuts sheet ----------
+const keys = $<HTMLDialogElement>("keys");
+function toggleKeys() {
+  if (keys.open) return keys.close();
+  if (palette.open) palette.close();
+  closeDrawer();
+  setSettings(false, true);
+  keys.showModal();
+  keys.focus(); // the sheet itself, not its close button, so nothing wears a focus ring unasked
+}
+keys.addEventListener("click", (e) => e.target === keys && keys.close()); // a press outside the sheet
+$("keys-close").addEventListener("click", () => keys.close());
+
 document.addEventListener("keydown", (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+  if ((e.key === "?" || e.key === "؟") && !isTyping(e) && (keys.open || !document.querySelector("dialog[open]"))) {
+    e.preventDefault();
+    toggleKeys();
+  } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
     e.preventDefault();
     palette.open ? palette.close() : openPalette();
   } else if (e.key === "/" && !isTyping(e) && !palette.open) {

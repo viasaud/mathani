@@ -50,7 +50,7 @@ const map = (axis: "x" | "y", edge: number) => {
     <link rel="preload" href="/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#f4f1e8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#090e0c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0b0a08" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
@@ -99,8 +99,8 @@ const map = (axis: "x" | "y", edge: number) => {
          pages only, the reading settings each get their own. -->
     <header class="hd gutter" id="hd">
       <div class="hd-start">
-      <!-- Where you are and where you can go: the mark (home), and beside it the index. On a reading page the index is
-           opened by the surah's own title, with the page and juz beside it. -->
+      <!-- Where you are and where you can go: the mark (home), and beside it the index. On the surah text view the index
+           is opened by the surah's own title, with the page and juz beside it; the mushaf pages name those themselves. -->
       <nav class="cap glass cap-nav" aria-label="التنقل">
         <a class="brand" href="/" aria-label="مثاني، الصفحة الرئيسية">
           <span class="brand-mark" aria-hidden="true"><Star /></span>
@@ -267,8 +267,46 @@ const map = (axis: "x" | "y", edge: number) => {
         <span><kbd>↑</kbd><kbd>↓</kbd> تنقّل</span>
         <span><kbd>↵</kbd> افتح</span>
         <span><kbd>Esc</kbd> أغلق</span>
+        <span><kbd>?</kbd> الاختصارات</span>
         <span class="pal-mark"><Star />مثاني</span>
       </div>
+    </dialog>
+
+    <!-- the keyboard shortcuts, on ? (shell.ts): what works everywhere, while reading, and in the index; a page adds its
+         own rows through the "keys" slot -->
+    <dialog class="keys glass glass-panel" id="keys" aria-labelledby="keys-title" tabindex="-1">
+      <div class="keys-head">
+        <h2 id="keys-title">اختصارات لوحة المفاتيح</h2>
+        <button class="ib" id="keys-close" type="button" aria-label="إغلاق">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+      <section>
+        <h3>في كل صفحة</h3>
+        <dl>
+          <div><dt>ابحث أو انتقل</dt><dd><kbd data-mod-k>⌘K</kbd><kbd>/</kbd></dd></div>
+          <div><dt>أغلق اللوحة المفتوحة</dt><dd><kbd>Esc</kbd></dd></div>
+          <div><dt>هذه القائمة</dt><dd><kbd>?</kbd></dd></div>
+        </dl>
+      </section>
+      {reader && (
+        <section>
+          <h3>أثناء القراءة</h3>
+          <dl>
+            <div><dt>التالية</dt><dd><kbd>←</kbd></dd></div>
+            <div><dt>السابقة</dt><dd><kbd>→</kbd></dd></div>
+            <div><dt>الآية التالية والسابقة، والآية مفتوحة</dt><dd><kbd>←</kbd><kbd>→</kbd></dd></div>
+            <slot name="keys" />
+          </dl>
+        </section>
+      )}
+      <section>
+        <h3>في الفهرس</h3>
+        <dl>
+          <div><dt>تنقّل بين السور</dt><dd><kbd>↑</kbd><kbd>↓</kbd></dd></div>
+          <div><dt>افتح السورة</dt><dd><kbd>↵</kbd></dd></div>
+        </dl>
+      </section>
     </dialog>
 
     <script>

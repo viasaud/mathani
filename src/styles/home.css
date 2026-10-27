@@ -62,7 +62,7 @@
   position: relative; flex: 0 1 auto; min-width: 0; width: min(100%, 420px); height: 70px; display: flex; align-items: center; gap: 14px;
   /* liquid glass over the cover (.glass gives the blur and the lens): the gilt lattice shows through */
   padding: 6px; padding-inline-start: 9px; border-radius: 999px; border: 1px solid rgba(255, 240, 200, 0.18);
-  background: rgba(8, 22, 16, 0.24);
+  background: rgba(20, 14, 6, 0.24);
   box-shadow: 0 26px 56px -26px rgba(0, 0, 0, 0.9);
   transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-3) var(--e-out);
 }

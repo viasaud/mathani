@@ -124,7 +124,7 @@ const rlLabel = ruler.querySelector<HTMLElement>(".rl-label")!;
 const ticks = [...track.querySelectorAll<HTMLElement>("i")];
 let rulerAt = 0; // the surah whose line is lit
 let chosen = 0; // the surah the reader last picked on the ruler
-// Put the name pill over a surah's line: --tx is the line, which the pill's link drops to, and --lx the pill, kept
+// Put the name tag over a surah's line: --tx is the line, which the tag's point aims at, and --lx the tag, kept
 // inside the ruler at either end.
 function pillTo(s: number) {
   const r = ruler.getBoundingClientRect();
@@ -134,7 +134,7 @@ function pillTo(s: number) {
   ruler.style.setProperty("--tx", `${x}px`);
   ruler.style.setProperty("--lx", `${Math.min(Math.max(x, half), r.width - half)}px`);
 }
-// Light a surah's line in gold, its name in the pill above it.
+// Light a surah's line in gold, its name on the tag above it.
 function rulerTo(s: number) {
   pillTo(s);
   if (s === rulerAt) return;
@@ -147,16 +147,13 @@ function rulerTo(s: number) {
 // the page a spread opens on (the odd page, on the right), and how far one turn moves
 const firstOf = (p: number, two = spreadOn()) => (two && !(p % 2) ? p - 1 : p);
 const step = (two = spreadOn()) => (two ? 2 : 1);
-const labelFor = (page: number, two = spreadOn()) => {
-  const right = firstOf(page, two);
-  return two ? `صفحة ${ar(right)}–${ar(Math.min(right + 1, 604))}` : `صفحة ${ar(page)}`;
-};
-// at either end of the mushaf the button stays where it is, dimmed, so the controls never shift; its caption names
-// the page (or pair) it turns to
+// at either end of the mushaf the button stays where it is, dimmed, so the controls never shift; its caption says
+// what it does
+const CAPTIONS = { next: ["الصفحة التالية", "الصفحتان التاليتان"], prev: ["الصفحة السابقة", "الصفحتان السابقتان"] };
 function point(link: HTMLAnchorElement | null, page: number) {
   if (!link) return;
   const off = page < 1 || page > 604;
-  link.querySelector(".dcap-p")!.textContent = off ? "" : labelFor(page).replace("صفحة", "ص");
+  link.querySelector(".dcap")!.textContent = CAPTIONS[link.id as "next" | "prev"][spreadOn() ? 1 : 0];
   if (off) {
     link.removeAttribute("href");
     link.setAttribute("aria-disabled", "true");
@@ -173,11 +170,7 @@ function layout() {
   const first = firstOf(pageNo, two);
   point(prevLink, first - step(two));
   point(nextLink, first + step(two));
-  // where the reader is: the surah of the first page on screen, and the page (or pair) and its juz
-  const label = labelFor(pageNo, two);
   const lead = shown()[0];
-  const metaPage = document.querySelector<HTMLElement>("#ctx-meta span");
-  if (metaPage) metaPage.textContent = label;
   // where the pages leave room either side, the page arrows stand beside them, half way down, like turning a book;
   // otherwise they stay at the ends of the dock
   const sr = stage.getBoundingClientRect();
@@ -189,7 +182,6 @@ function layout() {
   const here = new Set(keys().map((k) => Number(k.split(":")[0])));
   const at = chosen && here.has(chosen) ? chosen : Number(lead.dataset.sno);
   rlName.textContent = `سورة ${ticks[at - 1].dataset.name}`;
-  $("rl-now").textContent = ar(firstOf(pageNo, two));
   rulerTo(at);
 }
 layout();
@@ -242,7 +234,6 @@ function turn(to: number, push = true) {
   wanted = to;
   if (to === firstOf(pageNo)) return layout(); // turned there and back before the page arrived
   // the bar answers at once, before the page arrives
-  $("rl-now").textContent = ar(to);
   ready(to).then(
     (doc) => to === wanted && swap(doc, to, push),
     () => to === wanted && (location.href = `/page/${to}`),
@@ -266,9 +257,6 @@ function swap(doc: Document, to: number, push: boolean) {
   articles = [...stage.querySelectorAll<HTMLElement>(".mpage")];
   [firstS, firstA] = root.dataset.first!.split(":").map(Number);
   hovered = null;
-  const title = doc.getElementById("ctx-title"), meta = doc.getElementById("ctx-meta");
-  if (title) $("ctx-title").textContent = title.textContent;
-  if (meta) $("ctx-meta").innerHTML = meta.innerHTML;
   document.title = doc.title;
   if (push) history.pushState({ page: pageNo }, "", `/page/${pageNo}`);
   layout();
@@ -361,11 +349,13 @@ function preview(s: number) {
   rlName.textContent = `سورة ${ticks[s - 1].dataset.name}`;
   rulerTo(s);
 }
+// Choosing a surah goes to where it starts. Only when that page is already showing do the pages stay put (the gold
+// line just moves to it): a surah that merely continues on these pages is still turned back to its beginning.
 function commit(s: number) {
   chosen = s;
-  const here = new Set(keys().map((k) => Number(k.split(":")[0])));
-  if (here.has(s)) layout(); // already on screen: just put the label back
-  else turn(Number(ticks[s - 1].dataset.p));
+  const start = Number(ticks[s - 1].dataset.p);
+  if (shown().some((a) => Number(a.dataset.page) === start)) layout();
+  else turn(start);
 }
 let dragging = false;
 track.addEventListener("pointerdown", (e) => {

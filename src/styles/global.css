@@ -10,7 +10,7 @@
 @font-face { font-family: "Thmanyah Serif Display"; src: url("/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 
 /* Concept: tadhhib in motion. An illuminated mushaf whose gold leaf catches the light: a dark bound cover (the home
-   page's opening and every page's foot) over warm ivory paper, mushaf-binding green for action, gold for ornament,
+   page's opening and every page's foot) over warm ivory paper, gold-brown for action, gold for ornament,
    and the eight-pointed star of the rub' al-hizb as the recurring mark. Motion is the light moving across the gilt:
    things rise, settle and glint, never bounce for show, and all of it stands down under reduced motion. */
 :root {
@@ -18,17 +18,17 @@
   --bg-2: #ebe6d8;
   --sheet: #fbf9f3;
   --page: #fdfbf4; /* the mushaf page's own paper */
-  --ink: #121a16;
-  --ink-2: #2a342f;
-  --muted: #535d57;
-  --faint: #646d67;
-  --ctl: #8a8f87; /* the edge of a switch or slider: 3:1 against the paper */
+  --ink: #1c1710;
+  --ink-2: #352d22;
+  --muted: #5d5446;
+  --faint: #6b6152;
+  --ctl: #8f8572; /* the edge of a switch or slider: 3:1 against the paper */
   --line: #e3ddce;
   --line-2: #d3cbb8;
-  --accent: #0c5443;
-  --accent-2: #137a61;
+  --accent: #74511a; /* gold-brown: the gold family, deep enough to carry white text and to mark a verse */
+  --accent-2: #93682a;
   --accent-ink: #ffffff;
-  --accent-soft: #dcebe2;
+  --accent-soft: #f1e5c8;
   --raised: #ffffff;
   --knob: #ffffff;
   --gold: #87631a;
@@ -41,10 +41,10 @@
   --shadow-page: 0 1px 1px rgba(60, 46, 16, 0.06), 0 20px 50px -26px rgba(60, 46, 16, 0.34), 0 2px 10px -4px rgba(60, 46, 16, 0.08);
 
   /* the cover: the dark binding the home page opens on and every page ends with, in every theme */
-  --cover: #06130e;
-  --cover-2: #0b2018;
+  --cover: #0d0a06;
+  --cover-2: #1e160c;
   --cover-ink: #f4ecd8;
-  --cover-muted: #b5b29e;
+  --cover-muted: #bcb09a;
   --cover-gold: #dcb767;
   --cover-line: rgba(220, 183, 103, 0.18);
 
@@ -82,7 +82,7 @@
 }
 :root[data-theme="sepia"] {
   --bg: #ebe0c8; --bg-2: #e1d4b8; --sheet: #f6eedb; --page: #f8f0de; --ink: #32281a; --ink-2: #4a3d2a; --muted: #62533b; --faint: #715f44; --ctl: #8b7b5f;
-  --line: #dacbad; --line-2: #cbb995; --accent: #4f5e2f; --accent-2: #6a7a3e; --accent-ink: #fbf6e9; --accent-soft: #e2dcc0; --raised: #fffaf0; --knob: #fffaf0;
+  --line: #dacbad; --line-2: #cbb995; --accent: #6a4818; --accent-2: #87602a; --accent-ink: #fbf6e9; --accent-soft: #e8d6ae; --raised: #fffaf0; --knob: #fffaf0;
   --glass-edge: rgba(60, 40, 10, 0.14);
   --gold: #7c5b1e; --gold-2: #a98240; --gold-3: #d4b073; --gold-soft: #ead9b2;
   --shadow-1: 0 1px 2px rgba(60, 40, 10, 0.08), 0 8px 22px -12px rgba(60, 40, 10, 0.2);
@@ -92,32 +92,34 @@
   --tj-silent: #656e6b; --tj-qalqala: #da0008; --tj-ikhfa-shafawi: #c600aa; --tj-iqlab: #16749b;
   --tj-idgham-ghunna: #127a60; --tj-idgham: #137e00; --tj-idgham-shafawi: #3d7b00; --tj-idgham-other: #6b6b6b; --tj-ghunna: #ae5009;
 }
+/* dark: warm lamp-black and charcoal, so the gold belongs to the page rather than sitting on it; the text a soft
+   ivory, a little under full contrast for long reading; --band, the surah heading bands, a calmer gold */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #090e0c; --bg-2: #0f1613; --sheet: #111a16; --page: #121c18; --ink: #e8ede9; --ink-2: #c9d2cd; --muted: #9faba4; --faint: #8b9791; --ctl: #66756e;
-    --line: #1d2925; --line-2: #2a3833; --accent: #e6c886; --accent-2: #f3dca6; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #22302b; --knob: #e8ede9;
+    --bg: #0b0a08; --bg-2: #12100c; --sheet: #17140f; --page: #1a1712; --ink: #e6dcc6; --ink-2: #cbc1ab; --muted: #a49a86; --faint: #8f8676; --ctl: #6f6759;
+    --line: #28231b; --line-2: #383126; --accent: #e6c886; --accent-2: #f3dca6; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #2c271f; --knob: #e6dcc6;
     --glass-edge: rgba(255, 255, 255, 0.12); --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.75);
-    --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold);
+    --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold); --band: #a98a4b;
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -12px rgba(0, 0, 0, 0.6);
     --shadow-2: 0 30px 70px -26px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4);
     --shadow-page: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 60px -28px rgba(0, 0, 0, 0.9);
-    --cover: #040a08; --cover-2: #0a1814; --cover-line: rgba(220, 183, 103, 0.14);
-    --tj-silent: #7d8783; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
+    --cover: #090705; --cover-2: #18120a; --cover-line: rgba(220, 183, 103, 0.14);
+    --tj-silent: #8a8478; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
     --tj-qalqala: #ff6b70; --tj-ikhfa: #d27be6; --tj-ikhfa-shafawi: #f07ddd; --tj-iqlab: #5fd0ff;
     --tj-idgham-ghunna: #46c9a5; --tj-idgham: #5ccc4a; --tj-idgham-shafawi: #9ade4f; --tj-idgham-other: #a9a9a9; --tj-ghunna: #ffa25e;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #090e0c; --bg-2: #0f1613; --sheet: #111a16; --page: #121c18; --ink: #e8ede9; --ink-2: #c9d2cd; --muted: #9faba4; --faint: #8b9791; --ctl: #66756e;
-  --line: #1d2925; --line-2: #2a3833; --accent: #e6c886; --accent-2: #f3dca6; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #22302b; --knob: #e8ede9;
+  --bg: #0b0a08; --bg-2: #12100c; --sheet: #17140f; --page: #1a1712; --ink: #e6dcc6; --ink-2: #cbc1ab; --muted: #a49a86; --faint: #8f8676; --ctl: #6f6759;
+  --line: #28231b; --line-2: #383126; --accent: #e6c886; --accent-2: #f3dca6; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #2c271f; --knob: #e6dcc6;
   --glass-edge: rgba(255, 255, 255, 0.12); --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.75);
-  --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold);
+  --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold); --band: #a98a4b;
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -12px rgba(0, 0, 0, 0.6);
   --shadow-2: 0 30px 70px -26px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-page: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 60px -28px rgba(0, 0, 0, 0.9);
-  --cover: #040a08; --cover-2: #0a1814; --cover-line: rgba(220, 183, 103, 0.14);
-  --tj-silent: #7d8783; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
+  --cover: #090705; --cover-2: #18120a; --cover-line: rgba(220, 183, 103, 0.14);
+  --tj-silent: #8a8478; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
   --tj-qalqala: #ff6b70; --tj-ikhfa: #d27be6; --tj-ikhfa-shafawi: #f07ddd; --tj-iqlab: #5fd0ff;
   --tj-idgham-ghunna: #46c9a5; --tj-idgham: #5ccc4a; --tj-idgham-shafawi: #9ade4f; --tj-idgham-other: #a9a9a9; --tj-ghunna: #ffa25e;
   color-scheme: dark;
@@ -282,6 +284,8 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
   display: inline-flex; align-items: center; gap: 9px; height: 44px; padding-inline: 6px 13px; border-radius: 22px; overflow: hidden; white-space: nowrap; flex: none;
   transition: width var(--t-3) var(--e-out), padding var(--t-3) var(--e-out), opacity var(--t-2) ease, filter var(--t-2) ease, background-color var(--t-1) ease;
 }
+/* on a reading page the mark stands alone (no «مثاني»): an even circle around it */
+.brand:not(:has(.brand-name)) { width: 44px; padding-inline: 5px; }
 .brand:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
 .brand:active { transform: scale(0.95); }
 .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; }
@@ -313,21 +317,22 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 .hd-title { min-width: 0; line-height: 44px; translate: 0 -0.07em; font-family: var(--f-display); font-weight: 700; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hd-meta { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
 .hd-meta span {
-  font-size: 12.5px; line-height: 1.5; color: var(--muted); background: color-mix(in srgb, var(--ink) 6%, transparent); border-radius: 999px;
+  font-size: 13px; font-weight: 500; line-height: 1.5; color: var(--ink-2); background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius: 999px;
   padding: 3px 11px; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
-.cap-search { gap: 10px; min-width: 240px; padding-inline: 16px 7px; font-size: 14.5px; color: var(--muted); }
+.cap-search { gap: 10px; min-width: 240px; padding-inline: 16px 11.5px; font-size: 14.5px; color: var(--muted); }
 .cap-search svg { color: var(--gold); flex: none; transition: transform var(--t-3) var(--e-spring); }
 .cap-search:hover svg { transform: rotate(-12deg) scale(1.1); }
 .cap-search span { flex: 1; text-align: start; }
 /* hovering an option tints just that option (over paper glass or the cover's dark glass alike) */
 .cap-search:hover, .cap-circle:hover { color: var(--ink); background-image: linear-gradient(color-mix(in srgb, var(--ink) 10%, transparent), color-mix(in srgb, var(--ink) 10%, transparent)); }
-.cap-search kbd { border-radius: 999px; padding: 5px 9px; background: transparent; }
+/* the key sits as far from the capsule's end as from its top and bottom, so its round end follows the capsule's */
+.cap-search kbd { border-radius: 999px; border-bottom-width: 1px; padding: 5px 9px; background: transparent; }
 
 /* over the cover the controls turn to dark glass */
 html.on-cover .hd .cap.glass {
   --ink: var(--cover-ink); --ink-2: var(--cover-ink); --muted: var(--cover-muted); --gold: var(--cover-gold); --line-2: rgba(244, 236, 216, 0.2); --sheet: transparent;
-  background: rgba(8, 22, 16, 0.22); border-color: rgba(255, 240, 200, 0.16);
+  background: rgba(20, 14, 6, 0.22); border-color: rgba(255, 240, 200, 0.16);
   box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
 }
 
@@ -372,10 +377,10 @@ html[data-mode="pages"] .set-text, html:not([data-mode="pages"]) .set-pages { di
 .theme-opt i::after { content: ""; position: absolute; inset: 13px 10px auto; height: 4px; border-radius: 4px; background: currentColor; opacity: 0.5; box-shadow: 0 8px 0 currentColor; }
 .theme-opt:hover i { transform: translateY(-2px); }
 .theme-opt:active { transform: scale(0.94); }
-.theme-opt[data-theme-btn="auto"] i { background: linear-gradient(135deg, #fbf9f3 50%, #111a16 50%); color: #8a958f; }
-.theme-opt[data-theme-btn="light"] i { background: #fbf9f3; color: #121a16; }
+.theme-opt[data-theme-btn="auto"] i { background: linear-gradient(135deg, #fbf9f3 50%, #17140f 50%); color: #8f8676; }
+.theme-opt[data-theme-btn="light"] i { background: #fbf9f3; color: #1c1710; }
 .theme-opt[data-theme-btn="sepia"] i { background: #f6eedb; color: #32281a; }
-.theme-opt[data-theme-btn="dark"] i { background: #111a16; color: #e8ede9; }
+.theme-opt[data-theme-btn="dark"] i { background: #17140f; color: #e6dcc6; }
 .theme-opt[aria-pressed="true"] { color: var(--ink); font-weight: 500; }
 .theme-opt[aria-pressed="true"] i { box-shadow: 0 0 0 2px var(--sheet), 0 0 0 4px var(--gold-2); transform: translateY(-1px); }
 .settings .seg { width: 100%; background: color-mix(in srgb, var(--ink) 6%, transparent); }
@@ -601,6 +606,29 @@ input[type="range"].range {
 .pal-foot { display: flex; align-items: center; gap: 18px; padding: 12px 22px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
 .pal-foot span { display: inline-flex; align-items: center; gap: 6px; }
 .pal-foot kbd { border-radius: 7px; }
+
+/* ---------- the keyboard shortcuts: a glass sheet on ? (shell.ts), grouped, each action with its keys ---------- */
+.keys {
+  width: min(460px, calc(100vw - 24px)); max-height: min(80vh, 640px); max-height: min(80dvh, 640px); margin: auto; padding: 6px 24px 18px;
+  border: 1px solid var(--glass-edge); border-radius: 28px; color: var(--ink); overflow-y: auto; overscroll-behavior: contain; box-shadow: var(--shadow-2);
+  display: none; opacity: 0; transform: translateY(-12px) scale(0.97); filter: blur(6px);
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease,
+    display var(--t-2) allow-discrete, overlay var(--t-2) allow-discrete;
+}
+.keys[open] { display: block; opacity: 1; transform: none; filter: none; }
+.keys:focus { outline: none; }
+@starting-style { .keys[open] { opacity: 0; transform: translateY(-12px) scale(0.97); filter: blur(6px); } }
+.keys::backdrop { background: transparent; }
+.keys-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 2px; }
+.keys-head h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 19px; }
+.keys-head .ib { margin-inline-end: -10px; }
+.keys h3 { margin: 16px 0 4px; font-size: 12.5px; font-weight: 700; color: var(--gold-text); }
+.keys dl { margin: 0; }
+.keys dl > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 0; }
+.keys dl > div + div { border-top: 1px solid var(--line); }
+.keys dt { font-size: 14.5px; color: var(--ink-2); }
+.keys dd { margin: 0; flex: none; display: flex; gap: 6px; }
+.keys kbd { min-width: 30px; padding: 6px 8px; border-radius: 8px; font-size: 12px; text-align: center; color: var(--ink-2); }
 .pal-mark { margin-inline-start: auto; font-family: var(--f-display); font-weight: 700; font-size: 14px; color: var(--gold-text); }
 .pal-mark svg { width: 16px; height: 16px; color: var(--gold-2); }
 .pal-empty { padding: 40px 20px 32px; text-align: center; color: var(--muted); font-size: 14.5px; display: grid; justify-items: center; gap: 6px; animation: rise var(--t-3) var(--e-out) both; }
