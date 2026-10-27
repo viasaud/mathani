@@ -45,7 +45,9 @@ const loadFont = (a: HTMLElement) => {
 
 // Lines are justified edge to edge like the printed page; short lines (the last surahs on the final page, for
 // instance) are centered. The layout data also files a few words one line too early (pages 27 and 177, for
-// example), making a line overflow next to a short one; such a word is moved back to where it belongs.
+// example), making a line overflow next to a short one; such a word is moved back to where it belongs. The text is
+// sized so a typical line is nearly full; the few lines that would still run past the edge are set a little smaller,
+// each by just what it needs.
 function balance(page: HTMLElement) {
   const lines = [...page.querySelectorAll<HTMLElement>(".ml")].filter((l) => l.querySelector(".g"));
   const fill = (line: HTMLElement) => {
@@ -61,6 +63,11 @@ function balance(page: HTMLElement) {
     for (let moves = 0; moves < 3 && fill(line) > typical + 0.05 && fill(next) < typical - 0.05; moves++) {
       next.prepend(line.lastElementChild!);
     }
+  }
+  for (const line of lines) {
+    line.style.removeProperty("--fit");
+    const f = fill(line);
+    if (f > 0.995) line.style.setProperty("--fit", (0.99 / f).toFixed(4));
   }
   lines.forEach((line) => line.classList.toggle("short", fill(line) < typical * 0.85));
 }
@@ -212,11 +219,20 @@ function ready(p: number) {
   let doc = readied.get(p);
   if (!doc) {
     doc = fetchPage(p).then((d) => {
+      // Only faces this document lacks are added, one rule each. Defining a face again (the surah heading font comes
+      // with every page) would make a fresh, unloaded face the one in use, and everything set in it would blank out
+      // until it loaded: the heading bands blinked after each turn onwards, when the next pair is fetched ahead.
       const families = new Set<string>();
+      const known = new Set([...document.fonts].map((f) => f.family.replace(/^"|"$/g, "")));
       d.head.querySelectorAll("style").forEach((st) => {
-        if (!st.textContent!.includes("@font-face")) return;
-        for (const m of st.textContent!.matchAll(/font-family:"([^"]+)"/g)) families.add(m[1]);
-        if (![...document.head.querySelectorAll("style")].some((x) => x.textContent === st.textContent)) document.head.append(st.cloneNode(true));
+        for (const rule of st.textContent!.match(/@font-face\{[^}]*\}/g) ?? []) {
+          const family = /font-family:"([^"]+)"/.exec(rule)?.[1];
+          if (!family) continue;
+          families.add(family);
+          if (known.has(family)) continue;
+          known.add(family);
+          document.head.append(Object.assign(document.createElement("style"), { textContent: rule }));
+        }
       });
       const fonts = Promise.all([...families].map((f) => document.fonts.load(`24px "${f}"`).catch(() => {})));
       return Promise.race([fonts, new Promise((r) => setTimeout(r, FONT_WAIT))]).then(() => d);
@@ -229,7 +245,7 @@ function ready(p: number) {
 let wanted = pageNo;
 
 function turn(to: number, push = true) {
-  to = Math.min(604, Math.max(1, firstOf(to)));
+  to = firstOf(Math.min(604, Math.max(1, to))); // held to the mushaf first, so past the last pair is the last pair itself
   if (to === firstOf(wanted)) return;
   wanted = to;
   if (to === firstOf(pageNo)) return layout(); // turned there and back before the page arrived
@@ -246,7 +262,7 @@ function swap(doc: Document, to: number, push: boolean) {
   if (!next || !json) return void (location.href = `/page/${to}`);
   closeSheet();
   const from = pageNo;
-  const ghost = moving() ? leaving() : null;
+  const before = moving() ? snapshot() : null;
   root.dataset.page = next.dataset.page;
   root.dataset.first = next.dataset.first;
   stage.style.transform = "";
@@ -260,37 +276,102 @@ function swap(doc: Document, to: number, push: boolean) {
   document.title = doc.title;
   if (push) history.pushState({ page: pageNo }, "", `/page/${pageNo}`);
   layout();
-  if (ghost) turning(ghost, pageNo > from ? 1 : -1);
+  if (before) flip(before, pageNo > from ? 1 : -1);
   remember(firstS, firstA);
   afterShown(prefetch);
 }
 
 // ---------- the turn itself ----------
-// The page being left is copied and laid over the new one, then each goes its way: onwards (in a right-to-left
-// mushaf, the next page lies to the left) the old page slides off to the right and the new one comes in from the left.
-// A turn pressed while one is still running cuts it short, so a fast flick never queues.
-let ghostEl: HTMLElement | null = null;
-function leaving() {
-  ghostEl?.remove();
-  gsap.killTweensOf(articles);
-  const g = stage.cloneNode(true) as HTMLElement;
-  g.classList.add("ghost");
-  g.removeAttribute("data-fit-shift");
-  g.setAttribute("aria-hidden", "true");
-  Object.assign(g.style, { left: `${stage.offsetLeft}px`, top: `${stage.offsetTop}px`, width: `${stage.offsetWidth}px`, height: `${stage.offsetHeight}px`, transform: "" });
-  root.append(g);
-  return (ghostEl = g);
-}
-function turning(g: HTMLElement, dir: 1 | -1) {
-  const shift = Math.min(90, stage.offsetWidth * 0.12);
-  gsap.to(g, {
-    x: dir * shift, rotationY: dir * -8, opacity: 0, filter: "blur(3px)", duration: 0.42, ease: "power2.in",
-    transformOrigin: dir > 0 ? "100% 50%" : "0% 50%",
-    onComplete: () => { g.remove(); if (ghostEl === g) ghostEl = null; },
+// In the open pair a page turns like the printed book's: onwards (the next page lies to the left in a right-to-left
+// mushaf) the left page lifts at the spine and turns over onto the right, its back the new right page, uncovering
+// the new left page beneath it; back, the right page turns over onto the left. A single page has no spine to turn
+// on, so it moves like a sheet off a stack: onwards it slides away to the right and the next rises from just beneath
+// it; back, the one before slides in from the right over it and the page being left settles into the stack. Nothing
+// fades and no light or shadow moves with it. A turn pressed while one is running finishes it at once, so a fast
+// flick never queues.
+type Shot = HTMLElement[];
+// The pages on screen, copied before they are replaced, each with its size, padding and edges fixed so a copy lays out
+// and looks exactly as the page did: the padding is a share of the pair's width, not of its own, and in the pair a
+// page has no rule and square corners at the spine.
+function copyOf(a: HTMLElement) {
+  const c = a.cloneNode(true) as HTMLElement;
+  const cs = getComputedStyle(a);
+  c.classList.remove("facing");
+  c.classList.add("ready"); // a turn waits for the new page's fonts, so its copy shows its words, not the placeholder
+  c.removeAttribute("aria-label");
+  c.setAttribute("aria-hidden", "true");
+  c.querySelectorAll(".hover, .sel").forEach((g) => g.classList.remove("hover", "sel"));
+  Object.assign(c.style, {
+    width: `${a.offsetWidth}px`, height: `${a.offsetHeight}px`, padding: cs.padding, borderWidth: cs.borderWidth, borderRadius: cs.borderRadius,
   });
-  gsap.fromTo(articles,
-    { x: -dir * shift, opacity: 0, rotationY: dir * 6 },
-    { x: 0, opacity: 1, rotationY: 0, duration: 0.6, ease: "power3.out", delay: 0.06, stagger: { each: 0.05, from: dir > 0 ? "end" : "start" }, clearProps: "transform,opacity" });
+  return c;
+}
+const snapshot = (): Shot => shown().map(copyOf);
+
+let flipEnd: (() => void) | null = null;
+function flip(old: Shot, dir: 1 | -1) {
+  flipEnd?.();
+  const now = shown(); // reading order: in the pair, the right page first
+  const box = root.getBoundingClientRect();
+  const place = (el: HTMLElement, at: HTMLElement) => {
+    const r = at.getBoundingClientRect();
+    Object.assign(el.style, { left: `${r.left - box.left}px`, top: `${r.top - box.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    return el;
+  };
+  const layer = document.createElement("div");
+  layer.className = "flip";
+  layer.setAttribute("aria-hidden", "true");
+  root.append(layer);
+
+  const pair = now.length === 2 && old.length === 2;
+  if (!pair) return slide(old[0], now[0], dir, layer, place);
+  layer.append(Object.assign(place(document.createElement("i"), stage), { className: "flip-spine" }));
+  // which side turns: onwards the left page (index 1), back the right (index 0)
+  const side = dir > 0 ? 1 : 0;
+  const leaf = place(document.createElement("div"), now[side]);
+  leaf.className = "leaf";
+  // the page being left on the other side stays until the leaf lands on it
+  layer.append(place(Object.assign(old[1 - side], { className: old[1 - side].className + " still" }), now[1 - side]));
+  const back = copyOf(now[1 - side]);
+  back.classList.add("back");
+  leaf.append(old[side], back);
+  layer.append(leaf);
+  gsap.set(leaf, { transformOrigin: dir > 0 ? "100% 50%" : "0% 50%", rotationY: 0 }); // hinged at the spine
+  const tween = gsap.to(leaf, { rotationY: dir > 0 ? 180 : -180, duration: 0.9, ease: "power2.inOut", onComplete: () => flipEnd?.() });
+  flipEnd = () => {
+    tween.kill();
+    layer.remove();
+    flipEnd = null;
+  };
+}
+
+// One page, a sheet off the stack. The sheet on top moves the width of the screen; the one beneath sits a little
+// smaller, as if lower in the stack, and comes up to full size.
+function slide(old: HTMLElement, now: HTMLElement, dir: 1 | -1, layer: HTMLElement, place: (el: HTMLElement, at: HTMLElement) => HTMLElement) {
+  const away = innerWidth - now.getBoundingClientRect().left + 24; // clear of the screen's right edge
+  const depth = 0.94;
+  let top: gsap.core.Tween, beneath: gsap.core.Tween;
+  if (dir > 0) {
+    // the page being left slides off to the right; the new one, already in place, rises beneath it
+    layer.append(place(old, now));
+    top = gsap.to(old, { x: away, rotation: 2.5, transformOrigin: "0% 100%", duration: 0.55, ease: "power2.in" });
+    beneath = gsap.fromTo(now, { scale: depth }, { scale: 1, duration: 0.6, ease: "power1.inOut", clearProps: "transform" }); // rising as it is uncovered
+  } else {
+    // the page before slides in from the right over the page being left, which settles back beneath it
+    const leaving = place(Object.assign(old, { className: old.className + " still" }), now);
+    const coming = place(copyOf(now), now);
+    layer.append(leaving, coming);
+    beneath = gsap.to(leaving, { scale: depth, duration: 0.6, ease: "power2.out" });
+    top = gsap.fromTo(coming, { x: away, rotation: 2.5, transformOrigin: "0% 100%" }, { x: 0, rotation: 0, duration: 0.6, ease: "power3.out" });
+  }
+  top.eventCallback("onComplete", () => flipEnd?.());
+  flipEnd = () => {
+    top.kill();
+    beneath.kill();
+    gsap.set(now, { clearProps: "transform" });
+    layer.remove();
+    flipEnd = null;
+  };
 }
 
 // The neighbours wait until the pages on screen have their fonts, so on a slow connection they never compete with

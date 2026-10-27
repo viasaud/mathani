@@ -8,7 +8,7 @@ html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
 body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--gold-soft) 55%, transparent), transparent 70%), var(--bg); }
 .reader-main.fit {
   --r: 1.6; --r-max: 1.8; /* the printed 1 : 1.6, let out to 1 : 1.8 on tall phone screens so the lines breathe instead of leaving bands of empty paper */
-  --dock-h: 90px; /* the space the bottom controls take */
+  --dock-h: 82px; /* the space the bottom controls take, with as much clear space above the surah tag as below the header */
   position: relative; perspective: 1600px;
   height: calc(100dvh - var(--top)); padding-block: 0 calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
   display: grid; place-items: center; container-type: size;
@@ -17,8 +17,14 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
   position: relative; width: min(100cqw, 100cqh / var(--r)); height: min(100cqh, min(100cqw, 100cqh / var(--r)) * var(--r-max));
   display: flex; transition: transform var(--t-3) var(--e-out);
 }
-/* the page that was showing, leaving as the next one arrives (page.ts) */
-.stage.ghost { position: absolute; pointer-events: none; z-index: 2; transition: none; }
+/* the page turn (page.ts): over the new pages, a leaf that turns on the spine (its face the page being left, its back
+   the page it lands as) and, where the leaf will land, the page being left until it is covered */
+.flip { position: absolute; inset: 0; z-index: 2; pointer-events: none; perspective: 2400px; }
+.flip .mpage { position: absolute; margin: 0; box-shadow: none; } /* no shadow or glow travels with a turning page */
+.leaf { position: absolute; transform-style: preserve-3d; will-change: transform; }
+.leaf > .mpage { inset: 0; backface-visibility: hidden; }
+.leaf > .back { transform: rotateY(180deg); }
+.flip-spine { position: absolute; z-index: 4; }
 .fit .mpage { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
 .fit .mpage.facing { display: none; }
 .fit .mlines { flex: 1; display: flex; flex-direction: column; }
@@ -26,16 +32,25 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 .fit .centered .mlines { justify-content: center; }
 .fit .centered .ml { flex: none; height: 1.95em; }
 
-/* two pages, open like the printed mushaf: the odd page on the right, each in its own frame with a narrow gutter
-   between them. Only when the reading area is wider than it is tall, so each page stays large. */
+/* two pages, open like the printed mushaf: the odd page on the right, the pair bound at one spine, so a page turns
+   over on it (page.ts). Each page keeps its gilt rule on its three outer sides and a single gilt line marks the
+   spine. Only when the reading area is wider than it is tall, so each page stays large. */
 @container (min-width: 700px) and (min-aspect-ratio: 11 / 10) {
   html[data-spread="on"] .fit .stage {
-    --gap: 14px; gap: var(--gap);
+    --gap: 0px;
     width: min(100cqw, 100cqh / var(--r) * 2 + var(--gap));
     height: min(100cqh, (min(100cqw, 100cqh / var(--r) * 2 + var(--gap)) - var(--gap)) / 2 * var(--r-max));
   }
   html[data-spread="on"] .fit .mpage.facing { display: flex; }
   html[data-spread="on"] .fit .mhead { display: flex; }
+  html[data-spread="on"] .fit .mpage:first-child { border-left-width: 0; border-radius: 0 8px 8px 0; } /* the right page */
+  html[data-spread="on"] .fit .mpage:last-child { border-right-width: 0; border-radius: 8px 0 0 8px; } /* the left page */
+  html[data-spread="on"] .fit :is(.stage, .flip-spine)::after { /* the spine; over a turn too, so it never changes under it */
+    content: ""; position: absolute; inset: 0 auto 0 50%; z-index: 1; width: 1px; translate: -50% 0; pointer-events: none;
+    /* solid: the pages' gilt rule as it shows on the paper, so a second line over it during a turn can't change its
+       colour */
+    background: color-mix(in srgb, var(--gold-2) 55%, var(--page));
+  }
   html[data-spread="on"] .fit .mfoot { display: grid; }
 }
 /* the page: a sheet of paper whose edge is its one gilt rule, with no blank margin of paper outside it. The text is
@@ -49,15 +64,20 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 }
 .mhead, .mfoot { position: relative; font-size: max(11px, 2.3cqi); color: var(--muted); }
 /* the running head in a muted gold: page furniture, like the star around the page number */
-.mhead { color: color-mix(in srgb, var(--gold-text) 78%, var(--muted)); }
-.mhead { display: flex; justify-content: space-between; font-family: var(--f-display); font-weight: 700; padding: 0 1cqi 1.6cqi; }
+/* flush with the first and last words of the lines below */
+.mhead {
+  display: flex; justify-content: space-between; font-family: var(--f-display); font-weight: 700; padding: 0 0 1.6cqi;
+  color: color-mix(in srgb, var(--gold-text) 78%, var(--muted));
+}
 .mfoot { display: grid; place-items: center; padding-top: 1.4cqi; }
 .mfoot span { position: relative; width: 9.6cqi; height: 9.6cqi; display: grid; place-items: center; font-size: max(11px, 2.2cqi); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .mfoot svg { position: absolute; inset: 0; color: var(--gold-2); }
 /* the star's centre ring would sit behind the digits */
 .mfoot svg circle, .read .badge svg circle { display: none; }
-.mlines { font-family: var(--pf), serif; font-size: 6cqi; line-height: 1; color: var(--ink); }
-.ml { display: flex; justify-content: space-between; align-items: center; height: 1.95em; white-space: nowrap; }
+.mlines { font-family: var(--pf), serif; font-size: 6.2cqi; line-height: 1; color: var(--ink); }
+.ml { --fit: 1; display: flex; justify-content: space-between; align-items: center; height: 1.95em; white-space: nowrap; }
+/* a line whose words would run past the edge is set a touch smaller, by itself (--fit, page.ts) */
+.ml .g { font-size: calc(var(--fit) * 1em); }
 .centered .mlines { padding-block: 2cqi; font-size: 8cqi; }
 /* while the page font is still loading the glyphs are invisible: faint rules stand in, with light running along them */
 .mpage:not(.ready) .ml:not(.sh) {
@@ -92,7 +112,8 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
    the surah being read (its number in the rub' star) with the page and juz under it and, along its foot, how far
    into the mushaf this page is. Tapping the surah opens the surah strip. */
 .dock-row {
-  position: fixed; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 40; padding-inline: 12px;
+  position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0px); z-index: 40; /* the lines stand on the screen's edge */
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); /* the header's gutter */
   display: flex; justify-content: center; pointer-events: none;
   transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-spring);
 }
@@ -114,7 +135,7 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
    centred in the space there (--side, set by page.ts): the previous page on the right, the next on the left, as the
    mushaf reads */
 html.side-arrows .dround {
-  position: fixed; top: calc(var(--top) + (100dvh - var(--top) - 90px) / 2); /* 90px: the dock (--dock-h) */ translate: 0 -50%; width: 58px; height: 58px; z-index: 41;
+  position: fixed; top: calc(var(--top) + (100dvh - var(--top) - 82px) / 2); /* 82px: the dock (--dock-h) */ translate: 0 -50%; width: 58px; height: 58px; z-index: 41;
 }
 html.side-arrows #prev { right: calc(var(--side) / 2); translate: 50% -50%; }
 html.side-arrows #next { left: calc(var(--side) / 2); translate: -50% -50%; }
@@ -133,7 +154,7 @@ html.side-arrows .dcap {
    all 114 at once, the first on the right. No page numbers at its ends: the row counts surahs, not pages. Above the gold line its surah's name sits on a gold tag pointing down at it: --tx is the line, --lx the tag,
    kept inside the ruler at either end (page.ts) */
 /* --inset keeps the end lines under the tag's straight edge, where its point can sit */
-.ruler { --lx: 50%; --tx: 50%; --wave: 40px; --line: 22px; --inset: 14px; --pill: 26px; position: relative; flex: 1; min-width: 0; height: 72px; }
+.ruler { --lx: 50%; --tx: 50%; --wave: 40px; --line: 22px; --inset: 14px; --pill: 26px; position: relative; flex: 1; min-width: 0; height: 62px; }
 .ruler:has(.rl-track:focus-visible) { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
 .rl-label {
   position: absolute; top: 0; left: var(--lx); translate: -50% 0; z-index: 1; height: var(--pill); padding-inline: 12px; display: flex; align-items: center;
@@ -156,12 +177,13 @@ html.side-arrows .dcap {
 .ruler.pointing .rl-label { transition: left 70ms linear, background-color var(--t-2) ease, color var(--t-2) ease; }
 .ruler.pointing .rl-link { transition: left 70ms linear, background-color var(--t-2) ease; }
 .rl-track {
-  position: absolute; inset: auto var(--inset) 4px; height: var(--wave); display: flex; align-items: center;
+  position: absolute; inset: auto var(--inset) 0; height: var(--wave); display: flex; align-items: flex-end;
   cursor: pointer; touch-action: none; outline: none; user-select: none;
 }
-.rl-track i { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
+/* each line stands on the bottom edge of the screen and grows upward */
+.rl-track i { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
 .rl-track i::after {
-  content: ""; width: 3px; height: var(--line); border-radius: 3px; background: color-mix(in srgb, var(--ink) 22%, transparent);
+  content: ""; width: 3px; height: var(--line); border-radius: 3px 3px 0 0; transform-origin: bottom; background: color-mix(in srgb, var(--ink) 22%, transparent);
   transition: background-color var(--t-2) ease, transform 320ms var(--e-out);
 }
 /* the surah being read */
@@ -172,7 +194,7 @@ html.motion .rl-track i::after { animation: wave-in 900ms var(--e-out) both; ani
 @keyframes wave-in { from { transform: scaleY(0.04); } }
 .ruler.dragging :is(.rl-label, .rl-link), .ruler.dragging .rl-track i::after { transition: none; }
 /* narrower screens: finer, shorter lines, so all 114 still fit */
-@media (max-width: 900px) { .ruler { --line: 18px; --wave: 36px; height: 66px; } .rl-track i::after { width: 2px; } }
+@media (max-width: 900px) { .ruler { --line: 18px; --wave: 36px; height: 58px; } .rl-track i::after { width: 2px; } }
 /* a phone: hairlines with clear space between them */
 @media (max-width: 640px) { .rl-track i::after { width: 1px; } }
 @media (max-width: 479px) {
