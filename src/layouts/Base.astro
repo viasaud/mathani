@@ -25,6 +25,16 @@ const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية وتفسير"]];
 const year = new Date().getFullYear();
+// The lens at the rims of the liquid glass: two displacement maps, stretched over each control. Red moves pixels
+// sideways near the left and right edges, green up and down near the top and bottom; mid-grey (128) leaves the middle
+// untouched. Used by backdrop-filter: url(#lg) where the browser supports it (html.lg, global.css).
+// edge: how far in from each rim the bending reaches, in percent of the control's width or height.
+const map = (axis: "x" | "y", edge: number) => {
+  const [x2, y2, c] = axis === "x" ? ["1", "0", (v: number) => `rgb(${v},0,0)`] : ["0", "1", (v: number) => `rgb(0,${v},0)`];
+  const stops = [[0, 255], [edge, 128], [100 - edge, 128], [100, 0]];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" preserveAspectRatio="none"><linearGradient id="g" x2="${x2}" y2="${y2}">${stops.map(([o, v]) => `<stop offset="${o}%" stop-color="${c(v)}"/>`).join("")}</linearGradient><rect width="100" height="100" fill="url(#g)"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
 ---
 
 <!doctype html>
@@ -59,6 +69,11 @@ const year = new Date().getFullYear();
         d.dataset.tajweed = g("tajweed") || "off";
         d.style.setProperty("--qsize", (g("size") || (innerWidth < 500 ? 25 : 28)) + "px");
       } catch (e) {}
+      // the glass bends what is under its rims where the browser can do that in a backdrop (Chromium)
+      try {
+        var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
+        if (brands.some(function (b) { return b.brand === "Chromium"; }) && !matchMedia("(prefers-reduced-transparency: reduce)").matches) document.documentElement.classList.add("lg");
+      } catch (e) {}
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
         document.documentElement.classList.add("motion");
         setTimeout(function () { if (!window.__motion) document.documentElement.classList.remove("motion"); }, 2500);
@@ -67,32 +82,56 @@ const year = new Date().getFullYear();
     <slot name="head" />
   </head>
   <body class={reader ? "is-reader" : undefined}>
+    <svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <!-- capsules: the bend reaches well in from the ends; panels: only a thin band at each rim, so what lies under
+           their options is not distorted -->
+      {[["lg", 16, 34, 22], ["lg-panel", 5, 5, 16]].map(([id, ex, ey, scale]) => (
+        <filter id={id} x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feImage href={map("x", ex as number)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx" />
+          <feImage href={map("y", ey as number)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="my" />
+          <feComposite in="mx" in2="my" operator="arithmetic" k2="1" k3="1" result="map" />
+          <feDisplacementMap in="SourceGraphic" in2="map" scale={scale} xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      ))}
+    </svg>
     <!-- The controls float on their own layer above the content: capsules sized to what they hold, never a bar.
-         Navigation (home, and on a reading page the surah title, which opens the index), search and settings
-         each get their own. -->
+         Navigation (home, and on a reading page the surah title, which opens the index), search and, on the reading
+         pages only, the reading settings each get their own. -->
     <header class="hd gutter" id="hd">
+      <div class="hd-start">
+      <!-- Where you are and where you can go: the mark (home), and beside it the index. On a reading page the index is
+           opened by the surah's own title, with the page and juz beside it. -->
       <nav class="cap glass cap-nav" aria-label="التنقل">
-        <a class="cap-btn brand" href="/" aria-label="مثاني، الصفحة الرئيسية">
-          <Star />
+        <a class="brand" href="/" aria-label="مثاني، الصفحة الرئيسية">
+          <span class="brand-mark" aria-hidden="true"><Star /></span>
           {!reader && <span class="brand-name">مثاني</span>}
         </a>
+        <span class="cap-div" aria-hidden="true"></span>
         {reader && context ? (
-          <button class="cap-title" data-open="drawer" aria-haspopup="dialog" title="فهرس السور">
-            <strong class="hd-title" id="ctx-title">{context.title}</strong>
-            <span class="hd-meta" id="ctx-meta">{context.meta?.map((m) => <span>{m}</span>)}</span>
+          <button class="cap-title" data-open="drawer" aria-haspopup="dialog" aria-controls="drawer" title="فهرس السور">
+            <span class="cap-title-text">
+              <strong class="hd-title" id="ctx-title">{context.title}</strong>
+              <span class="hd-meta" id="ctx-meta">{context.meta?.map((m) => <span>{m}</span>)}</span>
+            </span>
+            <svg class="cap-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
           </button>
         ) : (
-          <button class="cap-btn" data-open="drawer" aria-haspopup="dialog" aria-label="فهرس السور" title="فهرس السور">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M10 12h10M4 18h16"></path></svg>
+          <button class="cap-index" data-open="drawer" aria-haspopup="dialog" aria-controls="drawer">
+            <!-- a list read right to left: the marks at the start (right), the lines running left -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h11M4 12h11M4 18h11"></path><path d="m19.5 4.5 1.5 1.5-1.5 1.5-1.5-1.5zM19.5 10.5l1.5 1.5-1.5 1.5-1.5-1.5zM19.5 16.5l1.5 1.5-1.5 1.5-1.5-1.5z" fill="currentColor" stroke-width="1"></path></svg>
+            <span>الفهرس</span>
           </button>
         )}
       </nav>
-      <div class="hd-actions">
+      <!-- search and jump, always there, right after the navigation -->
         <button class="cap glass cap-search" data-open="palette" aria-label="ابحث أو انتقل">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
           <span>ابحث أو انتقل</span>
           <kbd data-mod-k>⌘K</kbd>
         </button>
+      </div>
+      <div class="hd-actions">
+        {reader && (
         <div class="settings-wrap">
           <button class="cap glass cap-circle" id="settings-btn" aria-expanded="false" aria-controls="settings" aria-label="إعدادات القراءة" title="إعدادات القراءة">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path class="k1" d="M4 7h9M17 7h3"></path><path class="k2" d="M4 17h3M11 17h9"></path><circle class="k1" cx="15" cy="7" r="2"></circle><circle class="k2" cx="9" cy="17" r="2"></circle></svg>
@@ -137,6 +176,7 @@ const year = new Date().getFullYear();
             </label>
           </div>
         </div>
+        )}
       </div>
     </header>
 
@@ -165,47 +205,69 @@ const year = new Date().getFullYear();
 
     <div class="scrim" id="scrim"></div>
 
-    <aside class="drawer glass glass-panel" id="drawer" role="dialog" aria-modal="true" aria-label="فهرس السور" data-current={current} aria-hidden="true" tabindex="-1">
-      <div class="drawer-head">
-        <div class="drawer-title">
-          <h2>الفهرس</h2>
-          <button class="ib" data-close="drawer" aria-label="إغلاق الفهرس">
+    <!-- The index: every surah, or the thirty juz, with where the reader stopped at the top. A panel from the right
+         on wide screens, a sheet from the bottom on phones. Filled by shell.ts. -->
+    <aside class="drawer glass glass-panel" id="drawer" role="dialog" aria-modal="true" aria-labelledby="ix-title" data-current={current} aria-hidden="true" tabindex="-1">
+      <div class="ix-head">
+        <div class="ix-top">
+          <div>
+            <h2 id="ix-title">الفهرس</h2>
+            <p class="ix-count" id="ix-count" aria-live="polite">مئة وأربع عشرة سورة</p>
+          </div>
+          <button class="ib ix-close" data-close="drawer" aria-label="إغلاق الفهرس">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
           </button>
         </div>
-        <label class="field">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-          <input id="ix-q" type="search" placeholder="اسم السورة أو رقمها" autocomplete="off" aria-label="ابحث عن سورة" />
+        <label class="ix-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="ix-q" type="search" placeholder="اسم السورة أو رقمها" autocomplete="off" enterkeyhint="go" aria-label="ابحث عن سورة" />
         </label>
-        <div class="drawer-tabs">
-          <div class="seg seg-sm" role="group" aria-label="ترتيب الفهرس">
+        <div class="ix-bar">
+          <!-- a .seg, so motion.ts slides one marker between the tabs; here it is drawn as a gold underline -->
+          <div class="seg ix-tabs" role="group" aria-label="ترتيب الفهرس">
             <button data-ix="surah" aria-pressed="true">السور</button>
             <button data-ix="juz" aria-pressed="false">الأجزاء</button>
           </div>
-          <div class="drawer-place" role="group" aria-label="مكان النزول">
-            <button class="chip" data-ix-place="m" aria-pressed="false">مكية</button>
-            <button class="chip" data-ix-place="d" aria-pressed="false">مدنية</button>
+          <div class="ix-place" role="group" aria-label="مكان النزول">
+            <button data-ix-place="m" aria-pressed="false">مكية</button>
+            <button data-ix-place="d" aria-pressed="false">مدنية</button>
           </div>
         </div>
       </div>
-      <nav class="drawer-list" id="ix-list"><div class="ix-empty">جارٍ تحميل الفهرس…</div></nav>
+      <nav class="ix-list" id="ix-list" aria-label="السور"><div class="ix-empty">جارٍ تحميل الفهرس…</div></nav>
+      <div class="ix-foot">
+        <a href="/search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          البحث في الآيات
+        </a>
+        <button type="button" data-open="palette">
+          انتقل إلى صفحة أو آية
+          <kbd data-mod-k>⌘K</kbd>
+        </button>
+      </div>
     </aside>
 
-    <dialog class="palette" id="palette" aria-label="ابحث أو انتقل">
+    <!-- Search and jump: a surah, a page, a juz, a verse number or any word. Before typing it offers where the reader
+         stopped and four places most people go; examples to try sit under the field. Filled by shell.ts. -->
+    <dialog class="palette glass glass-panel" id="palette" aria-label="ابحث أو انتقل">
       <div class="pal-input">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-        <input id="pal-q" type="search" placeholder="سورة أو صفحة أو ٢:٢٥٥ أو كلمة" autocomplete="off" enterkeyhint="go" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-label="ابحث أو انتقل" aria-controls="pal-results" />
-        <kbd>Esc</kbd>
+        <span class="pal-lens" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+        <input id="pal-q" type="search" placeholder="سورة، صفحة، آية أو كلمة" autocomplete="off" enterkeyhint="go" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-label="ابحث أو انتقل" aria-controls="pal-results" />
         <button class="ib pal-close" id="pal-close" type="button" aria-label="إغلاق">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
         </button>
       </div>
+      <div class="pal-try" role="group" aria-label="أمثلة">
+        <span>جرّب</span>
+        {["٢:٢٥٥", "صفحة ٥٠٠", "جزء ٣٠", "الصبر"].map((t) => <button type="button" data-try={t}>{t}</button>)}
+      </div>
       <div class="pal-results" id="pal-results" aria-label="النتائج"></div>
       <div class="sr-only" id="pal-live" role="status" aria-live="polite"></div>
-      <div class="pal-foot">
-        <span><kbd>↑</kbd><kbd>↓</kbd> للتنقل</span>
-        <span><kbd>↵</kbd> للفتح</span>
-        <span><kbd data-mod-k>⌘K</kbd> للفتح من أي مكان</span>
+      <div class="pal-foot" aria-hidden="true">
+        <span><kbd>↑</kbd><kbd>↓</kbd> تنقّل</span>
+        <span><kbd>↵</kbd> افتح</span>
+        <span><kbd>Esc</kbd> أغلق</span>
+        <span class="pal-mark"><Star />مثاني</span>
       </div>
     </dialog>
 

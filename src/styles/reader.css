@@ -4,7 +4,6 @@
    controls, so it never scrolls. Every page has the printed proportion, 1 : 1.6, and its fifteen lines share the
    height evenly. */
 html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
-body:has(#mushaf.fit)::after { display: none; } /* nothing scrolls under the dock here */
 /* a soft pool of light behind the page, so the sheet sits on the desk rather than floats in nothing */
 body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--gold-soft) 55%, transparent), transparent 70%), var(--bg); }
 .reader-main.fit {
@@ -86,9 +85,10 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 /* the verse a link pointed to: a glint of gold that settles back into ink */
 .flash { animation: glint 1.6s var(--e-out); }
 @keyframes glint { 0%, 35% { color: var(--gold); text-shadow: 0 0 18px color-mix(in srgb, var(--gold) 55%, transparent); } }
-/* the heading stands taller than its line, so the line below is pushed down to leave clear space under it */
-.ml.sh { justify-content: center; margin-bottom: 0.35em; }
-.sh-band { position: absolute; inset-inline: 6%; height: 1.95em; display: flex; justify-content: center; align-items: center; container-type: inline-size; }
+/* the heading stands taller than its line, so the lines either side are held off to leave clear space around it */
+.ml.sh { justify-content: center; margin-block: 0.45em 0.35em; }
+/* it reaches over the lines next to it, so it lets the pointer through to their words (hover, tap) */
+.sh-band { position: absolute; inset-inline: 6%; height: 1.95em; display: flex; justify-content: center; align-items: center; container-type: inline-size; pointer-events: none; }
 /* the heading glyph is the whole printed band, 3.246em of ink by 0.39em: sized off the band's width so the ink fills it */
 .sh-band span { position: relative; font-family: "surah-header"; font-size: calc(100cqi / 3.246); line-height: 1; color: var(--gold); }
 /* frame and name are one glyph: a second copy in ink, clipped to the box every surah name sits in, well inside the cartouche */
@@ -105,99 +105,96 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
   transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-spring);
 }
 .dock-row > * { pointer-events: auto; }
-.dock { width: min(500px, 100%); display: flex; align-items: center; gap: 12px; }
+/* the whole width: the page arrows at the far ends, the ruler of surahs filling everything between */
+.dock { width: 100%; display: flex; align-items: center; gap: 12px; }
+/* the page arrows: two quiet glass circles alike, so the gold line between them is the one bright thing */
 .dround {
-  position: relative; flex: none; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: var(--ink);
+  position: relative; flex: none; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2);
 }
-.dround svg { width: 26px; height: 26px; stroke-width: 2.4; transition: transform var(--t-3) var(--e-spring); }
-.dround.next { background: var(--accent); border-color: transparent; color: var(--accent-ink); box-shadow: 0 14px 30px -14px var(--accent), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
-.dround:hover { background: color-mix(in srgb, var(--ink) 6%, var(--glass-solid)); }
-.dround.next:hover { background: color-mix(in srgb, #fff 10%, var(--accent)); }
+.dround svg { width: 22px; height: 22px; stroke-width: 2.2; transition: transform var(--t-3) var(--e-spring); }
+.dround:hover { background-image: linear-gradient(color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 8%, transparent)); }
 #prev:hover svg { transform: translateX(3px); }
 #next:hover svg { transform: translateX(-3px); }
 .dround:active { transform: scale(0.9); }
 .dround[aria-disabled] { opacity: 0.35; cursor: default; filter: none; }
 .dround:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
-
-.dsurah {
-  position: relative; overflow: hidden;
-  flex: 1; min-width: 0; height: 58px; padding-inline: 8px 14px; border-radius: 29px; display: flex; align-items: center; gap: 10px; text-align: start;
+/* with room beside the pages (page.ts), the arrows leave the dock and stand either side of the pages, half way down and
+   centred in the space there (--side, set by page.ts): the previous page on the right, the next on the left, as the
+   mushaf reads */
+html.side-arrows .dround {
+  position: fixed; top: calc(var(--top) + (100dvh - var(--top) - 90px) / 2); /* 90px: the dock (--dock-h) */ translate: 0 -50%; width: 58px; height: 58px; z-index: 41;
 }
-.dsurah:hover, .dsurah[aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 5%, var(--glass-solid)); }
-.dsurah:active { transform: scale(0.97); }
-.dsurah:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 29px; }
-.dstar { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }
-.dstar svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); transition: transform 800ms var(--e-spring); }
-.dsurah:hover .dstar svg { transform: rotate(90deg); }
-.dstar svg circle { display: none; }
-.dstar b { position: relative; font: 700 14px var(--f-ui); color: var(--ink); font-variant-numeric: tabular-nums; }
-.dtxt { flex: 1; min-width: 0; display: grid; gap: 1px; line-height: 1.25; }
-.dtxt b { font-family: var(--f-display); font-weight: 700; font-size: 19px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dtxt small { font-size: 13.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
-.dmore { flex: none; color: var(--muted); display: grid; transition: transform var(--t-3) var(--e-spring); }
-.dsurah[aria-expanded="true"] .dmore { transform: rotate(180deg); }
-/* how far into the mushaf: a gold hairline along the foot, from the right */
-.dprog { position: absolute; inset: auto 22px 0; height: 2px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--line-2) 50%, transparent); }
-.dprog i { display: block; height: 100%; background: linear-gradient(to left, var(--gold-2), var(--gold-3)); transform-origin: right; transform: scaleX(var(--p, 0)); transition: transform 700ms var(--e-out); }
-@media (max-width: 479px) { /* on a phone the surah, page and juz need the room */
-  .dmore { display: none; }
+html.side-arrows #prev { right: calc(var(--side) / 2); translate: 50% -50%; }
+html.side-arrows #next { left: calc(var(--side) / 2); translate: -50% -50%; }
+html.side-arrows .dround svg { width: 26px; height: 26px; }
+/* there each arrow says what it does under it: which way, and the page it turns to */
+.dcap { display: none; }
+html.side-arrows .dcap {
+  position: absolute; top: calc(100% + 10px); left: 50%; translate: -50% 0; display: flex; flex-direction: column; align-items: center;
+  white-space: nowrap; line-height: 1.35; pointer-events: none;
+}
+.dcap b { font-family: var(--f-display); font-weight: 700; font-size: 13px; color: var(--ink-2); transition: color var(--t-2) ease; }
+.dcap-p { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dround:not([aria-disabled]):hover .dcap b { color: var(--gold-text); }
+
+/* ---------- the line of surahs ----------
+   No box. One line per surah, all the same size and colour but the line of the surah being read, which is gold, and
+   all 114 at once, the first on the right. The page being read and the last page flank the row like an audio player's
+   time. Above the gold line its surah's name sits in a pill, joined to the line by a short gold link: --tx is the line,
+   --lx the pill, kept inside the ruler at either end (page.ts) */
+.ruler { --lx: 50%; --tx: 50%; --wave: 40px; --line: 22px; --time: 40px; --pill: 28px; position: relative; flex: 1; min-width: 0; height: 74px; }
+.ruler:has(.rl-track:focus-visible) { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
+.rl-label {
+  position: absolute; top: 0; left: var(--lx); translate: -50% 0; height: var(--pill); padding-inline: 13px; display: flex; align-items: center;
+  border: 1px solid var(--gold-2); border-radius: 999px; background: color-mix(in srgb, var(--gold-soft) 72%, var(--sheet));
+  white-space: nowrap; pointer-events: none;
+  transition: left 520ms var(--e-out), border-color var(--t-2) ease, background-color var(--t-2) ease;
+}
+.rl-label b { font-family: var(--f-display); font-weight: 700; font-size: 14px; line-height: 1; translate: 0 -0.06em; color: var(--ink); }
+/* the link: from the pill down to the top of the gold line */
+.rl-link {
+  position: absolute; top: calc(var(--pill) - 1px); bottom: calc(4px + var(--wave) / 2 + var(--line) * 0.59 - 1px); left: var(--tx);
+  width: 1.5px; translate: -50% 0; border-radius: 1px; background: var(--gold-2); pointer-events: none;
+  transition: left 520ms var(--e-out), background-color var(--t-2) ease;
+}
+/* pointing at another surah: the pill and its link go quiet, the gold stays on the surah being read */
+.ruler.pointing .rl-label { border-color: color-mix(in srgb, var(--ink) 26%, transparent); background: var(--sheet); }
+.ruler.pointing .rl-link { background: color-mix(in srgb, var(--ink) 40%, transparent); bottom: calc(4px + var(--wave) / 2 + var(--line) * 0.57 - 1px); }
+/* the time either side of the row: the page being read (gold, at the start) and the last page */
+.rl-now, .rl-total { position: absolute; bottom: calc(4px + var(--wave) / 2); translate: 0 50%; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: none; }
+.rl-now { right: 0; color: var(--gold-text); font-weight: 700; }
+.rl-total { left: 0; color: var(--faint); }
+.rl-track {
+  position: absolute; inset: auto var(--time) 4px; height: var(--wave); display: flex; align-items: center;
+  cursor: pointer; touch-action: none; outline: none; user-select: none;
+}
+.rl-track i { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
+.rl-track i::after {
+  content: ""; width: 3px; height: var(--line); border-radius: 3px; background: color-mix(in srgb, var(--ink) 22%, transparent);
+  transition: background-color var(--t-2) ease, transform 320ms var(--e-out);
+}
+/* the surah being read */
+.rl-track i.now::after { background: var(--gold-2); transform: scaleY(1.18); }
+@media (hover: hover) { .rl-track i:not(.now):hover::after { background: color-mix(in srgb, var(--ink) 60%, transparent); transform: scaleY(1.14); } }
+/* the lines rise from their centre when the page opens, from the first surah onwards */
+html.motion .rl-track i::after { animation: wave-in 900ms var(--e-out) both; animation-delay: calc(var(--i) * 5ms + 150ms); }
+@keyframes wave-in { from { transform: scaleY(0.04); } }
+.ruler.dragging :is(.rl-label, .rl-link), .ruler.dragging .rl-track i::after { transition: none; }
+/* narrower screens: finer, shorter lines, so all 114 still fit */
+@media (max-width: 900px) { .ruler { --line: 18px; --wave: 36px; --time: 32px; --pill: 26px; height: 68px; } .rl-track i::after { width: 2px; } }
+/* a phone: hairlines with clear space between them; the counters step aside */
+@media (max-width: 640px) { .rl-track i::after { width: 1px; } }
+/* (a small inset keeps the end lines under the pill's straight edge, where its link can meet it) */
+@media (max-width: 479px) { .ruler { --time: 14px; } .rl-now, .rl-total { display: none; } }
+@media (max-width: 479px) {
   .dock { gap: 10px; }
-  .dround { width: 54px; height: 54px; }
-  .dsurah { height: 54px; padding-inline: 6px 12px; gap: 8px; }
-  .dstar { width: 38px; height: 38px; }
-  .dstar b { font-size: 13px; }
-  .dtxt small { font-size: 13px; }
+  .dround { width: 46px; height: 46px; }
+  .rl-label b { font-size: 13px; }
 }
 @media (max-width: 359px) {
   .dock { gap: 8px; }
-  .dround { width: 50px; height: 50px; }
-  .dstar, .dmore { display: none; }
-  .dsurah { padding-inline: 12px; }
+  .dround { width: 42px; height: 42px; }
 }
-
-/* ---------- the surah strip ---------- */
-.surahs {
-  position: absolute; bottom: calc(100% + 12px); left: 50%; translate: -50% 0; width: min(840px, calc(100vw - 16px));
-  padding: 14px 0 12px; border-radius: 30px; transform-origin: 50% 100%;
-  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease, display var(--t-2) allow-discrete;
-}
-.surahs[hidden] { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(4px); }
-@starting-style { .surahs:not([hidden]) { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(4px); } }
-.sx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-inline: 18px 10px; margin-bottom: 6px; }
-.sx-head h2 { margin: 0; flex: none; font-family: var(--f-display); font-weight: 700; font-size: 21px; }
-.sx-find { position: relative; flex: 1; min-width: 0; }
-.sx-find.field input { height: 46px; border-radius: 23px; background: var(--bg); }
-.sx-head .ib { width: 46px; height: 46px; }
-@media (max-width: 419px) { /* narrow phones: the search takes its own full row under the title */
-  .sx-head h2 { flex: 1; }
-  .sx-find { order: 3; flex-basis: 100%; margin-inline-end: 8px; }
-}
-/* the row: snaps a card to the middle; the side padding lets the first and last surah reach the middle too */
-.sx-strip { perspective: 900px;
-  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
-  padding: 10px calc(50% - 70px) 6px; scrollbar-width: none;
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-}
-.sx-strip::-webkit-scrollbar { display: none; }
-/* each card: the surah's number in the star, its name large, and where it begins. --d is the distance from the
-   middle (0 to 1, set while scrolling), so the cards ease back like a dial */
-.sx-card {
-  --d: 1; flex: none; width: 140px; scroll-snap-align: center; display: grid; justify-items: center; gap: 4px; padding: 14px 8px 12px;
-  border-radius: 24px; background: var(--bg); border: 1px solid var(--line); text-align: center;
-  transform: scale(calc(1 - var(--d) * 0.14)) rotateY(calc(var(--d) * var(--side, 0) * 1deg)); opacity: calc(1 - var(--d) * 0.45);
-  transition: border-color var(--t-1) ease, background-color var(--t-1) ease;
-}
-.sx-card[aria-current] { background: var(--gold-soft); border-color: var(--gold-2); }
-.sx-card:hover { border-color: var(--gold-2); }
-.sx-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 24px; }
-.sx-star { position: relative; width: 46px; height: 46px; display: grid; place-items: center; }
-.sx-star svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold); transform: rotate(calc(var(--d) * 90deg)); }
-.sx-star svg circle { display: none; }
-.sx-star b { position: relative; font: 700 15px var(--f-ui); color: var(--ink); }
-.sx-card strong { font-family: var(--f-display); font-weight: 700; font-size: 24px; line-height: 1.3; color: var(--ink); white-space: nowrap; }
-.sx-card small { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
-.sx-card .sx-pg { color: var(--muted); }
-.sx-hint { margin: 4px 0 0; text-align: center; font-size: 14px; color: var(--ink-2); }
 
 /* a sheet or panel rising from the bottom takes the controls' place there */
 body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(24px); pointer-events: none; }
@@ -207,7 +204,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .read { --gold-text: color-mix(in srgb, var(--gold) 62%, var(--ink)); }
 /* how far into the surah: a gold hairline along the top edge that stays when the header slides away */
 .progress { position: fixed; inset: env(safe-area-inset-top, 0px) 0 auto; z-index: 45; height: 3px; pointer-events: none; }
-.progress i { display: block; height: 100%; background: linear-gradient(to left, var(--gold-2), var(--gold-3)); transform-origin: right; transform: scaleX(var(--p, 0)); box-shadow: 0 0 10px var(--gold-2); }
+.progress i { display: block; height: 100%; background: var(--gold-2); transform-origin: right; transform: scaleX(var(--p, 0)); box-shadow: 0 0 10px var(--gold-2); }
 .read { width: 100%; max-width: 860px; margin: 0 auto; padding-block: 24px 96px; }
 .surah-head { display: grid; gap: 16px; justify-items: center; padding: 28px 0 8px; text-align: center; }
 /* a gold band between double rules with a diamond at each end, as the surah titles are set in print; the rules draw
@@ -252,7 +249,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .ayah:hover { color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
 .end { color: var(--gold); white-space: nowrap; padding-inline: 2px; }
 .page-break { display: flex; align-items: center; gap: 14px; color: var(--muted); font-family: var(--f-ui); font-size: 13px; margin: 18px 0; line-height: 1; font-variant-numeric: tabular-nums; }
-.page-break::before, .page-break::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2), transparent); }
+.page-break::before, .page-break::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .sajda { font-family: var(--f-ui); font-size: 12.5px; color: var(--gold-text); border: 1px solid var(--gold-2); border-radius: 999px; padding: 1px 9px; vertical-align: middle; margin-inline: 4px; line-height: 1.6; }
 .rub { color: var(--gold); }
 .verses { display: grid; }
@@ -326,7 +323,6 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .mpage { border-radius: 10px; }
   .pager strong { font-size: 19px; }
   /* the text runs edge to edge on a phone: the Quran gets the width a card's inset would take */
-  body:has(.text-sheet) { --fade: var(--page); }
   .text-sheet { margin-inline: -16px; border-radius: 0; box-shadow: none; padding-inline: 20px; }
   .text-sheet::before { display: none; }
   .v-tools { margin-inline-end: -12px; }

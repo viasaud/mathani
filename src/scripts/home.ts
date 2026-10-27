@@ -1,14 +1,12 @@
-// The home page: the cover (its live gilt and the header's tone over it), the continue-reading card and its ring,
-// the juz the reader is in, the surah filter and the back-to-top button.
+// The home page: the cover (its live gilt and the header's tone over it), the continue button and the line under it
+// saying where the reader stopped, the juz they are in, the surah filter and the back-to-top button.
 import { gsap } from "gsap";
-import { Flip } from "gsap/Flip";
 import { ar } from "../lib/arabic";
 import { warmPage } from "../lib/page-fonts";
 import { lastReadHref, load, type LastRead } from "../lib/storage";
 import { whenIdle } from "../lib/ui";
 import { moving } from "./motion";
 
-gsap.registerPlugin(Flip);
 const root = document.documentElement;
 
 // ---------- the cover ----------
@@ -22,75 +20,101 @@ tone();
 import("./cover-gl").then((m) => m.start(document.getElementById("cover-gl") as HTMLCanvasElement, cover)).catch(() => {});
 
 // ---------- continue reading ----------
+// One pill: for a new reader «ابدأ القراءة, من سورة الفاتحة» with a star; for a returning one «تابع القراءة» over
+// the place they stopped, with a ring showing how far into the mushaf that is.
+// The place is read again whenever the page is shown: coming Back restores this page as it was when left, and the
+// reader may have moved on in another tab since.
 const card = document.getElementById("continue") as HTMLAnchorElement;
 const names: string[] = JSON.parse(card.dataset.names!);
 const startPages: number[] = JSON.parse(card.dataset.pages!);
 const juzPages: number[] = JSON.parse(card.dataset.juzPages!);
-const last = load<LastRead | null>("last", null);
-let progress = 0;
-let page = 0;
-if (last && names[last.s - 1]) {
-  page = last.p ?? startPages[last.s - 1];
-  progress = page / 604;
+const ring = card.querySelector<HTMLElement>(".resume-ring")!;
+const ringBar = document.getElementById("ring-bar")!;
+const ringPct = document.getElementById("ring-pct")!;
+const cta = document.getElementById("continue-cta")!;
+const whereName = document.getElementById("where-name")!;
+const tiles = document.querySelectorAll<HTMLElement>(".juz-tile");
+let shownKey = "";
+let fill: gsap.core.Tween | undefined;
+
+function paintContinue(animate: boolean) {
+  const last = load<LastRead | null>("last", null);
+  const key = JSON.stringify(last);
+  if (key === shownKey) return;
+  shownKey = key;
+  fill?.kill();
+  tiles.forEach((t) => t.classList.remove("here"));
+  if (!last || !names[last.s - 1]) {
+    card.href = "/page/1";
+    cta.textContent = "ابدأ القراءة";
+    whereName.textContent = "من سورة الفاتحة";
+    card.setAttribute("aria-label", "ابدأ القراءة من سورة الفاتحة");
+    ring.classList.remove("on");
+    return;
+  }
+  const page = last.p ?? startPages[last.s - 1];
+  const juz = Math.max(0, juzPages.findLastIndex((p) => p <= page)); // 0-based
+  const pct = Math.max(1, Math.round((page / 604) * 100));
   card.href = lastReadHref(last);
-  document.getElementById("continue-eyebrow")!.textContent = "تابع من حيث توقفت";
-  document.getElementById("continue-title-text")!.textContent = `سورة ${names[last.s - 1]}`;
-  document.getElementById("continue-sub")!.textContent = `الآية ${ar(last.a)}، الصفحة ${ar(page)} من ٦٠٤`;
-  document.getElementById("continue-cta")!.textContent = "تابع القراءة";
-  // a returning reader sees the percentage; a new one keeps the star
-  document.getElementById("ring-pct")!.hidden = false;
-  card.querySelector(".ring-star")?.remove();
+  cta.textContent = "تابع القراءة";
+  whereName.textContent = `سورة ${names[last.s - 1]}، الآية ${ar(last.a)}`;
+  card.setAttribute("aria-label", `تابع القراءة: سورة ${names[last.s - 1]}، الآية ${ar(last.a)}، ${ar(pct)}٪ من المصحف`);
+  ring.classList.add("on");
+  // the ring fills and the percentage counts up with it
+  const run = { p: animate && moving() ? 0 : 1 };
+  const paint = () => {
+    ringBar.style.strokeDashoffset = String(100 - run.p * pct);
+    ringPct.textContent = `${ar(Math.round(run.p * pct))}٪`;
+  };
+  paint();
+  if (run.p < 1) fill = gsap.to(run, { p: 1, duration: 1.6, ease: "power3.inOut", delay: shownOnce ? 0.2 : 1.2, onUpdate: paint });
+  // the juz the reader is in, and how far into it
+  const to = (juzPages[juz + 1] ?? 605) - 1;
+  const here = tiles[juz];
+  here.classList.add("here");
+  here.style.setProperty("--f", Math.min(1, (page - juzPages[juz] + 1) / (to - juzPages[juz] + 1)).toFixed(3));
 }
+let shownOnce = false;
+paintContinue(true);
+shownOnce = true;
+addEventListener("pageshow", (e) => e.persisted && paintContinue(true));
+addEventListener("storage", (e) => e.key === "mushaf:last" && paintContinue(true));
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && paintContinue(true));
 // the likeliest next tap: once the home page is idle, the continue-reading page's fonts download
 whenIdle(() => {
   const m = /^\/page\/(\d{1,3})/.exec(card.getAttribute("href")!);
   if (m) warmPage(Number(m[1]));
 });
-const pct = Math.round(progress * 100);
-const ringBar = document.getElementById("ring-bar")!;
-const ringPct = document.getElementById("ring-pct")!;
-const target = 100 - Math.max(progress * 100, last ? 1.5 : 0);
-if (last) ringBar.closest(".ring")?.classList.add("on");
-if (last && moving()) {
-  // the ring fills and the percentage counts up with it, once the card has risen
-  const fill = { p: 0 };
-  const paint = () => {
-    ringBar.style.strokeDashoffset = String(100 - fill.p * (100 - target));
-    ringPct.textContent = `${ar(Math.round(fill.p * pct))}٪`;
-  };
-  paint();
-  gsap.to(fill, { p: 1, duration: 1.8, ease: "power3.inOut", delay: 1.1, onUpdate: paint });
-} else {
-  if (last) ringPct.textContent = `${ar(pct)}٪`;
-  ringBar.style.strokeDashoffset = String(target);
-}
 
-// the juz the reader is in
-if (page) {
-  const j = juzPages.findLastIndex((p) => p <= page);
-  document.querySelectorAll(".juz-tile")[j]?.classList.add("here");
-}
-
-// ---------- surah filter: the cards that stay glide to their new places ----------
+// ---------- surah filter: the chosen surahs settle into view ----------
 const grid = document.getElementById("surah-grid")!;
 const cards = [...grid.querySelectorAll<HTMLElement>(".surah-card")];
 const count = document.getElementById("surah-count")!;
+// The grid takes its new shape at once; the cards on screen then come into focus from a soft blur, one after another.
+// Nothing slides across the grid (with so many cards changing places that cannot look calm), and nothing fades. A
+// press finishes the previous settle first, every card is let in at rest (some may still be waiting to rise into
+// view), and the cards' own CSS transitions stand aside meanwhile (.settling), so the two never pull against each other.
+let settle: gsap.core.Tween | null = null;
 document.querySelectorAll<HTMLElement>("[data-filter]").forEach((chip) =>
   chip.addEventListener("click", () => {
     const want = chip.dataset.filter;
+    if (chip.getAttribute("aria-pressed") === "true") return;
     document.querySelectorAll("[data-filter]").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
-    // only the cards near the screen take part; the rest just move
-    const near = cards.filter((c) => {
-      if (c.hidden) return true;
-      const r = c.getBoundingClientRect();
-      return r.bottom > -innerHeight && r.top < innerHeight * 2;
-    });
-    const state = moving() ? Flip.getState(near, { props: "opacity" }) : null;
+    settle?.progress(1).kill();
+    gsap.killTweensOf(cards);
+    gsap.set(cards, { opacity: 1, clearProps: "transform,filter" });
+    cards.forEach((c) => c.classList.add("in"));
     cards.forEach((c) => (c.hidden = !!want && c.dataset.place !== want));
-    if (state) {
-      Flip.from(state, {
-        targets: near, duration: 0.65, ease: "power3.inOut", stagger: 0.006, absolute: false, nested: false,
-        onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.5, delay: 0.15, ease: "power3.out", clearProps: "transform" }),
+    if (moving()) {
+      const inView = cards.filter((c) => {
+        if (c.hidden) return false;
+        const r = c.getBoundingClientRect();
+        return r.bottom > 0 && r.top < innerHeight;
+      });
+      grid.classList.add("settling");
+      settle = gsap.fromTo(inView, { y: 10, scale: 0.97, filter: "blur(8px)" }, {
+        y: 0, scale: 1, filter: "blur(0px)", duration: 0.45, ease: "power3.out", stagger: 0.018, clearProps: "transform,filter",
+        onComplete: () => grid.classList.remove("settling"),
       });
     }
     const shown = cards.filter((c) => !c.hidden).length;

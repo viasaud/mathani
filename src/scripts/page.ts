@@ -117,9 +117,33 @@ stage.addEventListener("click", (e) => {
 // ---------- one page or two: the turns move a whole spread, and the page number names both pages ----------
 const prevLink = document.getElementById("prev") as HTMLAnchorElement | null;
 const nextLink = document.getElementById("next") as HTMLAnchorElement | null;
-const dockNum = $("dock-num");
-const dockSub = $("dock-sub");
-const dockSno = $("dock-sno");
+const rlName = $("rl-name");
+const ruler = $("ruler");
+const track = $("rl-track");
+const rlLabel = ruler.querySelector<HTMLElement>(".rl-label")!;
+const ticks = [...track.querySelectorAll<HTMLElement>("i")];
+let rulerAt = 0; // the surah whose line is lit
+let chosen = 0; // the surah the reader last picked on the ruler
+// Put the name pill over a surah's line: --tx is the line, which the pill's link drops to, and --lx the pill, kept
+// inside the ruler at either end.
+function pillTo(s: number) {
+  const r = ruler.getBoundingClientRect();
+  const b = ticks[s - 1].getBoundingClientRect();
+  const x = b.left + b.width / 2 - r.left;
+  const half = rlLabel.offsetWidth / 2;
+  ruler.style.setProperty("--tx", `${x}px`);
+  ruler.style.setProperty("--lx", `${Math.min(Math.max(x, half), r.width - half)}px`);
+}
+// Light a surah's line in gold, its name in the pill above it.
+function rulerTo(s: number) {
+  pillTo(s);
+  if (s === rulerAt) return;
+  ticks[rulerAt - 1]?.classList.remove("now");
+  ticks[s - 1].classList.add("now");
+  rulerAt = s;
+  track.setAttribute("aria-valuenow", String(s));
+  track.setAttribute("aria-valuetext", `سورة ${ticks[s - 1].dataset.name}`);
+}
 // the page a spread opens on (the odd page, on the right), and how far one turn moves
 const firstOf = (p: number, two = spreadOn()) => (two && !(p % 2) ? p - 1 : p);
 const step = (two = spreadOn()) => (two ? 2 : 1);
@@ -127,10 +151,12 @@ const labelFor = (page: number, two = spreadOn()) => {
   const right = firstOf(page, two);
   return two ? `صفحة ${ar(right)}–${ar(Math.min(right + 1, 604))}` : `صفحة ${ar(page)}`;
 };
-// at either end of the mushaf the button stays where it is, dimmed, so the controls never shift
+// at either end of the mushaf the button stays where it is, dimmed, so the controls never shift; its caption names
+// the page (or pair) it turns to
 function point(link: HTMLAnchorElement | null, page: number) {
   if (!link) return;
   const off = page < 1 || page > 604;
+  link.querySelector(".dcap-p")!.textContent = off ? "" : labelFor(page).replace("صفحة", "ص");
   if (off) {
     link.removeAttribute("href");
     link.setAttribute("aria-disabled", "true");
@@ -152,10 +178,19 @@ function layout() {
   const lead = shown()[0];
   const metaPage = document.querySelector<HTMLElement>("#ctx-meta span");
   if (metaPage) metaPage.textContent = label;
-  dockNum.textContent = `سورة ${lead.dataset.surah}`;
-  dockSno.textContent = ar(Number(lead.dataset.sno));
-  dockSub.textContent = `${label} · الجزء ${ar(Number(lead.dataset.juz))}`;
-  $("dock-prog").style.setProperty("--p", (firstOf(pageNo, two) / 604).toFixed(4));
+  // where the pages leave room either side, the page arrows stand beside them, half way down, like turning a book;
+  // otherwise they stay at the ends of the dock
+  const sr = stage.getBoundingClientRect();
+  const side = Math.min(sr.left, innerWidth - sr.right);
+  document.documentElement.classList.toggle("side-arrows", side >= 84);
+  document.documentElement.style.setProperty("--side", `${side}px`);
+  // the ruler stays on a surah the reader chose while it is on screen (a surah often starts part way down a page that
+  // opens with the end of the one before); otherwise it follows the surah the pages open with
+  const here = new Set(keys().map((k) => Number(k.split(":")[0])));
+  const at = chosen && here.has(chosen) ? chosen : Number(lead.dataset.sno);
+  rlName.textContent = `سورة ${ticks[at - 1].dataset.name}`;
+  $("rl-now").textContent = ar(firstOf(pageNo, two));
+  rulerTo(at);
 }
 layout();
 new ResizeObserver(layout).observe(root);
@@ -207,7 +242,7 @@ function turn(to: number, push = true) {
   wanted = to;
   if (to === firstOf(pageNo)) return layout(); // turned there and back before the page arrived
   // the bar answers at once, before the page arrives
-  dockSub.textContent = labelFor(to);
+  $("rl-now").textContent = ar(to);
   ready(to).then(
     (doc) => to === wanted && swap(doc, to, push),
     () => to === wanted && (location.href = `/page/${to}`),
@@ -219,7 +254,6 @@ function swap(doc: Document, to: number, push: boolean) {
   const json = doc.getElementById("page-data");
   if (!next || !json) return void (location.href = `/page/${to}`);
   closeSheet();
-  setStrip(false);
   const from = pageNo;
   const ghost = moving() ? leaving() : null;
   root.dataset.page = next.dataset.page;
@@ -313,120 +347,90 @@ stage.addEventListener("touchend", (e) => {
   if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx > 0 ? "next" : "prev");
 });
 
-// ---------- the surah strip: the fast way to any surah ----------
-// All 114 surahs in one row, the one being read in the middle. A flick runs through them quickly; the card at the
-// centre stands out, the others ease back like a dial; a tap on any card opens that surah.
-const strip = $("surahs");
-const row = $("sx-strip");
-// The cards are drawn the first time the strip opens rather than carried in every page's HTML.
-let cards: HTMLAnchorElement[] = [];
-let filling: Promise<void> | undefined;
-const fillStrip = () =>
-  (filling ??= siteIndex().then(({ chapters }) => {
-    row.innerHTML = chapters
-      .map((c) => `<a class="sx-card" role="listitem" href="/page/${c.page}" data-page="${c.page}" data-s="${c.id}" data-name="${c.name}">
-        <span class="sx-star" aria-hidden="true">${STAR_SVG}<b>${ar(c.id)}</b></span>
-        <strong>${c.name}</strong>
-        <small>${c.makki ? "مكية" : "مدنية"} · ${ayahs(c.n)}</small>
-        <small class="sx-pg">صفحة ${ar(c.page)}</small></a>`)
-      .join("");
-    cards = [...row.querySelectorAll<HTMLAnchorElement>(".sx-card")];
-  }, (err) => {
-    filling = undefined;
-    throw err;
-  }));
-const where = $("dock-page");
-const find = $<HTMLInputElement>("sx-q");
-let stripOpen = false;
-let dialing = false;
-function dial() {
-  dialing = false;
-  const r = row.getBoundingClientRect();
-  const mid = r.left + r.width / 2;
-  for (const c of cards) {
-    if (c.hidden) continue;
-    const b = c.getBoundingClientRect();
-    if (b.right < r.left - 200 || b.left > r.right + 200) continue;
-    const d = Math.min(1, Math.abs(b.left + b.width / 2 - mid) / (r.width / 2));
-    c.style.setProperty("--d", d.toFixed(3));
-    c.style.setProperty("--side", String(Math.sign(b.left + b.width / 2 - mid) * -28));
-  }
+// ---------- the surah ruler ----------
+// The mushaf as a row of lines: all 114 surahs at once, one line each, all alike but for the one being read, which is
+// gold; the first on the right. Press anywhere on the row and drag: the gold moves with the pointer, naming each surah
+// it passes, and letting go turns the mushaf there (a tap is a drag that never moved). ← → and the mouse wheel step one
+// surah at a time and turn once the stepping pauses. Turning pages moves the gold along (layout).
+const surahAt = (x: number) => {
+  const r = track.getBoundingClientRect();
+  return Math.min(114, Math.max(1, Math.floor(((r.right - x) / r.width) * 114) + 1)); // RTL: the first on the right
+};
+// the surah the reader is choosing, lit, with its name
+function preview(s: number) {
+  rlName.textContent = `سورة ${ticks[s - 1].dataset.name}`;
+  rulerTo(s);
 }
-row.addEventListener("scroll", () => {
-  if (!dialing) (dialing = true), requestAnimationFrame(dial);
-}, { passive: true });
-// a mouse wheel turns the dial too
-row.addEventListener("wheel", (e) => {
-  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+function commit(s: number) {
+  chosen = s;
+  const here = new Set(keys().map((k) => Number(k.split(":")[0])));
+  if (here.has(s)) layout(); // already on screen: just put the label back
+  else turn(Number(ticks[s - 1].dataset.p));
+}
+let dragging = false;
+track.addEventListener("pointerdown", (e) => {
+  if (!e.isPrimary || e.button !== 0) return; // a real press only
+  dragging = true;
+  peeking = 0;
+  ruler.classList.remove("pointing");
+  track.setPointerCapture(e.pointerId);
+  ruler.classList.add("dragging");
+  preview(surahAt(e.clientX));
+});
+track.addEventListener("pointermove", (e) => {
+  if (dragging) preview(surahAt(e.clientX));
+});
+// pointing (a mouse, not dragging): the label above moves to the line under the pointer and names it, quieter, until
+// the pointer leaves
+let peeking = 0;
+track.addEventListener("pointermove", (e) => {
+  if (dragging || e.pointerType !== "mouse") return;
+  const s = surahAt(e.clientX);
+  if (s === peeking) return;
+  peeking = s;
+  if (s === rulerAt) return void (ruler.classList.remove("pointing"), layout());
+  rlName.textContent = `سورة ${ticks[s - 1].dataset.name}`;
+  pillTo(s);
+  ruler.classList.add("pointing");
+});
+track.addEventListener("pointerleave", () => {
+  peeking = 0;
+  if (!ruler.classList.contains("pointing")) return;
+  ruler.classList.remove("pointing");
+  layout(); // the label goes back to the surah being read
+});
+const release = () => {
+  if (!dragging) return;
+  dragging = false;
+  ruler.classList.remove("dragging");
+  commit(rulerAt);
+};
+track.addEventListener("pointerup", release);
+track.addEventListener("pointercancel", release);
+// stepping: each press moves the light at once, the mushaf follows when the presses stop
+let stepTimer = 0;
+const stepBy = (d: number) => {
+  preview(Math.min(114, Math.max(1, rulerAt + d)));
+  clearTimeout(stepTimer);
+  stepTimer = window.setTimeout(() => commit(rulerAt), 450);
+};
+// ← → (left is onwards), Home and End; the page-turning arrows are not touched
+track.addEventListener("keydown", (e) => {
+  const d = { ArrowLeft: 1, ArrowRight: -1, Home: 1 - rulerAt, End: 114 - rulerAt }[e.key];
+  if (d === undefined) return;
   e.preventDefault();
-  row.scrollBy({ left: -e.deltaY * 1.4 }); // RTL: scrolling down moves on through the mushaf
+  e.stopPropagation();
+  stepBy(d);
+});
+// the wheel steps too (scrolling down moves on through the mushaf)
+let wheelSum = 0;
+ruler.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  wheelSum += Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : -e.deltaX;
+  if (Math.abs(wheelSum) < 40) return;
+  stepBy(Math.sign(wheelSum));
+  wheelSum = 0;
 }, { passive: false });
-const centre = (card: Element) => card.scrollIntoView({ inline: "center", block: "nearest" });
-function setStrip(open: boolean) {
-  if (open === stripOpen) return;
-  stripOpen = open;
-  where.setAttribute("aria-expanded", String(open));
-  if (!open) {
-    strip.hidden = true;
-    if (strip.contains(document.activeElement)) where.focus({ preventScroll: true });
-    return;
-  }
-  fillStrip().then(() => {
-    if (!stripOpen) return; // closed again while the cards were loading
-    strip.hidden = false;
-    find.value = "";
-    cards.forEach((c) => (c.hidden = false));
-    const here = Number(shown()[0].dataset.sno);
-    cards.forEach((c) => c.toggleAttribute("aria-current", Number(c.dataset.s) === here));
-    centre(cards[here - 1]);
-    dial();
-    cards[here - 1].focus({ preventScroll: true });
-  }, () => {
-    stripOpen = false;
-    where.setAttribute("aria-expanded", "false");
-    toast("تعذّر تحميل قائمة السور. تحقق من الاتصال وحاول مرة أخرى.");
-  });
-}
-where.addEventListener("click", () => setStrip(!stripOpen));
-$("sx-close").addEventListener("click", () => setStrip(false));
-row.addEventListener("click", (e) => {
-  const card = (e.target as Element).closest<HTMLAnchorElement>(".sx-card");
-  if (!card || e.metaKey || e.ctrlKey) return;
-  e.preventDefault();
-  setStrip(false);
-  turn(Number(card.dataset.page));
-});
-// typing narrows the strip to matching surahs; Enter opens the first
-find.addEventListener("input", () => {
-  const q = normalize(westernDigits(find.value.trim()));
-  let first: HTMLAnchorElement | undefined;
-  for (const c of cards) {
-    c.hidden = !!q && !normalize(c.dataset.name!).includes(q) && c.dataset.s !== q;
-    if (!c.hidden) first ??= c;
-  }
-  if (first) centre(first);
-  dial();
-});
-find.addEventListener("keydown", (e) => {
-  e.stopPropagation();
-  if (e.key === "Escape") setStrip(false);
-  if (e.key === "Enter") cards.find((c) => !c.hidden)?.click();
-});
-// arrows step through the cards (RTL: left is onwards)
-row.addEventListener("keydown", (e) => {
-  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-  e.preventDefault();
-  e.stopPropagation();
-  const live = cards.filter((c) => !c.hidden);
-  const i = live.indexOf(document.activeElement as HTMLAnchorElement);
-  const next = live[Math.min(live.length - 1, Math.max(0, i + (e.key === "ArrowLeft" ? 1 : -1)))];
-  next?.focus({ preventScroll: true });
-  if (next) centre(next);
-});
-document.addEventListener("pointerdown", (e) => {
-  if (stripOpen && !(e.target as Element).closest("#surahs, #dock-page")) setStrip(false);
-});
-document.addEventListener("keydown", (e) => e.key === "Escape" && setStrip(false));
 
 // ---------- switching to a text view keeps the reader on the same verse ----------
 window.addEventListener("mushaf:beforemode", () => closeSheet());

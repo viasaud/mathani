@@ -1,7 +1,7 @@
-// Motion shared by every page: the pill that slides between segments, the gold rim that follows the pointer across
-// cards, buttons that lean toward the pointer, things rising into view as the page scrolls, counts that run up, and
-// the home cover's opening. Everything here is decoration over a page that already works without it; under reduced
-// motion only the static parts run (the pill still moves, instantly).
+// Motion shared by every page: the pill that slides between segments, buttons that lean toward the pointer, things
+// rising into view as the page scrolls, counts that run up, and the home cover's opening. Everything here is decoration
+// over a page that already works without it; under reduced motion only the static parts run (the pill still moves,
+// instantly).
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ar } from "../lib/arabic";
@@ -29,27 +29,17 @@ function pill(seg: HTMLElement) {
     const on = seg.querySelector<HTMLElement>('button[aria-pressed="true"]');
     if (!on || !seg.offsetWidth) return;
     const to = { x: on.offsetLeft, width: on.offsetWidth };
-    if (animate && shown && !reduce.matches) gsap.to(p, { ...to, duration: 0.55, ease: "elastic.out(1, 0.82)", overwrite: true });
+    if (animate && shown && !reduce.matches) gsap.to(p, { ...to, duration: 0.42, ease: "power3.out", overwrite: true });
     else gsap.set(p, to);
     shown = true;
   };
   new MutationObserver(() => place(true)).observe(seg, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
-  // a segment that was hidden (a closed panel) is placed without a slide when it shows
-  new ResizeObserver(() => place(false)).observe(seg);
+  // a segment that was hidden (a closed panel) is placed without a slide when it shows; a slide under way is left to
+  // finish rather than snapped
+  new ResizeObserver(() => gsap.isTweening(p) || place(false)).observe(seg);
   place(false);
 }
 document.querySelectorAll<HTMLElement>(".seg").forEach(pill);
-
-// ---------- the gold rim follows the pointer across a card ----------
-if (fine.matches) {
-  document.addEventListener("pointermove", (e) => {
-    const card = (e.target as Element).closest?.<HTMLElement>("[data-spot]");
-    if (!card) return;
-    const r = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    card.style.setProperty("--my", `${e.clientY - r.top}px`);
-  }, { passive: true });
-}
 
 // ---------- buttons that lean toward the pointer ----------
 if (fine.matches && moving()) {
@@ -97,22 +87,15 @@ if (moving()) {
 // ---------- the home cover opens ----------
 const cover = document.getElementById("cover");
 if (cover && moving()) {
-  // the lead is split into words, never letters: Arabic letters join, and splitting them would break the script
-  cover.querySelectorAll<HTMLElement>("[data-words]").forEach((p) => {
-    p.innerHTML = p.textContent!.trim().split(/\s+/).map((w) => `<span class="w">${w}</span>`).join(" ");
-  });
   const title = cover.querySelector<HTMLElement>("[data-hero-title] span")!;
-  const lead = cover.querySelectorAll(".hero-lead .w");
-  const rest = [...cover.querySelectorAll<HTMLElement>("[data-hero]")].filter((el) => !el.matches(".hero-lead"));
+  const rest = [...cover.querySelectorAll<HTMLElement>("[data-hero]")];
   const paths = (sel: string) => cover.querySelectorAll(`${sel} path`);
-  gsap.set(cover.querySelector(".hero-lead"), { opacity: 1 });
   const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.1 });
   tl.fromTo(title,
     { opacity: 1, clipPath: "inset(-30% -10% -45% 100%)", filter: "blur(16px)", y: 18 },
     { clipPath: "inset(-30% -10% -45% -10%)", filter: "blur(0px)", y: 0, duration: 1.5, ease: "expo.out", clearProps: "clipPath,filter" })
     .fromTo(rest[0], { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.9 }, 0.15)
     .fromTo(rest.slice(1), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 1, stagger: 0.12, clearProps: "transform" }, 0.55)
-    .fromTo(lead, { opacity: 0, y: 10, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, stagger: 0.035 }, 0.7)
     .to(paths(".ro-outer"), { strokeDashoffset: 0, duration: 2.4, ease: "power2.inOut", stagger: 0.04 }, 0.1)
     .to(paths(".ro-middle"), { strokeDashoffset: 0, duration: 2.2, ease: "power2.inOut", stagger: 0.05 }, 0.45)
     .to(paths(".ro-inner"), { strokeDashoffset: 0, duration: 2, ease: "power2.inOut", stagger: 0.025 }, 0.8)
@@ -132,9 +115,10 @@ if (cover && moving()) {
       ax(nx * -22), ay(ny * -22), hx(nx * 40), hy(ny * 40);
     });
   }
-  // the cover sinks back a little as the page scrolls over it
+  // the cover sinks back a little as the page scrolls over it. Only moved, never faded: an ancestor below full opacity
+  // would switch off the console's backdrop blur
   gsap.to(cover.querySelector(".cover-inner"), {
-    yPercent: 12, opacity: 0.3, ease: "none",
+    yPercent: 10, ease: "none",
     scrollTrigger: { trigger: cover, start: "top top", end: "bottom top", scrub: true },
   });
 } else if (cover) {

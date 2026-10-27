@@ -62,12 +62,13 @@ if (!/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
   document.querySelectorAll("[data-mod-k]").forEach((k) => (k.textContent = "Ctrl K"));
 }
 
-const settingsBtn = $("settings-btn");
-const settings = $("settings");
+// reading settings live only on the reading pages (Base.astro); elsewhere these are null and settings stay closed
+const settingsBtn = document.getElementById("settings-btn");
+const settings = document.getElementById("settings");
 
 // ---------- the controls recede while reading ----------
 // Scrolling down folds them away (html.recede); scrolling up, reaching an end, or tapping what is left brings them
-// back. html.scrolled turns on the soft fade where content slides under them.
+// back.
 {
   const dock = document.getElementById("dock");
   let last = scrollY;
@@ -90,7 +91,6 @@ const settings = $("settings");
   const onScroll = () => {
     ticking = false;
     const y = scrollY;
-    root.classList.toggle("scrolled", y > 4);
     const nearEnd = y + innerHeight > document.documentElement.scrollHeight - 80;
     if (y < 80 || nearEnd || y < last - 8) recede(false);
     else if (y > last + 8 && !settingsOpen && !document.querySelector(".vsheet.on, .drawer.on")) recede(true);
@@ -101,30 +101,12 @@ const settings = $("settings");
     ticking = true;
     requestAnimationFrame(onScroll);
   }, { passive: true });
-  root.classList.toggle("scrolled", scrollY > 4);
-}
-
-// ---------- the light on the glass follows the pointer across a capsule ----------
-document.addEventListener("pointermove", (e) => {
-  if (e.pointerType !== "mouse") return;
-  const cap = (e.target as Element).closest?.<HTMLElement>(".cap.glass");
-  if (!cap) return;
-  const r = cap.getBoundingClientRect();
-  cap.style.setProperty("--mx", `${e.clientX - r.left}px`);
-  cap.style.setProperty("--my", `${e.clientY - r.top}px`);
-}, { passive: true });
-
-// ---------- a page with its own search field hides the search capsule while that field is in view ----------
-const ownSearch = document.querySelector("[data-own-search]");
-if (ownSearch) {
-  new IntersectionObserver(([e]) => root.classList.toggle("own-search", e.isIntersecting)).observe(ownSearch);
 }
 
 // ---------- settings ----------
-// The header's backdrop blur would trap a fixed panel inside it, so the panel lives at the end of the page.
-document.body.append(settings);
 let settingsOpen = false;
 const setSettings = (open: boolean, restoreFocus = false) => {
+  if (!settings || !settingsBtn) return;
   const wasOpen = settingsOpen;
   settingsOpen = open;
   settingsBtn.setAttribute("aria-expanded", String(open));
@@ -133,15 +115,19 @@ const setSettings = (open: boolean, restoreFocus = false) => {
   if (open && !wasOpen) settings.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
   if (!open && wasOpen && (restoreFocus || settings.contains(document.activeElement))) settingsBtn.focus({ preventScroll: true });
 };
-// the panel sits at the end of the page, so Tab at its edges goes back to the button instead of wandering off
-settings.addEventListener("keydown", (e) => trapTab(settings, e, settingsBtn));
-settingsBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  setSettings(!settingsOpen);
-});
-document.addEventListener("click", (e) => {
-  if (settingsOpen && !(e.target as Element).closest("#settings, #settings-btn")) setSettings(false);
-});
+if (settings && settingsBtn) {
+  // The header's backdrop blur would trap a fixed panel inside it, so the panel lives at the end of the page.
+  document.body.append(settings);
+  // the panel sits at the end of the page, so Tab at its edges goes back to the button instead of wandering off
+  settings.addEventListener("keydown", (e) => trapTab(settings, e, settingsBtn));
+  settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setSettings(!settingsOpen);
+  });
+  document.addEventListener("click", (e) => {
+    if (settingsOpen && !(e.target as Element).closest("#settings, #settings-btn")) setSettings(false);
+  });
+}
 
 // view: the open page decides what a switch means (another kind of page, or the other text view)
 const modeButtons = document.querySelectorAll<HTMLElement>("[data-mode-btn]");
@@ -159,16 +145,18 @@ modeButtons.forEach((b) =>
 );
 
 // size: one slider scales the Quran text, and the mushaf page with it
-const size = $<HTMLInputElement>("size");
-const currentSize = () => parseFloat(getComputedStyle(root).getPropertyValue("--qsize")) || 28;
-const paintSize = () => size.style.setProperty("--fill", `${((+size.value - +size.min) / (+size.max - +size.min)) * 100}%`);
-size.value = String(currentSize());
-paintSize();
-size.addEventListener("input", () => {
-  root.style.setProperty("--qsize", `${size.value}px`);
+const size = document.getElementById("size") as HTMLInputElement | null;
+if (size) {
+  const currentSize = () => parseFloat(getComputedStyle(root).getPropertyValue("--qsize")) || 28;
+  const paintSize = () => size.style.setProperty("--fill", `${((+size.value - +size.min) / (+size.max - +size.min)) * 100}%`);
+  size.value = String(currentSize());
   paintSize();
-});
-size.addEventListener("change", () => save("size", Number(size.value)));
+  size.addEventListener("input", () => {
+    root.style.setProperty("--qsize", `${size.value}px`);
+    paintSize();
+  });
+  size.addEventListener("change", () => save("size", Number(size.value)));
+}
 
 // one page or two, in the pages view
 const spreadButtons = document.querySelectorAll<HTMLElement>("[data-spread-btn]");
@@ -204,16 +192,20 @@ themeButtons.forEach((b) =>
     root.style.setProperty("--vy", `${y}px`);
     root.style.setProperty("--vr", `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
     root.classList.add("theme-vt");
-    document.startViewTransition(apply).finished.finally(() => root.classList.remove("theme-vt"));
+    const vt = document.startViewTransition(apply);
+    vt.ready.catch(() => {}); // skipped (a hidden tab, say): the theme still changes
+    vt.finished.finally(() => root.classList.remove("theme-vt"));
   }),
 );
 
-const tajweed = $<HTMLInputElement>("opt-tajweed");
-tajweed.checked = root.dataset.tajweed === "on";
-tajweed.addEventListener("change", () => {
-  root.dataset.tajweed = tajweed.checked ? "on" : "off";
-  save("tajweed", root.dataset.tajweed);
-});
+const tajweed = document.getElementById("opt-tajweed") as HTMLInputElement | null;
+if (tajweed) {
+  tajweed.checked = root.dataset.tajweed === "on";
+  tajweed.addEventListener("change", () => {
+    root.dataset.tajweed = tajweed.checked ? "on" : "off";
+    save("tajweed", root.dataset.tajweed);
+  });
+}
 
 // ---------- index drawer ----------
 const drawer = $("drawer");
@@ -223,11 +215,15 @@ const current = Number(drawer.dataset.current);
 let ixView: "surah" | "juz" = "surah";
 let ixPlace: "" | "m" | "d" = "";
 
-// --i staggers the rows in when the drawer opens (.drawer-list.fresh in global.css)
+const ixCount = $("ix-count");
+
+// One row per surah: its number in the star, the name, what it is, and the page it opens on. The surah being read is
+// tinted gold. --i staggers the rows in when the drawer opens (.ix-list.fresh in global.css).
 const surahRow = (c: SiteIndex["chapters"][number], i: number) =>
   `<a class="ix-item" href="/surah/${c.id}" style="--i:${i}"${c.id === current ? ' aria-current="page"' : ""}>
-    <span class="badge">${STAR_SVG}<span>${ar(c.id)}</span></span>
-    <span class="ix-name">${c.name}<span class="ix-sub">${c.makki ? "مكية" : "مدنية"}، ${ayahs(c.n)}</span></span>
+    <span class="ix-num">${STAR_SVG}<b>${ar(c.id)}</b></span>
+    <span class="ix-main"><span class="ix-name">${c.name}</span>
+    <span class="ix-sub">${c.makki ? "مكية" : "مدنية"} · ${ayahs(c.n)}</span></span>
     <span class="ix-page">ص ${ar(c.page)}</span></a>`;
 
 async function renderIndex() {
@@ -244,26 +240,33 @@ async function renderIndex() {
   const matches = (c: SiteIndex["chapters"][number]) =>
     (!ixPlace || (ixPlace === "m") === c.makki) &&
     (!q || normalize(c.name).includes(q) || c.en.toLowerCase().includes(q) || String(c.id) === num);
+  const found = index.chapters.filter(matches);
+  ixCount.textContent = raw || ixPlace ? `${surahCount(found.length)}` : ixView === "juz" ? "ثلاثون جزءًا" : "مئة وأربع عشرة سورة";
 
   if (ixView === "juz" && !q) {
-    let n = 0;
+    // each juz under its own header, which stays at the top while its surahs scroll by
+    let n = 1;
     ixList.innerHTML = index.juz
       .map(([s, a], i) => {
         const next = index.juz[i + 1];
         const last = next ? (next[1] === 1 ? next[0] - 1 : next[0]) : 114;
         const rows = index.chapters.slice(s - 1, last).filter(matches).map((c) => surahRow(c, n++)).join("");
-        return rows ? `<div class="ix-juz">الجزء ${JUZ_NAMES[i + 1]}: تبدأ من ${index.chapters[s - 1].name}، الآية ${ar(a)}</div>${rows}` : "";
+        return rows
+          ? `<section class="ix-group"><div class="ix-juz"><b>${ar(i + 1)}</b><span>الجزء ${JUZ_NAMES[i + 1]}</span><small>من ${index.chapters[s - 1].name} ${ar(a)}</small></div>${rows}</section>`
+          : "";
       })
       .join("");
   } else {
-    const rows = index.chapters.filter(matches).map((c, i) => surahRow(c, i)).join("");
+    const rows = found.map((c, i) => surahRow(c, i + 1)).join("");
     const typed = escapeHtml(raw);
-    const why = raw ? `لا توجد سورة مطابقة لـ «${typed}».` : "لا توجد سور بهذا التصنيف.";
+    const why = raw ? `لا توجد سورة مطابقة لـ «${typed}».` : "لا توجد سور بهذا التصنيف.";
     const hint = ixPlace || raw ? "غيّر الكلمة أو الفلتر." : "";
     const inVerses = raw ? `<button class="btn btn-ghost" data-ix-verses>ابحث عن «${typed}» في الآيات</button>` : "";
     ixList.innerHTML = rows || `<div class="ix-empty"><p>${why} ${hint}</p>${inVerses}</div>`;
   }
 }
+// "٧ سور", "١١ سورة": the counted noun agrees with the number
+const surahCount = (n: number) => (n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n >= 3 && n <= 10 ? "سور" : "سورة"}`);
 
 let drawerOpener: HTMLElement | null = null;
 function openDrawer() {
@@ -287,7 +290,18 @@ function closeDrawer() {
   if (hadFocus && drawerOpener?.isConnected) drawerOpener.focus({ preventScroll: true });
   drawerOpener = null;
 }
-drawer.addEventListener("keydown", (e) => trapTab(drawer, e));
+drawer.addEventListener("keydown", (e) => {
+  trapTab(drawer, e);
+  // ↑ ↓ walk the rows (from the search field too), Enter in the field opens the first one
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && !(e.key === "Enter" && e.target === ixQ)) return;
+  const rows = [...ixList.querySelectorAll<HTMLAnchorElement>(".ix-item")];
+  if (!rows.length) return;
+  e.preventDefault();
+  if (e.key === "Enter") return rows[0].click();
+  const at = rows.indexOf(document.activeElement as HTMLAnchorElement);
+  if (e.key === "ArrowUp" && at <= 0) return ixQ.focus();
+  rows[Math.min(rows.length - 1, e.key === "ArrowDown" ? at + 1 : at - 1)].focus({ preventScroll: false });
+});
 ixQ.addEventListener("input", renderIndex);
 ixList.addEventListener("click", (e) => {
   if (!(e.target as Element).closest("[data-ix-verses]")) return;
@@ -323,7 +337,10 @@ const palette = $<HTMLDialogElement>("palette");
 const palQ = $<HTMLInputElement>("pal-q");
 const palResults = $("pal-results");
 const palLive = $("pal-live");
-type Item = { href: string; icon: string; title: string; sub: string; verse?: boolean };
+// kind: "resume" is the where-you-stopped card (with its ring), "tile" one of the quick places (shown as a grid);
+// n puts a number in the star instead of an icon (a surah's, or a verse's)
+type Item = { href: string; icon: string; title: string; sub: string; verse?: boolean; kind?: "resume" | "tile"; n?: number; pct?: number };
+type Group = [label: string, items: Item[], layout?: "grid"];
 let items: Item[] = [];
 let selected = 0;
 
@@ -351,22 +368,31 @@ function setActive() {
   else palQ.removeAttribute("aria-activedescendant");
 }
 
+const medal = (it: Item) => `<span class="pal-medal">${STAR_SVG}${it.n ? `<b>${ar(it.n)}</b>` : ""}</span>`;
+function itemHtml(it: Item, i: number) {
+  const open = `<a class="pal-item${it.kind ? ` pal-${it.kind}` : ""}${it.verse ? " is-verse" : ""}" role="option" id="pal-opt-${i}" href="${it.href}" data-i="${i}" style="--i:${i}" aria-selected="${i === selected}">`;
+  if (it.kind === "resume") {
+    // the ring fills clockwise from twelve o'clock to how far into the mushaf the place is
+    return open + `<span class="pal-ring" style="--p:${it.pct ?? 0}"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/><circle cx="24" cy="24" r="21" pathLength="100"/></svg><b>${ar(it.pct ?? 0)}٪</b></span>
+      <span class="pal-txt"><small>تابع القراءة</small><b>${it.title}</b><span class="pal-sub">${it.sub}</span></span><kbd>↵</kbd></a>`;
+  }
+  if (it.kind === "tile") return open + `${medal(it)}<b>${it.title}</b><small>${it.sub}</small></a>`;
+  const lead = it.n ? medal(it) : `<span class="pi">${it.icon}</span>`;
+  return open + `${lead}<span class="pal-txt"><b>${it.title}</b>${it.verse ? `<span class="verse">${it.sub}</span>` : `<small>${it.sub}</small>`}</span><kbd>↵</kbd></a>`;
+}
+
 // state: "wait" while the verses are still being searched, "done" when nothing more will come
-function renderItems(groups: [string, Item[]][], state: "wait" | "done" = "done", raw = "") {
+function renderItems(groups: Group[], state: "wait" | "done" = "done", raw = "") {
   items = groups.flatMap(([, g]) => g);
   selected = Math.min(selected, Math.max(0, items.length - 1));
   let k = 0;
   const list = groups
     .filter(([, g]) => g.length)
-    .map(([label, g]) => `<div role="group"${label ? ` aria-label="${label}"` : ""}>${label ? `<div class="pal-group" aria-hidden="true">${label}</div>` : ""}` + g.map((it) => {
-      const i = k++;
-      return `<a class="pal-item${it.verse ? " is-verse" : ""}" role="option" id="pal-opt-${i}" href="${it.href}" data-i="${i}" style="--i:${i}" aria-selected="${i === selected}">
-        <span class="pi">${it.icon}</span><span style="min-width:0"><b>${it.title}</b>${it.verse ? `<span class="verse">${it.sub}</span>` : `<small>${it.sub}</small>`}</span><kbd>↵</kbd></a>`;
-    }).join("") + "</div>")
+    .map(([label, g, layout]) => `<div role="group" class="pal-set${layout ? ` pal-${layout}` : ""}"${label ? ` aria-label="${label}"` : ""}>${label ? `<div class="pal-group" aria-hidden="true">${label}</div>` : ""}` + g.map((it) => itemHtml(it, k++)).join("") + "</div>")
     .join("");
   const tail =
     state === "wait" ? `<div class="pal-status">جارٍ البحث في الآيات…</div>`
-    : !items.length ? `<div class="pal-empty"><b>لا توجد نتائج لـ «${escapeHtml(raw)}»</b><p>${/\d/.test(westernDigits(raw)) ? "الصفحات من ١ إلى ٦٠٤، والسور من ١ إلى ١١٤، والأجزاء من ١ إلى ٣٠." : fold(raw).text.length < 2 ? "اكتب حرفين على الأقل للبحث في الآيات." : "جرّب كلمة أخرى، أو اسم سورة، أو رقم صفحة."}</p></div>`
+    : !items.length ? `<div class="pal-empty"><span class="pal-empty-mark">${STAR_SVG}</span><b>لا توجد نتائج لـ «${escapeHtml(raw)}»</b><p>${/\d/.test(westernDigits(raw)) ? "الصفحات من ١ إلى ٦٠٤، والسور من ١ إلى ١١٤، والأجزاء من ١ إلى ٣٠." : fold(raw).text.length < 2 ? "اكتب حرفين على الأقل للبحث في الآيات." : "جرّب كلمة أخرى، أو اسم سورة، أو رقم صفحة."}</p></div>`
     : "";
   palResults.innerHTML = (items.length ? `<div role="listbox" id="pal-list" aria-label="النتائج">${list}</div>` : "") + tail;
   palQ.setAttribute("aria-expanded", String(items.length > 0));
@@ -392,21 +418,22 @@ async function runPalette() {
   if (!raw) {
     // before typing: where the reader left off and the most visited places, ready for ↑ ↓ and Enter
     const last = load<LastRead | null>("last", null);
+    const page = last ? last.p ?? index.chapters[last.s - 1]?.page : undefined;
     const resume: Item[] = last && index.chapters[last.s - 1]
       ? [{
-          href: lastReadHref(last),
-          icon: ICON.resume, title: `سورة ${name(last.s)}، الآية ${ar(last.a)}`, sub: last.p ? `الصفحة ${ar(last.p)}` : "من حيث توقفت",
+          kind: "resume", href: lastReadHref(last), icon: ICON.resume,
+          title: `سورة ${name(last.s)}`, sub: `الآية ${ar(last.a)}${page ? ` · الصفحة ${ar(page)}` : ""}`,
+          pct: page ? Math.max(1, Math.round((page / 604) * 100)) : 0,
         }]
       : [];
+    const about = (s: number) => `${index.chapters[s - 1].makki ? "مكية" : "مدنية"} · ${ayahs(index.chapters[s - 1].n)}`;
     const places: Item[] = [
-      { href: "/surah/18", icon: ICON.star, title: "سورة الكهف", sub: `مكية، ${ayahs(110)}` },
-      { href: "/surah/36", icon: ICON.star, title: "سورة يس", sub: `مكية، ${ayahs(83)}` },
-      { href: "/surah/67", icon: ICON.star, title: "سورة الملك", sub: `مكية، ${ayahs(30)}` },
-      { href: "/surah/2#a255", icon: ICON.star, title: "آية الكرسي", sub: "سورة البقرة، الآية ٢٥٥" },
+      { kind: "tile", href: "/surah/18", icon: "", n: 18, title: "الكهف", sub: about(18) },
+      { kind: "tile", href: "/surah/36", icon: "", n: 36, title: "يس", sub: about(36) },
+      { kind: "tile", href: "/surah/67", icon: "", n: 67, title: "الملك", sub: about(67) },
+      { kind: "tile", href: "/surah/2#a255", icon: "", n: 255, title: "آية الكرسي", sub: "البقرة · الآية ٢٥٥" },
     ];
-    renderItems([["تابع القراءة", resume], ["وصول سريع", places]]);
-    palResults.insertAdjacentHTML("beforeend", `<div class="pal-hint"><p>أو اكتب:</p>
-      ${["٢:٢٥٥", "صفحة ٥٠٠", "جزء ٣٠", "الصبر"].map((t) => `<button class="chip" data-try="${t}">${t}</button>`).join("")}</div>`);
+    renderItems([["", resume], ["وصول سريع", places, "grid"]]);
     palLive.textContent = "";
     return;
   }
@@ -424,7 +451,7 @@ async function runPalette() {
   let m: RegExpMatchArray | null;
   if ((m = w.match(/^(\d{1,3})\s*[:：.\/]\s*(\d{1,3})$/))) {
     const s = +m[1], a = +m[2];
-    if (s >= 1 && s <= 114 && a >= 1 && a <= index.chapters[s - 1].n) jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.star, title: `سورة ${name(s)}، الآية ${ar(a)}`, sub: "انتقل إلى الآية" });
+    if (s >= 1 && s <= 114 && a >= 1 && a <= index.chapters[s - 1].n) jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.star, n: a, title: `سورة ${name(s)}، الآية ${ar(a)}`, sub: "انتقل إلى الآية" });
   } else if ((m = w.match(/^(?:ال)?(?:جزء|ج)\s*(\d{1,2})$/))) {
     const j = +m[1];
     if (j >= 1 && j <= 30) { const [s, a] = index.juz[j - 1]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الجزء ${JUZ_NAMES[j]}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
@@ -434,14 +461,14 @@ async function runPalette() {
   } else if ((m = w.match(/^(?:ال)?(?:صفحة|ص)?\s*(\d{1,3})$/))) {
     const n = +m[1];
     if (n >= 1 && n <= 604) { const [s] = index.pages[n - 1]; jump.push({ href: `/page/${n}`, icon: ICON.page, title: `الصفحة ${ar(n)}`, sub: `سورة ${name(s)}` }); }
-    if (n >= 1 && n <= 114 && !/^(?:ال)?(?:صفحة|ص)/.test(w)) { const c = index.chapters[n - 1]; jump.push({ href: `/surah/${n}`, icon: ICON.star, title: `سورة ${c.name}`, sub: `السورة رقم ${ar(n)}، ${ayahs(c.n)}` }); }
+    if (n >= 1 && n <= 114 && !/^(?:ال)?(?:صفحة|ص)/.test(w)) { const c = index.chapters[n - 1]; jump.push({ href: `/surah/${n}`, icon: ICON.star, n, title: `سورة ${c.name}`, sub: `السورة رقم ${ar(n)} · ${ayahs(c.n)}` }); }
   }
 
   const q = normalize(raw);
   const surahs: Item[] = /\d/.test(w) ? [] : index.chapters
     .filter((c) => normalize(c.name).includes(q) || c.en.toLowerCase().includes(q.toLowerCase()))
     .slice(0, 5)
-    .map((c) => ({ href: `/surah/${c.id}`, icon: ICON.star, title: `سورة ${c.name}`, sub: `${c.makki ? "مكية" : "مدنية"}، ${ayahs(c.n)}، تبدأ في الصفحة ${ar(c.page)}` }));
+    .map((c) => ({ href: `/surah/${c.id}`, icon: ICON.star, n: c.id, title: `سورة ${c.name}`, sub: `${c.makki ? "مكية" : "مدنية"} · ${ayahs(c.n)} · الصفحة ${ar(c.page)}` }));
   const needle = fold(raw).text;
   const searchVerses = needle.length >= 2 && !/^\d+$/.test(w.replace(/\s/g, ""));
   renderItems([["انتقال", jump], ["السور", surahs]], searchVerses ? "wait" : "done", raw);
@@ -503,17 +530,18 @@ palQ.addEventListener("keydown", (e) => {
   }
 });
 palResults.addEventListener("click", (e) => {
-  const tryIt = (e.target as Element).closest<HTMLElement>("[data-try]");
-  if (tryIt) {
-    palQ.value = tryIt.dataset.try!;
-    runPalette();
-    palQ.focus();
-    return;
-  }
   const a = (e.target as Element).closest<HTMLAnchorElement>(".pal-item");
   if (a) { e.preventDefault(); go(a.getAttribute("href")!); }
 });
-palette.addEventListener("click", (e) => e.target === palette && palette.close());
+palette.addEventListener("click", (e) => {
+  if (e.target === palette) return palette.close();
+  // an example under the field: typed in for the reader
+  const tryIt = (e.target as Element).closest<HTMLElement>("[data-try]");
+  if (!tryIt) return;
+  palQ.value = tryIt.dataset.try!;
+  runPalette();
+  palQ.focus();
+});
 $("pal-close").addEventListener("click", () => palette.close());
 
 // Jumping to a verse on the page already open only needs the hash to change.

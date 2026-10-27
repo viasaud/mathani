@@ -12,6 +12,7 @@ uniform vec2 res;
 uniform vec2 lamp;
 uniform float t;
 uniform float cell;
+uniform float lampR;
 uniform vec3 gold;
 out vec4 o;
 
@@ -32,22 +33,22 @@ void main() {
   float ring = length(g) - 0.34;                // a circle around the star
   float tip = s / R2;                           // where the turned square's points reach
   // rules from each point of the star to the next star's
-  float ties = max(rule(g.y, 0.010) * step(tip, a.x), rule(g.x, 0.010) * step(tip, a.y));
+  float ties = max(rule(g.y, 0.024) * step(tip, a.x), rule(g.x, 0.024) * step(tip, a.y));
   // small diamonds where four cells meet
   vec2 c = abs(fract(uv + 0.5) - 0.5);
   float knot = (c.x + c.y) * R2 - 0.075;
-  float lines = max(max(rule(sq, 0.012), rule(dm, 0.012)), max(rule(ring, 0.008) * 0.55, max(ties * 0.8, rule(knot, 0.010) * 0.9)));
+  // widths are in cells: about half a CSS pixel either side of each rule at the cell size below
+  float lines = max(max(rule(sq, 0.026), rule(dm, 0.026)), max(rule(ring, 0.018) * 0.45, max(ties * 0.7, rule(knot, 0.022) * 0.8)));
 
   // light: the lamp, a sheen crossing the field, and a twinkle per star
   vec2 dl = px - lamp;
-  float r = 0.2 * max(res.x, res.y);
-  float lit = exp(-dot(dl, dl) / (r * r));
+  float lit = exp(-dot(dl, dl) / (lampR * lampR));
   float sweep = mod(t * 0.07, 2.6) - 0.8;
   float band = exp(-pow((px.x / res.x) * 0.7 + (px.y / res.y) * 0.5 - sweep, 2.0) / 0.008);
   float tw = 0.5 + 0.5 * sin(t * 0.8 + hash(id) * 6.2832);
   float glow = 0.035 + 0.9 * lit + 0.16 * band + 0.25 * tw * lit;
   vec3 col = mix(gold, vec3(1.0, 0.95, 0.82), clamp(lit * 0.6, 0.0, 1.0));
-  float alpha = clamp(lines * glow, 0.0, 1.0) * 0.6;
+  float alpha = clamp(lines * glow, 0.0, 1.0) * 0.55;
   o = vec4(col * alpha, alpha);
 }`;
 
@@ -63,6 +64,9 @@ const rgb = (css: string): [number, number, number] => {
   const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(css.trim());
   return m ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255] : [0.86, 0.72, 0.4];
 };
+
+const CELL = 22; // one star's cell, in CSS pixels
+const LAMP = 90; // how far the pointer's light reaches, in CSS pixels
 
 export function start(canvas: HTMLCanvasElement, host: HTMLElement) {
   const context = canvas.getContext("webgl2", { premultipliedAlpha: true, antialias: false, alpha: true });
@@ -85,7 +89,7 @@ export function start(canvas: HTMLCanvasElement, host: HTMLElement) {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const u = (n: string) => gl.getUniformLocation(prog, n);
-  const [uRes, uLamp, uT, uCell, uGold] = ["res", "lamp", "t", "cell", "gold"].map(u);
+  const [uRes, uLamp, uT, uCell, uGold, uLampR] = ["res", "lamp", "t", "cell", "gold", "lampR"].map(u);
 
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let dpr = 1, w = 0, h = 0;
@@ -128,7 +132,8 @@ export function start(canvas: HTMLCanvasElement, host: HTMLElement) {
     gl.uniform2f(uRes, w, h);
     gl.uniform2f(uLamp, lamp.x * w, (1 - lamp.y) * h);
     gl.uniform1f(uT, still ? 4 : t);
-    gl.uniform1f(uCell, 92 * dpr);
+    gl.uniform1f(uCell, CELL * dpr);
+    gl.uniform1f(uLampR, LAMP * dpr);
     gl.uniform3f(uGold, ...gold);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);

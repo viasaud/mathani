@@ -19,6 +19,8 @@ interface Props {
 const { page } = Astro.props;
 const n = page.page;
 const chapters = getChapters();
+// where each surah starts, for the line of surahs in the dock
+const startPages = chapters.map((c) => getVerses(c.id)[0][1]);
 const font = (p: number) => `qcf-${String(p).padStart(3, "0")}`;
 
 // The facing page: the printed mushaf opens on pairs 1|2, 3|4 … 603|604, the odd page on the right. It is drawn
@@ -62,6 +64,8 @@ const pageVerses = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s
 const names = Object.fromEntries(surahsHere.map((s) => [s, chapters[s - 1].name]));
 const surahName = chapters[first.s - 1].name;
 const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+// beside the pages each arrow says what it does: which way, and the page it turns to (page.ts keeps the page current)
+const cap = (word: string, to: number) => `<span class="dcap" aria-hidden="true"><b>${word}</b><span class="dcap-p">${to >= 1 && to <= 604 ? `ص ${ar(to)}` : ""}</span></span>`;
 ---
 
 <Base
@@ -129,41 +133,24 @@ const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fil
     </div>
   </main>
 
-  <!-- Bottom controls, one compact row on glass: the previous and next page as large round buttons at the ends, and at
-       the centre the surah being read, its number in the rub' star, with how far into the mushaf this page is along
-       its foot. Tapping the surah opens the surah strip: all 114 surahs in a row to flick through quickly and tap to
-       open. The same shape on every page, so nothing shifts. -->
+  <!-- Bottom controls across the whole width: the previous and next page at the ends, and between them the mushaf as a
+       row of lines, one per surah, all alike, all 114 at once (the first on the right); the line of the surah being
+       read is gold, its name above it in a pill joined to it. The page being read and the last page flank the row like an audio player's
+       time. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). -->
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
-      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6")} />
-      <button class="dsurah glass" id="dock-page" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="surahs">
-        <span class="dstar" aria-hidden="true"><Star /><b id="dock-sno">{ar(first.s)}</b></span>
-        <span class="dtxt">
-          <b id="dock-num">سورة {surahName}</b>
-          <small id="dock-sub">صفحة {ar(n)} · الجزء {ar(juz)}</small>
-        </span>
-        <span class="dprog" aria-hidden="true"><i id="dock-prog" style={`--p:${(n / 604).toFixed(4)}`}></i></span>
-        <span class="dmore" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></span>
-      </button>
-      <a class="dround next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6")} />
-    </nav>
-
-    <!-- the surah strip: the fast way to any surah -->
-    <section class="surahs glass glass-panel" id="surahs" role="dialog" aria-labelledby="sx-title" hidden>
-      <div class="sx-head">
-        <h2 id="sx-title">انتقل إلى سورة</h2>
-        <label class="sx-find field">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-          <input id="sx-q" type="search" placeholder="ابحث باسم السورة" autocomplete="off" enterkeyhint="go" aria-label="ابحث عن سورة باسمها أو رقمها" />
-        </label>
-        <button class="ib" id="sx-close" type="button" aria-label="إغلاق">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
-        </button>
+      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("السابقة", n - 1)} />
+      <div class="ruler" id="ruler">
+        <div class="rl-label" aria-hidden="true"><b id="rl-name">سورة {surahName}</b></div>
+        <span class="rl-link" aria-hidden="true"></span>
+        <span class="rl-now" id="rl-now" aria-hidden="true">{ar(n)}</span>
+        <span class="rl-total" aria-hidden="true">{ar(604)}</span>
+        <div class="rl-track" id="rl-track" role="slider" tabindex="0" aria-label="انتقل إلى سورة" aria-valuemin="1" aria-valuemax="114" aria-valuenow={first.s} aria-valuetext={`سورة ${surahName}`}>
+          {chapters.map((c, i) => <i data-s={c.id} data-p={startPages[i]} data-name={c.name} style={`--i:${i}`}></i>)}
+        </div>
       </div>
-      <!-- filled from /index.json the first time the strip opens (page.ts) -->
-      <div class="sx-strip" id="sx-strip" role="list"></div>
-      <p class="sx-hint">اسحب لتتصفح السور، ثم اضغط السورة لتفتحها</p>
-    </section>
+      <a class="dround glass next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6") + cap("التالية", n + 1)} />
+    </nav>
   </div>
 
   <script type="application/json" id="page-data" set:html={JSON.stringify({ verses, names })} />

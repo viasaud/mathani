@@ -14,7 +14,7 @@ export function toast(message: string, ms = 1800) {
   if (!t) {
     t = document.createElement("div");
     t.id = "toast";
-    t.className = "toast";
+    t.className = "toast glass glass-panel";
     t.setAttribute("role", "status");
     document.body.append(t);
   }
