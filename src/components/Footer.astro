@@ -1,0 +1,123 @@
+---
+// The back cover: Madinah engraved in gold across the foot of the page, the Prophet's Mosque with its minarets, the
+// Green Dome and the umbrellas of its courtyard, palms and old houses either side and Uhud behind, with the name and
+// the ways in set in the sky above it. Under it the credit. It sits on the page's own background and the engraving is
+// printed in the theme's gold, so the page simply runs on into it, whatever the theme.
+import Star from "./Star.astro";
+
+const links = [
+  { href: "/page/1", label: "الصفحة الأولى" },
+  { href: "/search", label: "البحث في الآيات" },
+  { open: "drawer", label: "فهرس السور" },
+  { open: "palette", label: "انتقل إلى صفحة أو آية" },
+];
+---
+
+<footer class="foot">
+  <div class="foot-stage">
+    <div class="foot-text">
+      <a class="foot-mark" href="/" aria-label="مثاني، الصفحة الرئيسية"><Star class="foot-star" />مثاني</a>
+      <nav aria-label="روابط الموقع">
+        <ul class="foot-links">
+          {links.map((l) => (
+            <li>{l.href ? <a href={l.href}>{l.label}</a> : <button type="button" data-open={l.open}>{l.label}</button>}</li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Madinah engraved (src/lib/scene.ts), one cached file for every page, printed in the theme's ink -->
+    <div class="foot-scene" aria-hidden="true"></div>
+    <!-- the credit sits in the drawing, in the pause the ground's strokes leave under the central gate -->
+    <div class="foot-credit">
+      <a class="credit-link" href="https://saud.sh" target="_blank" rel="author noopener">
+        <!-- Saud's own mark, its viewBox cropped to the glyph -->
+        <svg class="credit-mark" viewBox="182.4 159.6 380 380" aria-hidden="true"><path fill-rule="evenodd" d="M362.88,538.99 C359.99,538.74 356.47,538.53 355.07,538.52 C349.60,538.48 349.82,539.05 349.65,524.50 C349.58,518.38 349.35,509.66 349.14,505.12 C348.51,491.69 348.26,482.81 348.00,465.62 C347.87,456.69 347.59,444.59 347.38,438.75 C346.95,426.64 346.62,414.15 346.26,395.25 C345.72,367.45 344.81,343.30 344.27,342.29 C343.42,340.70 343.58,340.57 323.78,360.62 C266.40,418.76 223.01,462.15 222.05,462.36 C220.55,462.69 219.21,461.17 213.88,453.01 C208.88,445.37 200.20,429.12 198.64,424.48 C197.87,422.19 197.41,422.75 210.72,409.50 C217.42,402.83 233.58,386.57 246.63,373.38 C259.67,360.18 275.70,344.02 282.24,337.48 C288.78,330.94 298.65,321.01 304.19,315.43 L314.25,305.27 L314.25,304.50 C314.25,303.10 312.19,303.03 300.65,304.00 C299.15,304.12 294.42,304.35 290.15,304.50 C285.87,304.65 280.52,304.87 278.25,305.00 C268.96,305.52 264.68,305.77 261.06,306.00 C258.96,306.14 253.67,306.36 249.31,306.51 C241.58,306.76 235.02,307.15 226.38,307.88 C224.04,308.08 218.86,308.30 214.88,308.38 C208.40,308.50 202.95,308.79 193.71,309.50 C187.44,309.98 187.18,309.25 189.99,299.38 C192.08,292.03 193.12,288.82 195.89,281.12 C196.33,279.89 197.26,277.68 197.95,276.21 C198.63,274.74 199.34,273.12 199.51,272.60 C200.01,271.08 203.77,263.94 204.47,263.16 C205.64,261.87 206.19,261.78 213.29,261.61 C219.09,261.48 222.70,261.27 236.00,260.26 C237.72,260.13 243.29,259.91 248.38,259.77 C257.00,259.52 264.88,259.13 266.62,258.86 C267.69,258.69 282.04,258.05 288.88,257.87 C298.39,257.62 315.03,256.52 315.69,256.10 C317.05,255.22 317.58,255.84 301.77,240.00 C273.32,211.51 261.15,198.94 261.05,197.97 C260.90,196.63 262.41,195.18 266.67,192.54 C267.74,191.87 270.09,190.39 271.88,189.25 C278.54,184.98 292.31,177.59 295.65,176.49 C296.18,176.32 297.30,175.85 298.12,175.46 C298.96,175.06 300.07,174.75 300.62,174.74 L301.62,174.73 L320.25,193.46 C330.49,203.77 339.14,212.28 339.47,212.37 C339.89,212.50 340.20,212.41 340.56,212.05 L341.07,211.55 L340.78,201.84 C340.62,196.49 340.49,187.96 340.49,182.88 C340.48,177.79 340.38,171.71 340.26,169.38 L340.03,165.12 L340.45,164.26 C341.27,162.56 343.42,162.01 351.59,161.36 C354.19,161.16 356.39,160.94 356.48,160.88 C356.58,160.83 358.68,160.58 361.14,160.34 C369.22,159.55 381.41,159.78 389.25,160.87 C390.69,161.08 393.45,161.35 395.38,161.49 C404.23,162.14 405.59,162.90 405.57,167.22 C405.57,169.73 405.11,181.33 404.76,188.00 C404.62,190.54 404.48,196.92 404.44,202.18 L404.38,211.73 L404.91,212.27 L405.44,212.80 L406.01,212.49 C406.55,212.20 411.49,207.28 433.73,184.87 C444.88,173.63 444.36,173.96 448.11,175.66 C459.57,180.87 462.78,182.56 472.62,188.50 C481.61,193.92 484.75,196.31 484.75,197.73 C484.75,198.99 483.39,200.41 456.46,227.31 C441.76,241.99 429.63,254.28 429.50,254.62 C428.91,256.17 429.52,256.40 435.05,256.75 C437.43,256.90 440.89,257.13 442.75,257.26 C444.61,257.40 449.67,257.62 454.00,257.75 C466.27,258.13 474.22,258.49 479.25,258.90 C484.08,259.30 484.98,259.34 498.25,259.76 C502.72,259.91 509.92,260.31 514.25,260.65 C518.58,260.99 525.85,261.37 530.41,261.50 C540.64,261.77 540.72,261.80 542.71,265.88 C547.39,275.44 549.58,280.69 552.19,288.50 C552.53,289.53 553.13,291.22 553.51,292.25 C553.89,293.28 554.28,294.57 554.38,295.12 C554.47,295.68 554.92,297.31 555.38,298.75 C557.07,304.08 557.64,308.07 556.81,308.82 C555.68,309.85 554.96,309.85 543.96,308.99 C542.22,308.85 536.82,308.63 531.96,308.50 C523.76,308.28 516.77,307.94 514.38,307.63 C511.74,307.30 506.20,306.97 499.50,306.75 C492.24,306.51 484.06,306.10 472.00,305.38 C468.63,305.18 462.78,304.90 459.00,304.75 C447.46,304.32 446.52,304.28 442.12,304.01 C439.79,303.86 436.75,303.63 435.36,303.49 C431.84,303.14 430.54,303.69 431.35,305.19 C431.50,305.48 444.28,318.40 459.75,333.92 C475.21,349.43 491.18,365.56 495.22,369.75 C499.27,373.94 512.29,387.11 524.16,399.00 C547.54,422.43 547.00,421.86 547.00,423.37 C547.00,426.04 537.33,444.46 530.93,454.00 C526.00,461.34 525.01,462.50 523.67,462.50 L522.91,462.50 L493.81,433.31 C477.80,417.26 452.61,391.92 437.84,377.00 C401.03,339.84 402.32,341.08 401.19,342.00 L400.62,342.46 L400.45,354.73 C400.35,361.48 400.04,372.43 399.75,379.07 C399.09,394.63 398.83,403.44 398.51,422.00 C398.19,440.21 397.86,452.70 397.37,465.25 C397.17,470.41 396.89,481.49 396.75,489.88 C396.52,504.01 396.01,521.42 395.52,532.08 L395.32,536.54 L394.82,537.21 C394.16,538.10 393.00,538.47 390.75,538.49 C389.72,538.49 386.18,538.73 382.88,539.00 C375.68,539.60 370.02,539.59 362.88,538.99 Z" /></svg>
+        <span class="credit-text"><span>تصميم وتطوير</span><span class="credit-name">سعود الشهري</span></span>
+      </a>
+    </div>
+  </div>
+
+</footer>
+
+<style>
+  .foot { position: relative; isolation: isolate; overflow: clip; margin-top: 96px; color: var(--ink); }
+
+  /* on a phone the name and links come first and the scene under them; on a wider screen they share one cell, the
+     name in the sky above the mosque */
+  .foot-stage { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .foot-text { z-index: 1; display: grid; justify-items: center; gap: 8px; padding: 56px 16px 8px; text-align: center; }
+  .foot-mark {
+    display: inline-flex; align-items: center; gap: 12px; padding-inline: 4px; border-radius: 12px;
+    font-family: var(--f-display); font-weight: 400; font-size: clamp(40px, 5vw, 52px); line-height: 1.3; color: var(--gold-text);
+  }
+  /* the display face sits low in its box (its tall dots and marks above), so the star comes down to the word's body */
+  .foot-mark :global(.foot-star) { width: 0.78em; height: 0.78em; translate: 0 0.14em; animation: turn 60s linear infinite; }
+
+  /* the ways in, on one line between dots, underlined in gold when pointed at */
+  .foot-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin: 0; padding: 0; list-style: none; }
+  .foot-links li { display: flex; align-items: center; }
+  .foot-links li + li::before { content: "·"; color: color-mix(in srgb, var(--muted) 60%, transparent); padding-inline: 4px; }
+  .foot-links :is(a, button) {
+    display: inline-flex; align-items: center; min-height: 44px; padding-inline: 6px; border-radius: 10px;
+    font-size: 15px; color: var(--ink-2); text-decoration: underline 1px transparent; text-underline-offset: 0.4em;
+    transition: color var(--t-1) ease, text-decoration-color var(--t-1) ease;
+  }
+  .foot-links :is(a, button):is(:hover, :focus-visible) { color: var(--ink); text-decoration-color: var(--gold); }
+
+  /* the engraving is white on black and serves as a luminance mask: the gold shows through its lines and nothing
+     through its black, so it prints like ink on whatever paper the theme lays down */
+  .foot-scene {
+    --scene: url("/footer-scene.svg");
+    width: 100%; height: 260px; pointer-events: none; background: var(--scene-ink);
+    -webkit-mask: var(--scene) 50% 100% / cover no-repeat; mask: var(--scene) 50% 100% / cover no-repeat;
+    mask-mode: luminance; -webkit-mask-source-type: luminance;
+  }
+  /* the ink: the deep gold of the text on light paper, the warm gold of the leaf on dark */
+  .foot { --scene-ink: var(--gold); }
+
+  @media (min-width: 768px) {
+    .foot-text, .foot-scene { grid-area: 1 / 1; }
+    .foot-text { align-self: start; padding-top: clamp(56px, 6vw, 88px); }
+    .foot-scene { height: max(33.333vw, 440px); }
+  }
+
+  /* the credit, quietly, at the foot of the drawing, in the calm stretch of ground under the central gate */
+  .foot { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .foot-stage { position: relative; }
+  .foot-credit {
+    position: absolute; z-index: 1; left: 50%; bottom: clamp(2px, 1.2vw, 14px); translate: -50% 0;
+    display: flex; justify-content: center; font-size: 13px; color: var(--muted); white-space: nowrap;
+  }
+  .credit-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 10px; color: var(--muted); }
+  .credit-text { display: inline-flex; align-items: baseline; gap: 0.4em; }
+  /* the name's ink, which pointing at the credit turns to gold; registered so it fades rather than flips, and so the
+     sheen below keeps running through it instead of being switched off */
+  @property --name-ink { syntax: "<color>"; inherits: true; initial-value: transparent; }
+  .credit-link { --name-ink: var(--ink); transition: --name-ink var(--t-2) ease; }
+  .credit-link:is(:hover, :focus-visible) { --name-ink: var(--gold); }
+  .credit-name { font-family: var(--f-display); font-size: 15px; color: var(--name-ink); }
+  .credit-mark { width: 20px; height: 20px; flex: none; fill: var(--name-ink); }
+  /* every few seconds a gold light passes over the name, in the reading direction, and the mark catches it first */
+  @media (prefers-reduced-motion: no-preference) {
+    .credit-name {
+      background: linear-gradient(100deg, var(--name-ink) 0 40%, var(--gold) 50%, var(--name-ink) 60% 100%) 0 0 / 260% 100% no-repeat;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: credit-sheen 7s var(--e-in-out) infinite;
+    }
+    .credit-mark { animation: credit-glint 7s ease-in-out infinite; }
+  }
+  @keyframes credit-sheen { 0%, 58% { background-position: 0 0; } 86%, 100% { background-position: 100% 0; } }
+  @keyframes credit-glint { 0%, 54% { fill: var(--name-ink); } 62% { fill: var(--gold); } 76%, 100% { fill: var(--name-ink); } }
+
+  @media (max-width: 640px) {
+    .foot { margin-top: 64px; }
+    /* the links wrap here, so they are spaced rather than dotted: a dot would be left at the start of a line */
+    .foot-links { gap: 0 12px; }
+    .foot-links li + li::before { content: none; }
+    .foot-scene { margin-top: -24px; height: 300px; }
+    /* the strip of ground is shallower at this size, so the credit is a little more compact */
+    .credit-link { min-height: 36px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .foot-mark :global(.foot-star) { animation: none; } }
+</style>

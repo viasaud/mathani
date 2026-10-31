@@ -10,7 +10,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "fetch-data": "node scripts/fetch-quran.mjs"
+    "fetch-data": "node scripts/fetch-quran.mjs",
+    "og": "node scripts/og.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
@@ -19,6 +20,7 @@
     "gsap": "3.13.0"
   },
   "devDependencies": {
+    "playwright-core": "1.56.0",
     "typescript": "^5.9.3"
   }
 }

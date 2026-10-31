@@ -4,6 +4,7 @@ import "../styles/home.css";
 import Star from "../components/Star.astro";
 import { ar, ayahs, JUZ_NAMES, placeLabel } from "../lib/arabic";
 import { getChapters, getJuz, getVerses } from "../lib/quran";
+import { quranBook } from "../lib/seo";
 
 const chapters = getChapters();
 const { starts } = getJuz();
@@ -55,7 +56,7 @@ const picks = [
 const madani = chapters.filter((c) => c.place === "madinah").length;
 ---
 
-<Base cover>
+<Base cover schema={[quranBook(Astro.site!)]}>
   <main class="home">
     <!-- ---------- the cover ---------- -->
     <section class="cover" data-tone="cover" id="cover" aria-labelledby="cover-title">
@@ -65,7 +66,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
         <div class="cover-copy">
           <h1 id="cover-title" data-hero-title><span>مثاني</span></h1>
           <p class="epigraph" data-hero><span>﴿كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾</span> <small>الزمر ٢٣</small></p>
-          <p class="hero-lead" data-hero>مصحف المدينة النبوية كما طُبع، صفحةً&nbsp;صفحة، مع التفسير الميسّر لكل آية<span class="v-before">.</span></p>
+          <p class="hero-lead" data-hero>مصحف المدينة النبوية كما طُبع، صفحةً&nbsp;صفحة، مع التفسير الميسّر لكل آية</p>
           <!-- what to do next: one pill that says where reading goes. For a returning reader the place they stopped and
                how far into the mushaf that is (the ring); for a new one, the first surah. Searching is in the header,
                always there. Filled by home.ts. -->
@@ -130,7 +131,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
           <div>
             <span class="eyebrow">الأجزاء</span>
             <h2 id="juz-title">ثلاثون جزءًا</h2>
-            <p>تحت كل رقم السورة والآية التي يبدأ بها الجزء<span class="v-before">.</span></p>
+            <p>تحت كل رقم السورة والآية التي يبدأ بها الجزء</p>
           </div>
           <span class="big-num" aria-hidden="true" data-count="30">{ar(30)}</span>
         </div>
@@ -156,7 +157,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
           <div>
             <span class="eyebrow">السور</span>
             <h2 id="surah-title">مئة وأربع عشرة سورة</h2>
-            <p>بترتيب المصحف<span class="v-before">.</span></p>
+            <p>بترتيب المصحف</p>
           </div>
           <span class="big-num" aria-hidden="true" data-count="114">{ar(114)}</span>
         </div>

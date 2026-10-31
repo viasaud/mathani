@@ -12,6 +12,7 @@
 <p align="center">
   <a href="#run-it">Run it</a> &nbsp;·&nbsp;
   <a href="#deploy">Deploy</a> &nbsp;·&nbsp;
+  <a href="#search-and-sharing">Search and sharing</a> &nbsp;·&nbsp;
   <a href="#how-it-is-built">How it is built</a> &nbsp;·&nbsp;
   <a href="#credits">Credits</a>
 </p>
@@ -93,7 +94,7 @@
 | **Type** | Thmanyah Serif Text for the interface and the tafsir, Thmanyah Serif Display for titles and surah names, Scheherazade New for the Quran in the text views, and the 604 King Fahd Complex fonts for the pages |
 | **Motion** | GSAP for the cover's opening, scroll reveals, count-ups, the page turn and the surah filter. CSS transitions for the panels and the verse sheet. View Transitions for moving between pages, plus a circular reveal when the theme changes |
 
-**Before and after.** [`src/styles/unslop.css`](src/styles/unslop.css) is a polish pass laid over the original styles under `html.after`. It changes the gold effects, labels, weights, spacing, radii and some motion. A small **قبل / بعد** switch pinned to the foot of every page ([`Compare.astro`](src/components/Compare.astro)) flips between the two looks, and each browser remembers its choice. To keep the after look for good, fold its rules into their own stylesheets and remove `<Compare />` from [`Base.astro`](src/layouts/Base.astro).
+**Polish.** [`src/styles/unslop.css`](src/styles/unslop.css) holds the refinements laid over the original styles: solid gold instead of gilt gradients, no glows, regular display weights, spacing on a 4px grid, one card radius, cards that stay put on hover, and panels that open without overshoot.
 
 <br>
 
@@ -106,6 +107,7 @@ npm install
 npm run dev        # http://localhost:4321
 npm run build      # static output in dist/
 npm run preview    # serve the built site
+npm run og         # redraw the share cards and app icons in public/
 ```
 
 Bun works too (`bun install`, `bun run dev`).
@@ -117,6 +119,24 @@ In Vercel, choose **Add New → Project**, import [`viasaud/mathani`](https://gi
 From the terminal, use `npx vercel` for a preview and `npx vercel --prod` for production.
 
 The sitemap and canonical links use Vercel's production domain automatically. For a custom domain, set `SITE_URL` (for example `https://quran.example.com`) in the project's environment variables and redeploy.
+
+| Environment variable | What it does |
+|---|---|
+| `SITE_URL` | The address every canonical link, share card and sitemap entry points to. Set it whenever the site lives on its own domain |
+| `PUBLIC_GOOGLE_SITE_VERIFICATION` | The code from Google Search Console's HTML-tag check, written into every page's head |
+| `PUBLIC_BING_SITE_VERIFICATION` | The same for Bing Webmaster Tools |
+
+Once it is live, add the site to Google Search Console and Bing Webmaster Tools and submit `/sitemap-index.xml`.
+
+<br>
+
+## Search and sharing
+
+- **Every page has its own title and description**, written from the data: the surah pages give the surah's place of revelation, verse count, pages and opening words, and each mushaf page gives its juz, the verses it holds and the first verse that begins on it.
+- **Structured data** (JSON-LD) describes the site and its verse search, the Quran as a book, each surah as a chapter of it with its pages, and the breadcrumbs from the home page to every surah and mushaf page.
+- **Share cards** for the site and for each of the 114 surahs, 1200 × 630, set in the site's own type, in `public/og/`. A mushaf page shares its surah's card. They come from `npm run og` (`scripts/og.mjs`), which also draws the app icons in `public/icons/`; run it again after changing the cards or the data.
+- **One address per page**, without a trailing slash, in the links, the canonical tags and the sitemap alike. `vercel.json` redirects the slashed form, caches the hashed assets and fonts for a year, and keeps the two data files out of the index.
+- **The surah pages are readable by search engines.** A reader who chose the pages view, or who follows a surah link inside the site, goes on to the mushaf page; someone arriving from outside, from a search result or a shared link, reads the surah where they landed, in the continuous text.
 
 <br>
 
@@ -133,7 +153,10 @@ The sitemap and canonical links use Vercel's production domain automatically. Fo
 data/                    Quran text, tafsir, tajweed and search text: one JSON file per surah, plus chapters.json
 data/layout/             Where every word sits in the printed mushaf: glyph code, page, line
 docs/screens/            The screenshots in this file
+public/og/, public/icons/ Share cards and app icons, drawn by scripts/og.mjs
 scripts/fetch-quran.mjs  Re-downloads data/ from the quran.com API
+scripts/og.mjs           Draws the share cards and app icons (npm run og)
+vercel.json              One address per page, cache headers, noindex for the data files
 src/
   pages/index.astro      Home: cover, continue reading, where to begin, the juz, the surahs
   pages/page/[n].astro   One static page per mushaf page (604 pages)
@@ -141,8 +164,9 @@ src/
   pages/search.astro     Verse search; reads /search.json (built from data/)
   pages/index.json.ts    Surah list and the first verse of every page, juz and quarter, for the index, palette and ruler
   layouts/Base.astro     Shell: header, settings, index, palette, shortcuts; saved settings applied before first paint
-  components/            Star mark, verse sheet, surah text (both views), tajweed key, before/after switch
-  lib/                   Data access and page layout (quran.ts), the shared index, verse sheet, search folding, helpers
+  components/            Star mark, verse sheet, surah text (both views), tajweed key
+  lib/                   Data access and page layout (quran.ts), titles and structured data (seo.ts), the shared index,
+                         verse sheet, search folding, helpers
   scripts/shell.ts       Every page: header, index, palette, settings (theme reveal), shortcuts
   scripts/motion.ts      Every page: segment pill, scroll reveals, count-ups, the cover's opening
   scripts/home.ts        Home: the cover's header tone, the continue-reading ring, current juz, surah filter, back to top
@@ -152,7 +176,7 @@ src/
   styles/global.css      Tokens for the four themes and the cover, motion tokens, tajweed colors, shared components
   styles/home.css        The home page
   styles/reader.css      The mushaf page and the two text views
-  styles/unslop.css      The after look, laid over the rest (see Design)
+  styles/unslop.css      The polish pass, laid over the rest (see Design)
 ```
 
 <details>

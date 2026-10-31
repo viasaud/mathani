@@ -3,7 +3,8 @@ import "@fontsource/scheherazade-new/400.css";
 import "../styles/global.css";
 import "../styles/unslop.css";
 import Star from "../components/Star.astro";
-import Compare from "../components/Compare.astro";
+import Footer from "../components/Footer.astro";
+import { DEFAULT_DESCRIPTION, HOME_TITLE, OG_SIZE, SITE_NAME, graph, ogHome, website } from "../lib/seo";
 
 interface Props {
   title?: string;
@@ -12,21 +13,38 @@ interface Props {
   context?: { title: string; meta?: string[] };
   reader?: boolean; // immersive reading: the header slides away while scrolling down
   cover?: boolean; // the page opens on the dark cover (home), so the header starts in its light-on-dark tone
+  image?: string; // the share card (public/og/), see lib/seo.ts
+  imageAlt?: string;
+  type?: "website" | "article";
+  noindex?: boolean; // kept out of search results (the 404 page)
+  schema?: Record<string, unknown>[]; // schema.org descriptions of this page, added to the site's own
 }
 
-const SITE_NAME = "مثاني";
 const {
   title,
-  description = "اقرأ القرآن الكريم في صفحات مصحف المدينة، مع التفسير الميسّر والبحث في الآيات.",
+  description = DEFAULT_DESCRIPTION,
   current = 0,
   context,
   reader = false,
   cover = false,
+  image = ogHome,
+  imageAlt = "مثاني: القرآن الكريم بمصحف المدينة مع التفسير الميسّر",
+  type = "website",
+  noindex = false,
+  schema = [],
 } = Astro.props;
-const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const site = Astro.site!;
+const fullTitle = title ? `${title} · ${SITE_NAME}` : HOME_TITLE;
+// one address per page, without a trailing slash, as the links and the sitemap write it
+const canonical = new URL(Astro.url.pathname.replace(/\/+$/, "") || "/", site);
+const ogImage = new URL(image, site);
+const ld = graph([website(site), ...schema]);
+// ownership checks for Google Search Console and Bing Webmaster Tools, set in the deployment's environment variables
+const verify = {
+  "google-site-verification": import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION,
+  "msvalidate.01": import.meta.env.PUBLIC_BING_SITE_VERIFICATION,
+};
 const modes = [["pages", "صفحات"], ["flow", "متصل"], ["list", "آية وتفسير"]];
-const year = new Date().getFullYear();
 // The lens at the rims of the liquid glass: two displacement maps, stretched over each control. Red moves pixels
 // sideways near the left and right edges, green up and down near the top and bottom; mid-grey (128) leaves the middle
 // untouched. Used by backdrop-filter: url(#lg) where the browser supports it (html.lg, global.css).
@@ -46,18 +64,41 @@ const map = (axis: "x" | "y", edge: number) => {
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />}
+    {!noindex && <link rel="canonical" href={canonical} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="application-name" content={SITE_NAME} />
+    <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="preload" href="/fonts/thmanyah/thmanyahseriftext-Regular.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- the face the first screen's title is set in: the regular cut for the cover's name, the bold one for the reading
+         pages' running heads and surah plates -->
+    <link rel="preload" href={`/fonts/thmanyah/thmanyahserifdisplay-${cover ? "Regular" : "Bold"}.woff2`} as="font" type="font/woff2" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#f4f1e8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0a08" media="(prefers-color-scheme: dark)" />
+    <!-- the link preview: Open Graph for most apps, the Twitter card for X -->
+    <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:locale" content="ar_AR" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content={String(OG_SIZE.width)} />
+    <meta property="og:image:height" content={String(OG_SIZE.height)} />
+    <meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={imageAlt} />
+    <script type="application/ld+json" set:html={ld} />
+    {Object.entries(verify).map(([name, content]) => content && <meta name={name} content={content} />)}
     <!-- Apply the saved theme, view, tajweed and size before first paint so nothing flashes. html.motion turns on the
          entrance choreography (motion.ts); if that script never runs, the content is shown anyway after a moment. -->
     <script is:inline>
@@ -70,8 +111,7 @@ const map = (axis: "x" | "y", edge: number) => {
         d.dataset.spread = g("spread") || "on";
         d.dataset.tajweed = g("tajweed") || "off";
         d.style.setProperty("--qsize", (g("size") || (innerWidth < 500 ? 25 : 28)) + "px");
-        if (g("look") !== "before") d.classList.add("after"); // the unslop pass, unless the reader switched back (Compare.astro)
-      } catch (e) { document.documentElement.classList.add("after"); }
+      } catch (e) {}
       // the glass bends what is under its rims where the browser can do that in a backdrop (Chromium)
       try {
         var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
@@ -185,28 +225,7 @@ const map = (axis: "x" | "y", edge: number) => {
 
     <slot />
 
-    {!reader && (
-      <footer class="foot" data-tone="cover">
-        <div class="foot-inner gutter">
-          <div class="foot-brand">
-            <Star class="foot-star" />
-            <div>
-              <strong>مثاني</strong>
-              <p>﴿ٱللَّهُ نَزَّلَ أَحۡسَنَ ٱلۡحَدِيثِ كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾ <small>الزمر ٢٣</small></p>
-            </div>
-          </div>
-          <nav class="foot-links" aria-label="روابط">
-            <a href="/page/1">الصفحة الأولى</a>
-            <a href="/search">البحث في الآيات</a>
-            <button type="button" data-open="drawer">فهرس السور</button>
-            <button type="button" data-open="palette">انتقل إلى…</button>
-          </nav>
-          <p class="foot-note">نص المصحف بخطوط مجمع الملك فهد لطباعة المصحف الشريف، والتفسير الميسّر<span class="v-before">.</span> <span class="num">{new Intl.NumberFormat("ar-EG", { useGrouping: false }).format(year)}</span></p>
-        </div>
-      </footer>
-    )}
-
-    <Compare />
+    {!reader && <Footer />}
 
     <div class="scrim" id="scrim"></div>
 

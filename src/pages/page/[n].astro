@@ -6,6 +6,7 @@ import Star from "../../components/Star.astro";
 import VerseSheet from "../../components/VerseSheet.astro";
 import { ar, JUZ_NAMES } from "../../lib/arabic";
 import { pageFontUrl as fontUrl } from "../../lib/page-fonts";
+import { breadcrumbs, ogSurah } from "../../lib/seo";
 import { getChapters, getLayout, getMushafPages, getVerses, tafsirLabel, tafsirSpans, type MushafPage } from "../../lib/quran";
 
 export function getStaticPaths() {
@@ -60,6 +61,28 @@ const headOf = (pg: MushafPage) => {
 const pageVerses = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s}:${g.a}`))].map((k) => verses[k][0]);
 const names = Object.fromEntries(surahsHere.map((s) => [s, chapters[s - 1].name]));
 const surahName = chapters[first.s - 1].name;
+
+// What a search result shows for this page: where it sits in the mushaf, the verses it holds, and the first verse that
+// begins on it (a page can open part way through a verse carried over from the page before).
+const keysHere = [...new Set(glyphs.map((g) => `${g.s}:${g.a}`))].map((k) => k.split(":").map(Number) as [number, number]);
+const [[s1, a1], [s2, a2]] = [keysHere[0], keysHere[keysHere.length - 1]];
+const juzHere = getVerses(s1)[a1 - 1][2];
+const range = s1 === s2
+  ? `سورة ${chapters[s1 - 1].name}، ${a1 === a2 ? `الآية ${ar(a1)}` : `الآيات ${ar(a1)}–${ar(a2)}`}`
+  : `من سورة ${chapters[s1 - 1].name}، الآية ${ar(a1)}، إلى سورة ${chapters[s2 - 1].name}، الآية ${ar(a2)}`;
+const startsHere = keysHere.find(([s, a]) => getVerses(s)[a - 1][1] === n);
+const firstWords = startsHere ? getVerses(startsHere[0])[startsHere[1] - 1][0].trim().split(/\s+/) : [];
+const openingWords = firstWords.slice(0, 6).join(" ") + (firstWords.length > 6 ? "…" : "");
+const pageDescription = `الصفحة ${ar(n)} من مصحف المدينة النبوية، في الجزء ${JUZ_NAMES[juzHere]}: ${range}.` +
+  (openingWords ? ` ${startsHere === keysHere[0] ? "أولها" : "وفيها"}: ﴿${openingWords}﴾.` : "") +
+  " المس أي كلمة لقراءة الآية وتفسيرها الميسّر.";
+const schema = [
+  breadcrumbs(Astro.site!, [
+    { name: "مثاني", path: "/" },
+    { name: `سورة ${surahName}`, path: `/surah/${first.s}` },
+    { name: `صفحة ${ar(n)}`, path: `/page/${n}` },
+  ]),
+];
 // The header gets no context (title, page, juz): the printed page names its surah, juz and page itself, and the dock
 // the surah, so the header just offers the index.
 const chev = (d: string) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
@@ -69,8 +92,12 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
 ---
 
 <Base
-  title={`صفحة ${ar(n)}، سورة ${surahName}`}
-  description={`الصفحة ${ar(n)} من مصحف المدينة النبوية.`}
+  title={`صفحة ${ar(n)} من القرآن الكريم، سورة ${surahName}`}
+  description={pageDescription}
+  image={ogSurah(first.s)}
+  imageAlt={`سورة ${surahName}، الصفحة ${ar(n)} من مصحف المدينة`}
+  type="article"
+  schema={schema}
   current={first.s}
   reader
 >
@@ -93,6 +120,10 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
   </Fragment>
 
   <main class="reader-main fit gutter" id="mushaf" data-page={n} data-first={`${first.s}:${first.a}`}>
+    <!-- the printed page names itself in its running head and footer; for screen readers and search engines it gets a
+         heading in words, and a way to the same surah as text with its tafsir -->
+    <h1 class="sr-only">صفحة {ar(n)} من القرآن الكريم، سورة {surahName}</h1>
+    <p class="sr-only"><a href={`/surah/${first.s}`}>سورة {surahName} مكتوبة مع التفسير الميسّر</a></p>
     <div class="stage" data-fit-shift>
       {spread.map((pg) => {
         const h = headOf(pg);

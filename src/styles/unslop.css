@@ -1,71 +1,67 @@
-/* After: the unslop pass, laid over the original styles under html.after so the two can be compared (Compare.astro).
-   Polish only: the palette, faces, layout, the cover and all of the motion stay. What changes is the glows and gilt
-   gradients, the duplicated labels, the weights, and the spacing and radii that had drifted off the grid. To keep it,
-   fold each rule into its own stylesheet and remove the switch. */
+/* The polish pass over the original styles: the gilt gradients and glows, the labels that repeated their headings, the
+   weights, the spacing and radii that had drifted off the grid, cards that leapt on hover, panels that sprang past
+   their place, and the mushaf page lifting under the verse sheet. Each rule is scoped under :root so it outranks the
+   rule it refines, wherever the two land in the bundle. */
 
 /* ---------- color: the gold is ink, not light ---------- */
-html.after .cover h1 span {
+:root .cover h1 span {
   background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--cover-gold); animation: none;
 }
-html.after .halo { display: none; }
-html.after :is(.ro-core, .resume-ring .rb) { filter: none; }
-html.after .juz-tile.here .juz-num { background: none; color: var(--gold-text); }
-html.after :is(.btn-primary, .btn-primary:hover) { box-shadow: none; }
-html.after body:has(#mushaf.fit) { background: var(--bg); }
+:root .halo { display: none; }
+:root :is(.ro-core, .resume-ring .rb) { filter: none; }
+:root .juz-tile.here .juz-num { background: none; color: var(--gold-text); }
+:root :is(.btn-primary, .btn-primary:hover) { box-shadow: none; }
+:root body:has(#mushaf.fit) { background: var(--bg); }
 
 /* ---------- copy: no label repeats the heading under it, no period ends a short line ---------- */
-html.after .v-before { display: none; }
-html.after .home :is(.eyebrow, .big-num) { display: none; }
+:root .home :is(.eyebrow, .big-num) { display: none; }
 
 /* ---------- type: hierarchy from size; the display face in its regular cut, the text face up to 500 ---------- */
-html.after :is(.cover h1, .section-head h2, .pick-name, .surah-card .nm, .juz-num, .resume-text strong, .brand-name, .foot-brand strong, .ix-top h2, .search-hero h1, .empty-state h1, .keys-head h2, .r-group h2, .pager strong) {
+:root :is(.cover h1, .section-head h2, .pick-name, .surah-card .nm, .juz-num, .resume-text strong, .brand-name, .ix-top h2, .search-hero h1, .empty-state h1, .keys-head h2, .r-group h2, .pager strong) {
   font-weight: 400; letter-spacing: 0;
 }
-html.after :is(.pick-medal b, .sc-medal b, .resume-ring b, .pal-medal b, .pal-ring b, .pal-item b, .pal-empty b, .keys h3, .ix-juz span) {
+:root :is(.pick-medal b, .sc-medal b, .resume-ring b, .pal-medal b, .pal-ring b, .pal-item b, .pal-empty b, .keys h3, .ix-juz span) {
   font-family: var(--f-ui); font-weight: 500;
 }
-html.after :is(.pick-sub, .resume-text small, .resume-ring b, .pal-ring b, .keys h3) { font-size: 13px; }
-html.after .section-head p { font-size: 16px; }
+:root :is(.pick-sub, .resume-text small, .resume-ring b, .pal-ring b, .keys h3) { font-size: 13px; }
+:root .section-head p { font-size: 16px; }
 
 /* ---------- spacing: the 4px grid, equal things equal ---------- */
-html.after .cover-copy { gap: 24px; }
-html.after .actions { margin-top: 8px; }
-html.after .resume { gap: 16px; height: 72px; padding: 8px; }
-html.after .section { padding-top: 96px; }
-html.after .section-head { margin-bottom: 32px; }
-html.after .section-head > div { gap: 8px; }
-html.after :is(.picks, .surah-grid) { gap: 12px; }
-html.after .juz-grid { gap: 12px; }
-html.after .pick { padding: 28px 20px 24px; }
-html.after .pick-sub { margin-top: 12px; padding-top: 12px; }
-html.after .juz-tile { padding: 20px 8px 16px; gap: 8px; }
-html.after .surah-card { padding: 20px 16px 16px; gap: 8px; }
-html.after .filters button { padding-inline: 16px; }
-html.after .surah-tools { margin-bottom: 20px; }
-html.after .brand { gap: 8px; padding-inline: 6px 12px; }
-html.after .cap-index { gap: 8px; padding-inline: 12px 16px; }
-html.after .hd-meta span { padding: 2px 12px; }
-html.after .foot-brand { gap: 16px; }
-html.after .foot-links { gap: 4px 24px; }
-html.after .foot-note { padding-top: 24px; }
+:root .cover-copy { gap: 24px; }
+:root .actions { margin-top: 8px; }
+:root .resume { gap: 16px; height: 72px; padding: 8px; }
+:root .section { padding-top: 96px; }
+:root .section-head { margin-bottom: 32px; }
+:root .section-head > div { gap: 8px; }
+:root :is(.picks, .surah-grid) { gap: 12px; }
+:root .juz-grid { gap: 12px; }
+:root .pick { padding: 28px 20px 24px; }
+:root .pick-sub { margin-top: 12px; padding-top: 12px; }
+:root .juz-tile { padding: 20px 8px 16px; gap: 8px; }
+:root .surah-card { padding: 20px 16px 16px; gap: 8px; }
+:root .filters button { padding-inline: 16px; }
+:root .surah-tools { margin-bottom: 20px; }
+:root .brand { gap: 8px; padding-inline: 6px 12px; }
+:root .cap-index { gap: 8px; padding-inline: 12px 16px; }
+:root .hd-meta span { padding: 2px 12px; }
 
 /* ---------- details: one card radius, nested radii that add up ---------- */
-html.after :is(.pick, .juz-tile, .surah-card) { border-radius: 16px; }
-html.after .pick::after { inset: 8px; border-radius: 8px; }
-html.after :is(.pick, .juz-tile, .surah-card):focus-visible { border-radius: 16px; }
+:root :is(.pick, .juz-tile, .surah-card) { border-radius: 16px; }
+:root .pick::after { inset: 8px; border-radius: 8px; }
+:root :is(.pick, .juz-tile, .surah-card):focus-visible { border-radius: 16px; }
 
 /* ---------- hover: the cards stay in place; the rim, star and details still answer ---------- */
-html.after :is(.pick, .juz-tile, .surah-card):is(:hover, :active) { transform: none; }
-html.after :is(.pick, .juz-tile, .surah-card):active { scale: 0.98; }
+:root :is(.pick, .juz-tile, .surah-card):is(:hover, :active) { transform: none; }
+:root :is(.pick, .juz-tile, .surah-card):active { scale: 0.98; }
 /* the verse sheet rises and settles at its place, instead of springing past it and dropping back */
-html.after .vsheet.on { transition: transform var(--t-3) var(--e-out), visibility 0s; }
+:root .vsheet.on { transition: transform var(--t-3) var(--e-out), visibility 0s; }
 /* so do the index, the search palette, the reading settings and the shortcuts: the same moves, without the overshoot */
-html.after .drawer.on { transition: transform var(--t-3) var(--e-out), opacity var(--t-2) ease, visibility 0s; }
-html.after .settings { transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease, display var(--t-2) allow-discrete; }
-html.after :is(.palette, .keys) {
+:root .drawer.on { transition: transform var(--t-3) var(--e-out), opacity var(--t-2) ease, visibility 0s; }
+:root .settings { transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease, display var(--t-2) allow-discrete; }
+:root :is(.palette, .keys) {
   transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease,
     display var(--t-2) allow-discrete, overlay var(--t-2) allow-discrete;
 }
 /* the mushaf page stays where it is when the tafsir sheet opens; the verse is marked in gold, and the sheet rises
    over the page rather than pushing it up under the header (sheet.ts lifts [data-fit-shift] inline) */
-html.after [data-fit-shift] { transform: none !important; }
+:root [data-fit-shift] { transform: none !important; }

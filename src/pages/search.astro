@@ -1,12 +1,18 @@
 ---
 import Base from "../layouts/Base.astro";
 import { getChapters } from "../lib/quran";
+import { breadcrumbs } from "../lib/seo";
 
 const names = getChapters().map((c) => c.name);
 const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة", "اليتيم", "الشكر"];
 ---
 
-<Base title="البحث في الآيات" description="ابحث عن كلمة أو عبارة في آيات القرآن الكريم." context={{ title: "البحث في الآيات" }}>
+<Base
+  title="البحث في آيات القرآن الكريم"
+  description="ابحث عن أي كلمة أو عبارة في آيات القرآن الكريم كلها، دون كتابة التشكيل ولا ضبط الهمزة والتاء المربوطة، فكلمة «الصلاة» تجد «ٱلصَّلَوٰةَ». وتنقلك كل نتيجة إلى آيتها في مصحف المدينة."
+  context={{ title: "البحث في الآيات" }}
+  schema={[breadcrumbs(Astro.site!, [{ name: "مثاني", path: "/" }, { name: "البحث في الآيات", path: "/search" }])]}
+>
   <main class="gutter search-page">
     <section class="search-hero">
       <span class="eyebrow" data-reveal>ستة آلاف ومئتان وست وثلاثون آية</span>

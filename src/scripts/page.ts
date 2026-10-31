@@ -274,6 +274,12 @@ function swap(doc: Document, to: number, push: boolean) {
   [firstS, firstA] = root.dataset.first!.split(":").map(Number);
   hovered = null;
   document.title = doc.title;
+  // the page's heading in words and its link to the text ([n].astro), and what the head says about it
+  for (const sel of [":scope > h1", ":scope > h1 + p"]) root.querySelector(sel)?.replaceWith(next.querySelector(sel)!.cloneNode(true));
+  for (const sel of ['link[rel="canonical"]', 'meta[name="description"]', 'meta[property^="og:"]', 'meta[name^="twitter:"]', 'script[type="application/ld+json"]']) {
+    const fresh = doc.head.querySelectorAll(sel);
+    document.head.querySelectorAll(sel).forEach((el, i) => fresh[i] && el.replaceWith(document.importNode(fresh[i], true)));
+  }
   if (push) history.pushState({ page: pageNo }, "", `/page/${pageNo}`);
   layout();
   if (before) flip(before, pageNo > from ? 1 : -1);

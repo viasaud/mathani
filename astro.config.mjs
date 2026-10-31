@@ -10,6 +10,9 @@ const site =
 
 export default defineConfig({
   site,
+  // one address per page: /surah/18, never /surah/18/, matching every link on the site, the canonical links and the
+  // sitemap (vercel.json redirects the slashed form)
+  trailingSlash: "never",
   integrations: [sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: "hover" },
   // Small fonts would otherwise be inlined into the stylesheet every page loads, even for subsets no page uses.

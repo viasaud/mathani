@@ -3,8 +3,9 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/reader.css";
 import SurahText from "../../components/SurahText.astro";
 import VerseSheet from "../../components/VerseSheet.astro";
-import { ar, placeLabel } from "../../lib/arabic";
+import { ar, ayahs, placeLabel } from "../../lib/arabic";
 import { getChapters, getVerses, type Chapter } from "../../lib/quran";
+import { breadcrumbs, ogSurah, quranBook } from "../../lib/seo";
 
 export function getStaticPaths() {
   return getChapters().map((chapter) => ({ params: { id: String(chapter.id) }, props: { chapter } }));
@@ -22,21 +23,57 @@ const next = chapters[chapter.id];
 const first = verses[0][1];
 const last = verses[verses.length - 1][1];
 const pagesLabel = first === last ? `صفحة ${ar(first)}` : `الصفحات ${ar(first)}–${ar(last)}`;
-const description = `سورة ${chapter.name} (${placeLabel(chapter.place)}، ${ar(chapter.n)} آية) بالرسم العثماني مع التفسير الميسّر.`;
+// what a search result shows: what the page holds, then the facts people look for, then the words it opens with
+const words = verses[0][0].trim().split(/\s+/);
+const opening = words.slice(0, 6).join(" ") + (words.length > 6 ? "…" : "");
+const where = first === last ? `في الصفحة ${ar(first)}` : `في الصفحات ${ar(first)}–${ar(last)}`;
+const description = `اقرأ سورة ${chapter.name} كاملة بالرسم العثماني من مصحف المدينة، مع التفسير الميسّر لكل آية. سورة ${placeLabel(chapter.place)}، ${ayahs(chapter.n)}، ${where}. أولها: ﴿${opening}﴾`;
+const site = Astro.site!;
+const url = new URL(`/surah/${chapter.id}`, site).href;
+const schema = [
+  quranBook(site),
+  {
+    "@type": "Chapter",
+    "@id": `${url}#surah`,
+    url,
+    name: `سورة ${chapter.name}`,
+    alternateName: `Surah ${chapter.en}`,
+    description,
+    position: chapter.id,
+    pageStart: first,
+    pageEnd: last,
+    inLanguage: "ar",
+    isPartOf: { "@id": new URL("/#quran", site).href },
+  },
+  breadcrumbs(site, [
+    { name: "مثاني", path: "/" },
+    { name: `سورة ${chapter.name}`, path: `/surah/${chapter.id}` },
+  ]),
+];
 ---
 
 <Base
-  title={`سورة ${chapter.name}`}
+  title={`سورة ${chapter.name} مكتوبة كاملة مع التفسير الميسّر`}
   description={description}
+  image={ogSurah(chapter.id)}
+  imageAlt={`سورة ${chapter.name}، ${placeLabel(chapter.place)}، ${ayahs(chapter.n)}`}
+  type="article"
+  schema={schema}
   current={chapter.id}
   context={{ title: `سورة ${chapter.name}`, meta: [placeLabel(chapter.place), `${ar(chapter.n)} آية`, pagesLabel] }}
   reader
 >
-  <!-- In the page view (the default), a surah link opens the mushaf page where the verse starts. -->
+  <!-- In the page view (the default), a surah link opens the mushaf page where the verse starts: for a reader who chose
+       the pages, or who followed a link here from another page of the site. Someone arriving from outside, from a
+       search result or a shared link, reads the surah here, in the continuous text, and can switch to the pages from
+       the settings; so does a search engine, which therefore finds this page's text and tafsir instead of a redirect. -->
   <script is:inline slot="head" define:vars={{ s: chapter.id, pages: verses.map((v) => v[1]) }}>
     try {
       var mode = JSON.parse(localStorage.getItem("mushaf:mode"));
-      if ((mode || "pages") === "pages") {
+      var inside = false;
+      try { inside = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
+      if (mode == null && !inside) document.documentElement.dataset.mode = "flow";
+      else if ((mode || "pages") === "pages") {
         var m = /^#a(\d{1,3})$/.exec(location.hash);
         var a = m ? Math.min(+m[1], pages.length) : 1;
         location.replace("/page/" + pages[a - 1] + (a > 1 ? "#v" + s + "-" + a : ""));
