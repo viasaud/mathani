@@ -101,6 +101,14 @@ export function tafsirSpans(verses: VerseRow[]) {
   });
 }
 
+// the spans of one surah, worked out once for all of its verse pages
+const spanCache = new Map<number, ReturnType<typeof tafsirSpans>>();
+export function getTafsirSpans(id: number) {
+  let spans = spanCache.get(id);
+  if (!spans) spanCache.set(id, (spans = tafsirSpans(getVerses(id))));
+  return spans;
+}
+
 export const tafsirLabel = ({ start, end }: { start: number; end: number }) =>
   "التفسير الميسّر" + (end > start ? `، الآيات ${ar(start + 1)}–${ar(end + 1)}` : "");
 

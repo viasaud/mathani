@@ -285,7 +285,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
   position: relative; font-size: 16px; line-height: 2; color: var(--ink-2); background: var(--bg); border-radius: 18px; padding: 14px 20px; max-width: 70ch;
   border-inline-start: 2px solid var(--gold-2);
 }
-.tafsir b { display: block; color: var(--gold-text); font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.tafsir :is(b, h2) { display: block; margin: 0 0 2px; font-family: var(--f-ui); color: var(--gold-text); font-size: 13px; font-weight: 500; line-height: inherit; }
 .tafsir p { margin: 0; }
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
 .pager a {
@@ -297,6 +297,41 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .pager a[rel="next"] { text-align: end; grid-column: 2; }
 .pager small { color: var(--muted); font-size: 13px; }
 .pager strong { font-family: var(--f-display); font-weight: 700; font-size: 24px; }
+
+/* ---------- a verse's own page, a juz's own page ---------- */
+/* the facts under the plate link on: the mushaf page, the juz; a name the verse is known by sits on its own line above
+   them, in gold */
+.surah-meta { flex-wrap: wrap; row-gap: 4px; }
+.surah-meta a { color: inherit; text-decoration: underline 1px var(--line-2); text-underline-offset: 5px; transition: color var(--t-1) ease, text-decoration-color var(--t-1) ease; }
+.surah-meta a:hover { color: var(--ink); text-decoration-color: var(--gold-2); }
+.surah-meta .named { flex-basis: 100%; color: var(--gold-text); font-weight: 500; }
+/* a tafsir that explains several verses: each of them, the one on this page marked */
+.v-span { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.v-span > * {
+  display: inline-grid; place-items: center; min-width: 36px; height: 30px; padding: 0 10px; border-radius: 999px;
+  border: 1px solid var(--line-2); font-size: 13px; line-height: 1; font-variant-numeric: tabular-nums; transition: border-color var(--t-1) ease;
+}
+.v-span a:hover { border-color: var(--gold-2); }
+.v-span [aria-current] { background: var(--gold-soft); border-color: var(--gold-2); color: var(--gold-text); }
+.v-go { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+/* «الجزء الحادي والعشرون» is longer than any surah name: a little smaller, and free to take two lines */
+.juz-page .plate h1 { font-size: clamp(28px, 6vw, 56px); white-space: normal; text-wrap: balance; }
+.j-ends { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.j-end {
+  display: grid; align-content: start; gap: 2px; padding: 14px 20px; border-radius: 18px; background: var(--bg);
+  border-inline-start: 2px solid var(--gold-2); transition: background-color var(--t-2) ease;
+}
+.j-end:hover { background: color-mix(in srgb, var(--gold-soft) 55%, var(--bg)); }
+.j-end small { font-size: 13px; color: var(--muted); }
+.j-end strong { font-family: var(--f-display); font-weight: 700; font-size: 19px; line-height: 1.4; }
+.j-words { font-family: var(--f-quran); font-size: 20px; line-height: 2; color: var(--ink-2); }
+.j-sec { margin-top: 36px; }
+.j-sec h2 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 700; font-size: 22px; line-height: 1.4; }
+/* the index drawer's rows, in as many columns as fit; pulled out so the row's tint reaches past the text column */
+.j-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 2px 12px; margin-inline: -12px; }
+.j-list .ix-num svg circle { display: none; }
+.j-rub { font: 400 24px/1 var(--f-quran); color: var(--gold-text); }
+.ix-sub .j-words { font-size: 15px; line-height: 1.7; }
 
 /* tajweed */
 .legend { display: none; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 16px; font-size: 13.5px; background: var(--bg); }
@@ -337,4 +372,6 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .text-sheet { margin-inline: -16px; border-radius: 0; box-shadow: none; padding-inline: 20px; }
   .text-sheet::before { display: none; }
   .v-tools { margin-inline-end: -12px; }
+  .j-ends { grid-template-columns: 1fr; }
+  .v-go .btn { flex: 1 1 100%; }
 }

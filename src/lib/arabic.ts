@@ -12,7 +12,23 @@ export const JUZ_NAMES = [
   "التاسع والعشرون", "الثلاثون",
 ];
 
-export const placeLabel = (place: string) => (place === "makkah" ? "مكية" : "مدنية");
+// The names people search for a juz by, where one is in common use: its opening words.
+export const JUZ_COMMON: Record<number, string> = { 28: "جزء قد سمع", 29: "جزء تبارك", 30: "جزء عم" };
+
+// Verses known by a name of their own: a single verse, or a group read together (from–to).
+export const VERSE_NAMES = [
+  { s: 2, from: 255, to: 255, name: "آية الكرسي" },
+  { s: 2, from: 282, to: 282, name: "آية الدين" },
+  { s: 2, from: 285, to: 286, name: "خواتيم سورة البقرة" },
+  { s: 3, from: 190, to: 200, name: "خواتيم سورة آل عمران" },
+  { s: 4, from: 176, to: 176, name: "آية الكلالة" },
+  { s: 18, from: 1, to: 10, name: "العشر الأوائل من سورة الكهف" },
+  { s: 24, from: 35, to: 35, name: "آية النور" },
+  { s: 59, from: 22, to: 24, name: "خواتيم سورة الحشر" },
+];
+export const verseName = (s: number, a: number) => VERSE_NAMES.find((v) => v.s === s && a >= v.from && a <= v.to)?.name;
+
+export const placeLabel =(place: string) => (place === "makkah" ? "مكية" : "مدنية");
 
 // "7 آيات", "11 آية": the counted noun agrees with the number
 export function ayahs(n: number) {

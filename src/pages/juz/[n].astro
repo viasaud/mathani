@@ -1,0 +1,136 @@
+---
+// One page per juz: where it begins and ends, the surahs it takes in, its eight quarters, and the way into the mushaf.
+import Base from "../../layouts/Base.astro";
+import "../../styles/reader.css";
+import Star from "../../components/Star.astro";
+import { ar, ayahs, JUZ_COMMON, JUZ_NAMES } from "../../lib/arabic";
+import { getChapters, getJuz, getNav, getVerses } from "../../lib/quran";
+import { breadcrumbs } from "../../lib/seo";
+
+export function getStaticPaths() {
+  return Array.from({ length: 30 }, (_, i) => ({ params: { n: String(i + 1) } }));
+}
+
+const n = Number(Astro.params.n);
+const chapters = getChapters();
+const { starts } = getJuz();
+const { rubs } = getNav();
+const row = (s: number, a: number) => getVerses(s)[a - 1];
+const opening = (s: number, a: number, count = 7) => {
+  const words = row(s, a)[0].replace("۞", "").trim().split(/\s+/); // the quarter mark is shown on its own
+  return words.slice(0, count).join(" ") + (words.length > count ? "…" : "");
+};
+
+const start = starts[n - 1];
+// it ends on the verse before the next juz begins, or on the last verse of the Quran
+const following = starts[n];
+const end = !following
+  ? { surah: 114, ayah: chapters[113].n }
+  : following.ayah > 1
+    ? { surah: following.surah, ayah: following.ayah - 1 }
+    : { surah: following.surah - 1, ayah: chapters[following.surah - 2].n };
+const firstPage = row(start.surah, start.ayah)[1];
+const lastPage = row(end.surah, end.ayah)[1];
+const name = (s: number) => chapters[s - 1].name;
+
+// each surah it takes in, whole or in part
+const surahs = chapters.slice(start.surah - 1, end.surah).map((c) => {
+  const from = c.id === start.surah ? start.ayah : 1;
+  const to = c.id === end.surah ? end.ayah : c.n;
+  return { c, from, to, whole: from === 1 && to === c.n, page: row(c.id, from)[1] };
+});
+// its two hizb, each in four quarters
+const QUARTERS = ["الحزب", "ربع الحزب", "نصف الحزب", "ثلاثة أرباع الحزب"];
+const quarters = rubs.slice((n - 1) * 8, n * 8).map(([s, a], k) => {
+  const hizb = (n - 1) * 2 + Math.floor(k / 4) + 1;
+  return { s, a, k, hizb, label: `${QUARTERS[k % 4]} ${ar(hizb)}`, page: row(s, a)[1] };
+});
+
+const common = JUZ_COMMON[n];
+const ord = `الجزء ${JUZ_NAMES[n]}`;
+const title = common ? `${common}، ${ord} من القرآن الكريم` : `${ord} من القرآن الكريم: بدايته ونهايته وسوره`;
+const pagesLabel = `الصفحات ${ar(firstPage)}–${ar(lastPage)}`;
+const names = surahs.map((x) => x.c.name);
+const listed = names.length > 8 ? `${names.slice(0, 8).join("، ")} وغيرها` : names.join("، ");
+const description =
+  `${ord} من القرآن الكريم${common ? `، ${common}` : ""}: يبدأ من سورة ${name(start.surah)}، الآية ${ar(start.ayah)}، ` +
+  `وينتهي بسورة ${name(end.surah)}، الآية ${ar(end.ayah)}، في ${pagesLabel} من مصحف المدينة. ` +
+  (names.length > 1 ? `سوره: ${listed}.` : `وكله من سورة ${names[0]}.`);
+
+const site = Astro.site!;
+const schema = [
+  breadcrumbs(site, [
+    { name: "مثاني", path: "/" },
+    { name: ord, path: `/juz/${n}` },
+  ]),
+];
+---
+
+<Base title={title} description={description} type="article" schema={schema}>
+  <main class="read gutter juz-page">
+    <header class="surah-head">
+      <div class="plate">
+        <i></i><i></i><i></i><i></i>
+        <span class="plate-side"><small>الجزء</small><b>{ar(n)}</b></span>
+        <h1>{ord}</h1>
+        <span class="plate-side"><small>صفحاته</small><b>{ar(lastPage - firstPage + 1)}</b></span>
+      </div>
+      <p class="surah-meta">
+        {common && <span class="named">{common}</span>}
+        الحزبان {ar(n * 2 - 1)} و{ar(n * 2)}<span aria-hidden="true">·</span>{pagesLabel}
+      </p>
+    </header>
+
+    <article class="text-sheet">
+      <div class="j-ends">
+        {[["يبدأ من", start], ["وينتهي عند", end]].map(([label, v]) => {
+          const { surah: s, ayah: a } = v as typeof start;
+          return (
+            <a class="j-end" href={`/surah/${s}/${a}`}>
+              <small>{label as string}</small>
+              <strong>سورة {name(s)}، الآية {ar(a)}</strong>
+              <span class="j-words">﴿{opening(s, a)}﴾</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <section class="j-sec" aria-labelledby="j-surahs">
+        <h2 id="j-surahs">{surahs.length === 1 ? "سورته" : `سوره، ${ar(surahs.length)}`}</h2>
+        <div class="j-list">
+          {surahs.map(({ c, from, to, whole, page }) => (
+            <a class="ix-item" href={`/surah/${c.id}${from > 1 ? `#a${from}` : ""}`}>
+              <span class="ix-num"><Star /><b>{ar(c.id)}</b></span>
+              <span class="ix-main"><span class="ix-name">{c.name}</span>
+              <span class="ix-sub">{whole ? `كاملة، ${ayahs(c.n)}` : from === to ? `الآية ${ar(from)}` : `الآيات ${ar(from)}–${ar(to)}`}</span></span>
+              <span class="ix-page">ص {ar(page)}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section class="j-sec" aria-labelledby="j-quarters">
+        <h2 id="j-quarters">أرباعه</h2>
+        <div class="j-list">
+          {quarters.map(({ s, a, k, label, page }) => (
+            <a class="ix-item" href={`/surah/${s}/${a}`}>
+              <span class="ix-num j-rub" aria-hidden="true">{["۞", "¼", "½", "¾"][k % 4]}</span>
+              <span class="ix-main"><span class="ix-name">{label}</span>
+              <span class="ix-sub">سورة {name(s)}، الآية {ar(a)} <span class="j-words">﴿{opening(s, a, 5)}﴾</span></span></span>
+              <span class="ix-page">ص {ar(page)}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    </article>
+
+    <div class="v-go">
+      <a class="btn btn-primary" href={`/page/${firstPage}`}>اقرأ الجزء في المصحف، صفحة {ar(firstPage)}</a>
+    </div>
+
+    <nav class="pager" aria-label="التنقل بين الأجزاء">
+      {n > 1 && <a href={`/juz/${n - 1}`} rel="prev"><small>الجزء السابق</small><strong>الجزء {JUZ_NAMES[n - 1]}</strong></a>}
+      {n < 30 && <a href={`/juz/${n + 1}`} rel="next"><small>الجزء التالي</small><strong>الجزء {JUZ_NAMES[n + 1]}</strong></a>}
+    </nav>
+  </main>
+</Base>

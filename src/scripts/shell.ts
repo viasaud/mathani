@@ -451,10 +451,17 @@ async function runPalette() {
   let m: RegExpMatchArray | null;
   if ((m = w.match(/^(\d{1,3})\s*[:：.\/]\s*(\d{1,3})$/))) {
     const s = +m[1], a = +m[2];
-    if (s >= 1 && s <= 114 && a >= 1 && a <= index.chapters[s - 1].n) jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.star, n: a, title: `سورة ${name(s)}، الآية ${ar(a)}`, sub: "انتقل إلى الآية" });
+    if (s >= 1 && s <= 114 && a >= 1 && a <= index.chapters[s - 1].n) {
+      jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.star, n: a, title: `سورة ${name(s)}، الآية ${ar(a)}`, sub: "انتقل إلى الآية" });
+      jump.push({ href: `/surah/${s}/${a}`, icon: ICON.page, title: `تفسير الآية ${ar(a)} من سورة ${name(s)}`, sub: "الآية وتفسيرها الميسّر في صفحتها" });
+    }
   } else if ((m = w.match(/^(?:ال)?(?:جزء|ج)\s*(\d{1,2})$/))) {
     const j = +m[1];
-    if (j >= 1 && j <= 30) { const [s, a] = index.juz[j - 1]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الجزء ${JUZ_NAMES[j]}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
+    if (j >= 1 && j <= 30) {
+      const [s, a] = index.juz[j - 1];
+      jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الجزء ${JUZ_NAMES[j]}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` });
+      jump.push({ href: `/juz/${j}`, icon: ICON.page, title: `عن الجزء ${JUZ_NAMES[j]}`, sub: "سوره وأرباعه، وأين يبدأ وأين ينتهي" });
+    }
   } else if ((m = w.match(/^(?:ال)?(?:حزب|ح)\s*(\d{1,2})$/))) {
     const h = +m[1];
     if (h >= 1 && h <= 60) { const [s, a] = index.rubs[(h - 1) * 4]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الحزب ${ar(h)}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
