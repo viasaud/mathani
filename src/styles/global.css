@@ -812,6 +812,6 @@ html.theme-vt::view-transition-new(root) { animation: theme-in 640ms var(--e-in-
 }
 /* reduced motion: state changes are instant and nothing travels */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; transition-delay: 0s !important; }
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; transition-delay: 0s !important; animation-delay: 0s !important; }
   @view-transition { navigation: none; }
 }

@@ -43,6 +43,9 @@ async function paged(path, key) {
   return items;
 }
 
+// The API spells a few surah names the old way (الإنفطار, سبإ); these are the names as the mushaf prints them.
+const NAMES = { 14: "إبراهيم", 34: "سبأ", 76: "الإنسان", 78: "النبأ", 82: "الانفطار", 84: "الانشقاق" };
+
 const clean = (html) => html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 
 // ---------- tajweed ----------
@@ -132,11 +135,10 @@ await mkdir(LAYOUT, { recursive: true });
 const { chapters } = await get(`${API}/chapters?language=ar`);
 const index = chapters.map((c) => ({
   id: c.id,
-  name: c.name_arabic,
+  name: NAMES[c.id] ?? c.name_arabic,
   en: c.name_simple,
   place: c.revelation_place,
   n: c.verses_count,
-  pages: c.pages,
   bism: c.bismillah_pre,
 }));
 await writeFile(new URL("chapters.json", DATA), JSON.stringify(index));

@@ -78,8 +78,10 @@ const reveal = (els: Element[]) => {
 };
 if (moving()) {
   const items = gsap.utils.toArray<HTMLElement>("[data-reveal]");
-  gsap.set(items, { y: 28 });
-  ScrollTrigger.batch(items, { start: "top 92%", once: true, onEnter: reveal });
+  if (items.length) {
+    gsap.set(items, { y: 28 });
+    ScrollTrigger.batch(items, { start: "top 92%", once: true, onEnter: reveal });
+  }
 } else {
   document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("in"));
 }

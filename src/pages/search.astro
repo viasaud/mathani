@@ -67,13 +67,17 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
   // the last few searches that found something, newest first, kept in this browser
   const recentBox = document.getElementById("recent")!;
   const recentList = document.getElementById("recent-list")!;
-  let recent = load<string[]>("recent-searches", []);
+  const saved = load<unknown>("recent-searches", []);
+  let recent: string[] = Array.isArray(saved) ? saved.filter((q) => typeof q === "string") : [];
   const CLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   function showRecent() {
     recentBox.hidden = !recent.length;
     recentList.innerHTML = recent.map((q) => `<button class="chip" data-q="${escapeHtml(q)}">${CLOCK}${escapeHtml(q)}</button>`).join("");
   }
+  // kept once the reader settles on a search (or opens a result), not at every pause while typing it
+  let keepTimer = 0;
   function keep(q: string) {
+    clearTimeout(keepTimer);
     recent = [q, ...recent.filter((r) => r !== q)].slice(0, 6);
     save("recent-searches", recent);
   }
@@ -112,6 +116,7 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
   async function run() {
     const raw = input.value.trim();
     const mine = ++seq;
+    clearTimeout(keepTimer);
     try {
       history.replaceState(null, "", raw ? `?q=${encodeURIComponent(raw)}` : location.pathname);
     } catch {}
@@ -142,7 +147,7 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
       : `لا توجد آية فيها «${raw}». جرّب كلمة أخرى أو جزءًا من الكلمة، أو اختر من الاقتراحات.`;
     suggest.hidden = hits.length > 0;
     renderMore();
-    if (hits.length) keep(raw);
+    if (hits.length) keepTimer = window.setTimeout(keep, 1500, raw);
   }
 
   let timer = 0;
@@ -159,6 +164,9 @@ const suggestions = ["الصبر", "الرحمة", "التوبة", "الجنة",
     if (!b) return;
     input.value = b.dataset.q!;
     run();
+  });
+  list.addEventListener("click", (e) => {
+    if (keepTimer && (e.target as Element).closest("a")) keep(input.value.trim());
   });
   more.addEventListener("click", () => {
     const before = shown;

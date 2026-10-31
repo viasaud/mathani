@@ -314,6 +314,9 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .v-span a:hover { border-color: var(--gold-2); }
 .v-span [aria-current] { background: var(--gold-soft); border-color: var(--gold-2); color: var(--gold-text); }
 .v-go { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+/* in the page view a surah link opens the mushaf page too (shell.ts), so «read it in the surah» would only repeat the
+   first button */
+html[data-mode="pages"] .v-go .btn-ghost { display: none; }
 /* «الجزء الحادي والعشرون» is longer than any surah name: a little smaller, and free to take two lines */
 .juz-page .plate h1 { font-size: clamp(28px, 6vw, 56px); white-space: normal; text-wrap: balance; }
 .j-ends { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -361,6 +364,11 @@ html[data-tajweed="on"] .tj-dj, html[data-tajweed="on"] .tj-dq, .chipc.tj-dj, .c
 html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
 
 /* ---------- responsive ---------- */
+/* a long name («المنافقون») beside the order and the count must not push a 320px screen sideways */
+@media (max-width: 359px) {
+  .plate { padding-inline: 26px; gap: 8px; }
+  .plate h1 { font-size: 28px; }
+}
 @media (max-width: 640px) {
   .read { padding-top: 8px; }
   .surah-head { padding-top: 14px; }

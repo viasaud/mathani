@@ -1,7 +1,7 @@
 // The verse sheet: one verse with its tafsir, opened from a mushaf page or a text view.
 import { gsap } from "gsap";
 import { ar } from "./arabic";
-import { $, copyVerse, copyVerseLink, hideScrim, showScrim, trapTab } from "./ui";
+import { $, copyVerse, copyVerseLink, hideScrim, hideToast, showScrim, trapTab } from "./ui";
 
 export type SheetVerse = {
   s: number;
@@ -101,6 +101,7 @@ export function openSheet(v: SheetVerse, h: Handlers) {
     opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
     el.classList.add("on");
     el.setAttribute("aria-hidden", "false");
+    hideToast();
     showScrim(closeSheet);
     el.focus({ preventScroll: true }); // so a keyboard user continues inside the sheet, not behind it
   }
@@ -133,7 +134,8 @@ export function initSheet() {
   $("vs-copy").addEventListener("click", (e) => current && copyVerse(current.plain, current.surahName, current.a, e.currentTarget as Element));
   $("vs-link").addEventListener("click", (e) => current && copyVerseLink(current.s, current.a, e.currentTarget as Element));
   document.addEventListener("keydown", (e) => {
-    if (!sheetOpen()) return;
+    // a dialog over the sheet (the search, the shortcuts) keeps its own keys: Esc, the caret, Tab
+    if (!sheetOpen() || document.querySelector("dialog[open]")) return;
     if (e.key === "Escape") closeSheet();
     trapTab(sheet(), e);
     // RTL: the next verse is to the left
@@ -168,4 +170,5 @@ export function initSheet() {
   }
   el.addEventListener("touchmove", (e) => move(e.touches[0].clientY), { passive: true });
   el.addEventListener("touchend", end);
+  el.addEventListener("touchcancel", end);
 }

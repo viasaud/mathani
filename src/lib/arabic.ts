@@ -11,6 +11,8 @@ export const JUZ_NAMES = [
   "الرابع والعشرون", "الخامس والعشرون", "السادس والعشرون", "السابع والعشرون", "الثامن والعشرون",
   "التاسع والعشرون", "الثلاثون",
 ];
+// after a preposition: «في الجزء الثلاثين», «عن الجزء الحادي والعشرين»
+export const juzGenitive = (j: number) => JUZ_NAMES[j].replace(/ون(?=\s|$)/g, "ين");
 
 // The names people search for a juz by, where one is in common use: its opening words.
 export const JUZ_COMMON: Record<number, string> = { 28: "جزء قد سمع", 29: "جزء تبارك", 30: "جزء عم" };
@@ -28,7 +30,7 @@ export const VERSE_NAMES = [
 ];
 export const verseName = (s: number, a: number) => VERSE_NAMES.find((v) => v.s === s && a >= v.from && a <= v.to)?.name;
 
-export const placeLabel =(place: string) => (place === "makkah" ? "مكية" : "مدنية");
+export const placeLabel = (place: string) => (place === "makkah" ? "مكية" : "مدنية");
 
 // "7 آيات", "11 آية": the counted noun agrees with the number
 export function ayahs(n: number) {
@@ -37,13 +39,15 @@ export function ayahs(n: number) {
   return `${ar(n)} ${n <= 10 ? "آيات" : "آية"}`;
 }
 
-// Strip diacritics and unify letter forms so "ابراهيم" finds "إبراهيم".
+// Strip diacritics and unify letter forms so "ابراهيم" finds "إبراهيم" (the same folding as src/lib/search.ts).
 export const normalize = (s: string) =>
   s
-    .replace(/[ً-ٰٟۖ-ۭ]/g, "")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
     .replace(/[أإآٱ]/g, "ا")
     .replace(/ة/g, "ه")
     .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
     .toLowerCase();
 
 export const westernDigits = (s: string) => s.replace(/[٠-٩]/g, (d) => String(DIGITS.indexOf(d)));

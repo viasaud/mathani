@@ -9,7 +9,6 @@ export type Chapter = {
   en: string;
   place: "makkah" | "madinah";
   n: number;
-  pages: [number, number];
   bism: boolean;
 };
 

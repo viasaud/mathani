@@ -65,11 +65,11 @@ const page = (body) => `<!doctype html><html lang="ar" dir="rtl"><head><meta cha
   .brand { display: flex; align-items: center; gap: 14px; font-family: Display; font-size: 34px; line-height: 1; color: #f4ecd8; }
   .brand svg { width: 40px; height: 40px; }
   .brand small { font-family: Text; font-size: 22px; color: #bcb09a; margin-inline-start: 6px; }
-  .main { margin-block: auto; display: grid; gap: 14px; }
+  .main { margin-block: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .kicker { font-size: 28px; font-weight: 500; color: #dcb767; }
   h1 { font-family: Display; font-weight: 400; font-size: 132px; line-height: 1.25; color: #dcb767; white-space: nowrap; padding-bottom: 0.1em; }
   .verse { font-family: Quran; font-size: 44px; line-height: 1.9; color: #e9d7a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .meta { font-size: 26px; color: #bcb09a; }
+  .meta { font-size: 26px; color: #bcb09a; white-space: nowrap; }
 </style></head><body>${rosette()}<div class="edge"></div>${body}</body></html>`;
 
 const brand = `<div class="brand">${star("#dcb767", 2.6, "#dcb767")}مثاني<small>القرآن الكريم والتفسير الميسّر</small></div>`;
@@ -137,6 +137,9 @@ async function render(html, file, size, type) {
     const h1 = document.querySelector("h1");
     const room = document.querySelector(".copy")?.clientWidth ?? 0;
     for (let px = parseFloat(getComputedStyle(h1 ?? document.body).fontSize); h1 && h1.scrollWidth > room && px > 60; px -= 4) h1.style.fontSize = `${px}px`;
+    // and so is a long line of facts, rather than wrapping onto a second line
+    const meta = document.querySelector(".meta");
+    for (let px = parseFloat(getComputedStyle(meta ?? document.body).fontSize); meta && meta.scrollWidth > room && px > 18; px -= 1) meta.style.fontSize = `${px}px`;
   });
   await tab.screenshot({ path: join(ROOT, "public", file), type, ...(type === "jpeg" ? { quality: 80 } : {}) });
 }

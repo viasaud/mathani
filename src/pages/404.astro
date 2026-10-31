@@ -17,3 +17,8 @@ import Star from "../components/Star.astro";
     </section>
   </main>
 </Base>
+
+<style>
+  /* the rule before the number would leave it off centre in a centred column: one on each side */
+  .eyebrow::after { content: ""; width: 28px; height: 1px; background: currentColor; }
+</style>

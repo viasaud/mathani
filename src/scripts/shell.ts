@@ -1,11 +1,11 @@
 // Runs on every page: the header that steps aside while reading, the index drawer, the quick-jump palette,
 // reading settings and keyboard shortcuts.
-import { ar, ayahs, JUZ_NAMES, normalize, westernDigits } from "../lib/arabic";
+import { ar, ayahs, JUZ_NAMES, juzGenitive, normalize, westernDigits } from "../lib/arabic";
 import { fold, matchRanges, verseIndex } from "../lib/search";
 import { warmPage } from "../lib/page-fonts";
 import { pageOfVerse, siteIndex, type SiteIndex } from "../lib/site-index";
 import { lastReadHref, load, save, type LastRead } from "../lib/storage";
-import { $, escapeHtml, hideScrim, isTyping, showScrim, STAR_SVG, trapTab, whenIdle } from "../lib/ui";
+import { $, escapeHtml, hideScrim, hideToast, isTyping, showScrim, STAR_SVG, trapTab, whenIdle } from "../lib/ui";
 
 const root = document.documentElement;
 const header = $("hd");
@@ -104,13 +104,19 @@ const settings = document.getElementById("settings");
 }
 
 // ---------- settings ----------
+// ← → belong to an open panel (a slider, the index rows); they must not also turn the page or go to the next surah
+// behind it (page.ts and reader.ts listen on the document)
+const stepAside = (e: KeyboardEvent) => (e.key === "ArrowLeft" || e.key === "ArrowRight") && e.stopPropagation();
 let settingsOpen = false;
 const setSettings = (open: boolean, restoreFocus = false) => {
   if (!settings || !settingsBtn) return;
   const wasOpen = settingsOpen;
   settingsOpen = open;
   settingsBtn.setAttribute("aria-expanded", String(open));
-  if (open && !wasOpen) settings.hidden = false;
+  if (open && !wasOpen) {
+    settings.hidden = false;
+    hideToast(); // the panel and the tap hint would share the bottom of a phone's screen
+  }
   if (!open && wasOpen) settings.hidden = true;
   if (open && !wasOpen) settings.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
   if (!open && wasOpen && (restoreFocus || settings.contains(document.activeElement))) settingsBtn.focus({ preventScroll: true });
@@ -119,7 +125,10 @@ if (settings && settingsBtn) {
   // The header's backdrop blur would trap a fixed panel inside it, so the panel lives at the end of the page.
   document.body.append(settings);
   // the panel sits at the end of the page, so Tab at its edges goes back to the button instead of wandering off
-  settings.addEventListener("keydown", (e) => trapTab(settings, e, settingsBtn));
+  settings.addEventListener("keydown", (e) => {
+    trapTab(settings, e, settingsBtn);
+    stepAside(e);
+  });
   settingsBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     setSettings(!settingsOpen);
@@ -260,17 +269,18 @@ async function renderIndex() {
     const rows = found.map((c, i) => surahRow(c, i + 1)).join("");
     const typed = escapeHtml(raw);
     const why = raw ? `لا توجد سورة مطابقة لـ «${typed}».` : "لا توجد سور بهذا التصنيف.";
-    const hint = ixPlace || raw ? "غيّر الكلمة أو الفلتر." : "";
+    const hint = ixPlace ? "غيّر الكلمة أو الفلتر." : raw ? "جرّب كلمة أخرى." : "";
     const inVerses = raw ? `<button class="btn btn-ghost" data-ix-verses>ابحث عن «${typed}» في الآيات</button>` : "";
     ixList.innerHTML = rows || `<div class="ix-empty"><p>${why} ${hint}</p>${inVerses}</div>`;
   }
 }
 // "٧ سور", "١١ سورة": the counted noun agrees with the number
-const surahCount = (n: number) => (n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n >= 3 && n <= 10 ? "سور" : "سورة"}`);
+const surahCount = (n: number) => (n === 0 ? "لا توجد سور" : n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n >= 3 && n <= 10 ? "سور" : "سورة"}`);
 
 let drawerOpener: HTMLElement | null = null;
 function openDrawer() {
   setSettings(false);
+  hideToast(); // the tap hint rides above the drawer otherwise
   drawerOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   drawer.classList.add("on");
   drawer.setAttribute("aria-hidden", "false");
@@ -292,6 +302,7 @@ function closeDrawer() {
 }
 drawer.addEventListener("keydown", (e) => {
   trapTab(drawer, e);
+  stepAside(e);
   // ↑ ↓ walk the rows (from the search field too), Enter in the field opens the first one
   if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && !(e.key === "Enter" && e.target === ixQ)) return;
   const rows = [...ixList.querySelectorAll<HTMLAnchorElement>(".ix-item")];
@@ -460,11 +471,14 @@ async function runPalette() {
     if (j >= 1 && j <= 30) {
       const [s, a] = index.juz[j - 1];
       jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الجزء ${JUZ_NAMES[j]}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` });
-      jump.push({ href: `/juz/${j}`, icon: ICON.page, title: `عن الجزء ${JUZ_NAMES[j]}`, sub: "سوره وأرباعه، وأين يبدأ وأين ينتهي" });
+      jump.push({ href: `/juz/${j}`, icon: ICON.page, title: `عن الجزء ${juzGenitive(j)}`, sub: "سوره وأرباعه، وأين يبدأ وأين ينتهي" });
     }
   } else if ((m = w.match(/^(?:ال)?(?:حزب|ح)\s*(\d{1,2})$/))) {
     const h = +m[1];
     if (h >= 1 && h <= 60) { const [s, a] = index.rubs[(h - 1) * 4]; jump.push({ href: `/surah/${s}#a${a}`, icon: ICON.juz, title: `الحزب ${ar(h)}`, sub: `يبدأ من سورة ${name(s)}، الآية ${ar(a)}` }); }
+  } else if ((m = normalize(w).match(/^(?:ال)?سوره\s*(\d{1,3})$/))) {
+    const n = +m[1];
+    if (n >= 1 && n <= 114) { const c = index.chapters[n - 1]; jump.push({ href: `/surah/${n}`, icon: ICON.star, n, title: `سورة ${c.name}`, sub: `السورة رقم ${ar(n)} · ${ayahs(c.n)}` }); }
   } else if ((m = w.match(/^(?:ال)?(?:صفحة|ص)?\s*(\d{1,3})$/))) {
     const n = +m[1];
     if (n >= 1 && n <= 604) { const [s] = index.pages[n - 1]; jump.push({ href: `/page/${n}`, icon: ICON.page, title: `الصفحة ${ar(n)}`, sub: `سورة ${name(s)}` }); }
@@ -472,8 +486,9 @@ async function runPalette() {
   }
 
   const q = normalize(raw);
+  const named = q.replace(/^(?:ال)?سوره\s+/, ""); // «سورة البقرة» finds البقرة
   const surahs: Item[] = /\d/.test(w) ? [] : index.chapters
-    .filter((c) => normalize(c.name).includes(q) || c.en.toLowerCase().includes(q.toLowerCase()))
+    .filter((c) => normalize(c.name).includes(named) || c.en.toLowerCase().includes(named.toLowerCase()))
     .slice(0, 5)
     .map((c) => ({ href: `/surah/${c.id}`, icon: ICON.star, n: c.id, title: `سورة ${c.name}`, sub: `${c.makki ? "مكية" : "مدنية"} · ${ayahs(c.n)} · الصفحة ${ar(c.page)}` }));
   const needle = fold(raw).text;
@@ -499,6 +514,7 @@ async function runPalette() {
 
 function openPalette(prefill = "") {
   setSettings(false);
+  if (keys.open) keys.close();
   if (drawer.classList.contains("on")) closeDrawer();
   palQ.value = prefill;
   palette.showModal();
@@ -582,14 +598,19 @@ function toggleKeys() {
 keys.addEventListener("click", (e) => e.target === keys && keys.close()); // a press outside the sheet
 $("keys-close").addEventListener("click", () => keys.close());
 
+// An Arabic layout types ظ and ن on the slash and K keys: the key itself counts then. A Latin layout that puts another
+// character there (Dvorak, German) keeps it, and so do dead keys and Option's ÷: only a single non-ASCII character,
+// typed without Alt, stands in.
+const keyIs = (e: KeyboardEvent, char: string, code: string) =>
+  e.key.toLowerCase() === char || (e.code === code && !e.shiftKey && !e.altKey && /^[^\x00-\x7f]$/u.test(e.key));
 document.addEventListener("keydown", (e) => {
   if ((e.key === "?" || e.key === "؟") && !isTyping(e) && (keys.open || !document.querySelector("dialog[open]"))) {
     e.preventDefault();
     toggleKeys();
-  } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+  } else if ((e.metaKey || e.ctrlKey) && keyIs(e, "k", "KeyK")) {
     e.preventDefault();
     palette.open ? palette.close() : openPalette();
-  } else if (e.key === "/" && !isTyping(e) && !palette.open) {
+  } else if (keyIs(e, "/", "Slash") && !isTyping(e) && !palette.open) {
     e.preventDefault();
     openPalette();
   } else if (e.key === "Escape") {

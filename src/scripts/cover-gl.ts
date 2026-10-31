@@ -120,6 +120,7 @@ export function start(canvas: HTMLCanvasElement, host: HTMLElement) {
   }, { passive: true });
 
   const t0 = performance.now();
+  let raf = 0, visible = true;
   function draw(now: number) {
     const t = (now - t0) / 1000;
     if (now - lastMove > 2500) {
@@ -142,16 +143,25 @@ export function start(canvas: HTMLCanvasElement, host: HTMLElement) {
 
   new ResizeObserver(size).observe(canvas);
   size();
+  // a lost context (the browser reclaiming the GPU, common on phones) leaves the canvas dead, and some browsers paint
+  // it opaque white: the still pattern takes its place on a plain element
+  canvas.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    cancelAnimationFrame(raf);
+    const stand = document.createElement("div");
+    stand.className = "cover-gl off";
+    stand.setAttribute("aria-hidden", "true");
+    canvas.replaceWith(stand);
+  });
   if (still) return;
   // only runs while the cover is on screen and the tab is visible
-  let raf = 0, visible = true;
   const loop = (now: number) => {
     draw(now);
     raf = requestAnimationFrame(loop);
   };
   const run = () => {
     cancelAnimationFrame(raf);
-    if (visible && !document.hidden) raf = requestAnimationFrame(loop);
+    if (visible && !document.hidden && !gl.isContextLost()) raf = requestAnimationFrame(loop);
   };
   new IntersectionObserver(([e]) => ((visible = e.isIntersecting), run())).observe(canvas);
   document.addEventListener("visibilitychange", run);

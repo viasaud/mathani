@@ -24,6 +24,14 @@ export function toast(message: string, ms = 1800) {
   t.dataset.timer = String(setTimeout(() => (t!.hidden = true), ms));
 }
 
+// A toast still up when a panel takes over the screen (the tap hint, as the verse sheet opens) is put away at once.
+export function hideToast() {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  clearTimeout(Number(t.dataset.timer));
+  t.hidden = true;
+}
+
 // the button pressed shows a check for a moment (.ib.done in global.css)
 export function copyText(text: string, done = "نُسخت الآية", button?: Element | null) {
   const fail = () => toast("تعذّر النسخ، حدّد النص وانسخه يدويًا");

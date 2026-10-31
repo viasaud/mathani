@@ -4,6 +4,7 @@
 import Base from "../../../layouts/Base.astro";
 import "../../../styles/reader.css";
 import Star from "../../../components/Star.astro";
+import TajweedLegend from "../../../components/TajweedLegend.astro";
 import { ar, JUZ_NAMES, verseName } from "../../../lib/arabic";
 import { getChapters, getNav, getTafsirSpans, getVerses, tafsirLabel, verseHtml, type Chapter } from "../../../lib/quran";
 import { breadcrumbs, clip, ogSurah } from "../../../lib/seo";
@@ -39,7 +40,7 @@ const title = named
   ? `تفسير ${named}، الآية ${ar(a)}${named.includes("سورة") ? "" : ` من سورة ${c.name}`}`
   : `تفسير الآية ${ar(a)} من سورة ${c.name}`;
 // what a search result shows: which verse, its first words in plain spelling, then the start of its tafsir
-const description = `الآية ${ar(a)} من سورة ${c.name}${named ? `، ${named}` : ""}: ﴿${clip(imlaei.replace("۞", "").trim(), 70)}﴾ تفسيرها الميسّر: ${clip(span.text, 110)}`;
+const description = `الآية ${ar(a)}${named?.includes("سورة") ? "" : ` من سورة ${c.name}`}${named ? `، ${named}` : ""}: ﴿${clip(imlaei.replace("۞", "").trim(), 70)}﴾ تفسيرها الميسّر: ${clip(span.text, 110)}`;
 
 const site = Astro.site!;
 const surahUrl = new URL(`/surah/${c.id}`, site).href;
@@ -98,6 +99,7 @@ const schema = [
     </header>
 
     <article class="text-sheet">
+      <TajweedLegend />
       <div class="verses">
         <section class="v">
           <div class="v-top">

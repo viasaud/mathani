@@ -119,10 +119,11 @@ document.addEventListener("keydown", (e) => {
 function fromHash() {
   const m = /^#a(\d{1,3})$/.exec(location.hash);
   if (!m) return;
-  goAyah(Number(m[1]));
-  const el = verseIn(currentView(), Number(m[1]) - 1);
+  const n = Math.max(1, Math.min(Number(m[1]), count)); // #a0 and #a999 land on the first and last verse
+  goAyah(n);
+  const el = verseIn(currentView(), n - 1);
   if (el) flash([el.matches(".v") ? el.querySelector(".v-text")! : el]);
-  remember(Number(m[1]) - 1);
+  remember(n - 1);
 }
 window.addEventListener("hashchange", fromHash);
 requestAnimationFrame(() => {

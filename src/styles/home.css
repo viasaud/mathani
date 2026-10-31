@@ -296,7 +296,7 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
   /* no room for the large count beside the heading on a phone, and the heading already says the number */
   .big-num { display: none; }
   /* the picks become a row to flick through */
-  .picks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin-inline: -16px; padding: 4px 16px 12px; scrollbar-width: none; }
+  .picks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin-inline: -16px; padding: 4px 16px 12px; scroll-padding-inline: 16px; scrollbar-width: none; }
   .picks::-webkit-scrollbar { display: none; }
   .pick { flex: none; width: 60vw; max-width: 240px; min-height: 230px; scroll-snap-align: start; }
   .surah-tools { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 66px); z-index: 5; justify-content: center; }
@@ -306,4 +306,12 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
   .surah-card .nm { font-size: 21px; }
   .sc-medal { width: 42px; height: 42px; }
   .juz-num { font-size: 30px; }
+}
+/* the narrowest phones: a little less padding so the details and the place the reader stopped are not cut short (under
+   :root to outrank unslop.css) */
+@media (max-width: 340px) {
+  :root .resume { gap: 10px; }
+  :root .resume-text strong { font-size: 15.5px; }
+  :root .surah-card { padding-inline: 6px; }
+  :root .juz-tile { padding-inline: 3px; }
 }

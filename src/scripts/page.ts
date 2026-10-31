@@ -174,6 +174,9 @@ function layout() {
   const two = spreadOn();
   shown().forEach(loadFont);
   document.documentElement.classList.toggle("spread", two);
+  // the facing page is hidden from screen readers only while it is not on screen
+  const on = shown();
+  articles.forEach((a) => (on.includes(a) ? a.removeAttribute("aria-hidden") : a.setAttribute("aria-hidden", "true")));
   const first = firstOf(pageNo, two);
   point(prevLink, first - step(two));
   point(nextLink, first + step(two));
@@ -199,6 +202,7 @@ window.addEventListener("mushaf:spread", () => requestAnimationFrame(layout));
 // Each page is fetched once (the neighbours ahead of time) and swapped into this document. A press while a page is
 // still on its way moves the target on, and only the last one asked for is shown, so a burst of presses is a fast
 // flick through the mushaf rather than presses lost to page loads.
+const KEEP = 12;
 const pages = new Map<number, Promise<Document>>();
 function fetchPage(p: number) {
   let doc = pages.get(p);
@@ -208,6 +212,12 @@ function fetchPage(p: number) {
       .then((html) => new DOMParser().parseFromString(html, "text/html"));
     doc.catch(() => pages.delete(p));
     pages.set(p, doc);
+    // only the latest few pages are kept (each is a whole parsed document), so a long read doesn't pile them up
+    if (pages.size > KEEP) {
+      const old = pages.keys().next().value!;
+      pages.delete(old);
+      readied.delete(old);
+    }
   }
   return doc;
 }
@@ -408,12 +418,14 @@ afterShown(prefetch);
 
 // ---------- arrows and swipes (RTL: the next page is to the left) ----------
 document.addEventListener("keydown", (e) => {
-  if (isTyping(e) || document.querySelector("dialog[open]") || sheetOpen()) return;
+  // ⌘← and ⌥← are the browser's own; the index and settings panels keep their keys too (a panel just closed may still
+  // hold focus for a moment, but it is aria-hidden by then and its keys are no longer its own)
+  if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e) || (e.target as Element).closest?.('[role="dialog"]:not([aria-hidden="true"])') || document.querySelector("dialog[open], .drawer.on") || sheetOpen()) return;
   if (e.key === "ArrowLeft") go("next");
   if (e.key === "ArrowRight") go("prev");
 });
 let touch: { x: number; y: number } | null = null;
-stage.addEventListener("touchstart", (e) => (touch = { x: e.touches[0].clientX, y: e.touches[0].clientY }), { passive: true });
+stage.addEventListener("touchstart", (e) => (touch = e.touches.length > 1 ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }), { passive: true }); // a pinch is no swipe
 stage.addEventListener("touchend", (e) => {
   if (!touch) return;
   const dx = e.changedTouches[0].clientX - touch.x;
@@ -533,5 +545,6 @@ if (!fromHash()) remember(firstS, firstA);
 // ---------- the first visit: say once that every word opens its verse ----------
 if (!load("tapped", false)) {
   stage.addEventListener("click", () => save("tapped", true), { once: true });
-  setTimeout(() => load("tapped", false) || sheetOpen() || toast("اضغط أي كلمة لتقرأ آيتها وتفسيرها", 4200), 1400);
+  // not over the index or the settings, which the hint would cover on a phone
+  setTimeout(() => load("tapped", false) || sheetOpen() || document.querySelector(".drawer.on, #settings:not([hidden])") || toast("اضغط أي كلمة لتقرأ آيتها وتفسيرها", 4200), 1400);
 }

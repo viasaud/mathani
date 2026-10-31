@@ -15,7 +15,8 @@ export const ogSurah = (id: number) => `/og/surah-${id}.jpg`;
 export function clip(text: string, max: number) {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
-  return cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s،,.:؛]+$/, "") + "…";
+  const space = cut.lastIndexOf(" ");
+  return (space > 0 ? cut.slice(0, space) : cut).replace(/[\s،,.:؛]+$/, "") + "…";
 }
 
 export type Crumb = { name: string; path: string };

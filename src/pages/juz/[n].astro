@@ -52,10 +52,12 @@ const title = common ? `${common}، ${ord} من القرآن الكريم` : `${
 const pagesLabel = `الصفحات ${ar(firstPage)}–${ar(lastPage)}`;
 const names = surahs.map((x) => x.c.name);
 const listed = names.length > 8 ? `${names.slice(0, 8).join("، ")} وغيرها` : names.join("، ");
+// a juz inside one surah names it once: «كله من سورة البقرة، من الآية ١٤٢ إلى الآية ٢٥٢»
 const description =
-  `${ord} من القرآن الكريم${common ? `، ${common}` : ""}: يبدأ من سورة ${name(start.surah)}، الآية ${ar(start.ayah)}، ` +
-  `وينتهي بسورة ${name(end.surah)}، الآية ${ar(end.ayah)}، في ${pagesLabel} من مصحف المدينة. ` +
-  (names.length > 1 ? `سوره: ${listed}.` : `وكله من سورة ${names[0]}.`);
+  `${ord} من القرآن الكريم${common ? `، ${common}` : ""}: ` +
+  (names.length > 1
+    ? `يبدأ من سورة ${name(start.surah)}، الآية ${ar(start.ayah)}، وينتهي بسورة ${name(end.surah)}، الآية ${ar(end.ayah)}، في ${pagesLabel} من مصحف المدينة. سوره: ${listed}.`
+    : `كله من سورة ${names[0]}، من الآية ${ar(start.ayah)} إلى الآية ${ar(end.ayah)}، في ${pagesLabel} من مصحف المدينة.`);
 
 const site = Astro.site!;
 const schema = [

@@ -4,7 +4,7 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/reader.css";
 import Star from "../../components/Star.astro";
 import VerseSheet from "../../components/VerseSheet.astro";
-import { ar, JUZ_NAMES } from "../../lib/arabic";
+import { ar, JUZ_NAMES, juzGenitive } from "../../lib/arabic";
 import { pageFontUrl as fontUrl } from "../../lib/page-fonts";
 import { breadcrumbs, ogSurah } from "../../lib/seo";
 import { getChapters, getLayout, getMushafPages, getVerses, tafsirLabel, tafsirSpans, type MushafPage } from "../../lib/quran";
@@ -71,9 +71,9 @@ const range = s1 === s2
   ? `سورة ${chapters[s1 - 1].name}، ${a1 === a2 ? `الآية ${ar(a1)}` : `الآيات ${ar(a1)}–${ar(a2)}`}`
   : `من سورة ${chapters[s1 - 1].name}، الآية ${ar(a1)}، إلى سورة ${chapters[s2 - 1].name}، الآية ${ar(a2)}`;
 const startsHere = keysHere.find(([s, a]) => getVerses(s)[a - 1][1] === n);
-const firstWords = startsHere ? getVerses(startsHere[0])[startsHere[1] - 1][0].trim().split(/\s+/) : [];
+const firstWords = startsHere ? getVerses(startsHere[0])[startsHere[1] - 1][0].replace(/[\u06DE\u06E9]/g, "").trim().split(/\s+/).filter((w) => /[\u0621-\u064A]/.test(w)) : []; // the hizb sign opening some verses, and the pause marks between words, are no words
 const openingWords = firstWords.slice(0, 6).join(" ") + (firstWords.length > 6 ? "…" : "");
-const pageDescription = `الصفحة ${ar(n)} من مصحف المدينة النبوية، في الجزء ${JUZ_NAMES[juzHere]}: ${range}.` +
+const pageDescription = `الصفحة ${ar(n)} من مصحف المدينة النبوية، في الجزء ${juzGenitive(juzHere)}: ${range}.` +
   (openingWords ? ` ${startsHere === keysHere[0] ? "أولها" : "وفيها"}: ﴿${openingWords}﴾.` : "") +
   " المس أي كلمة لقراءة الآية وتفسيرها الميسّر.";
 const schema = [
