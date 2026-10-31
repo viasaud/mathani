@@ -1,7 +1,9 @@
 ---
 import "@fontsource/scheherazade-new/400.css";
 import "../styles/global.css";
+import "../styles/unslop.css";
 import Star from "../components/Star.astro";
+import Compare from "../components/Compare.astro";
 
 interface Props {
   title?: string;
@@ -68,7 +70,8 @@ const map = (axis: "x" | "y", edge: number) => {
         d.dataset.spread = g("spread") || "on";
         d.dataset.tajweed = g("tajweed") || "off";
         d.style.setProperty("--qsize", (g("size") || (innerWidth < 500 ? 25 : 28)) + "px");
-      } catch (e) {}
+        if (g("look") !== "before") d.classList.add("after"); // the unslop pass, unless the reader switched back (Compare.astro)
+      } catch (e) { document.documentElement.classList.add("after"); }
       // the glass bends what is under its rims where the browser can do that in a backdrop (Chromium)
       try {
         var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
@@ -198,10 +201,12 @@ const map = (axis: "x" | "y", edge: number) => {
             <button type="button" data-open="drawer">فهرس السور</button>
             <button type="button" data-open="palette">انتقل إلى…</button>
           </nav>
-          <p class="foot-note">نص المصحف بخطوط مجمع الملك فهد لطباعة المصحف الشريف، والتفسير الميسّر. <span class="num">{new Intl.NumberFormat("ar-EG", { useGrouping: false }).format(year)}</span></p>
+          <p class="foot-note">نص المصحف بخطوط مجمع الملك فهد لطباعة المصحف الشريف، والتفسير الميسّر<span class="v-before">.</span> <span class="num">{new Intl.NumberFormat("ar-EG", { useGrouping: false }).format(year)}</span></p>
         </div>
       </footer>
     )}
+
+    <Compare />
 
     <div class="scrim" id="scrim"></div>
 

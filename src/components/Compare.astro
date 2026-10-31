@@ -1,0 +1,49 @@
+---
+// Before and after the unslop pass, side by side in time: a small switch pinned to the foot of every page. «بعد» lays
+// unslop.css over the original (html.after); «قبل» shows the site as it was. The choice is remembered per browser and
+// applied before first paint (Base.astro).
+---
+
+<div class="compare glass" role="group" aria-label="المقارنة">
+  <span class="compare-label">التصميم</span>
+  <div class="seg seg-sm">
+    <button type="button" data-look="before" aria-pressed="false">قبل</button>
+    <button type="button" data-look="after" aria-pressed="true">بعد</button>
+  </div>
+</div>
+
+<script>
+  import { save } from "../lib/storage";
+
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-look]");
+  const show = () => {
+    const look = root.classList.contains("after") ? "after" : "before";
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === look)));
+  };
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => {
+      const after = b.dataset.look === "after";
+      root.classList.toggle("after", after);
+      save("look", after ? "after" : "before");
+      show();
+    }),
+  );
+  show();
+</script>
+
+<style>
+  /* a review tool rather than part of the book, so it keeps the cover's dark glass in every theme */
+  .compare {
+    --ink: var(--cover-ink); --muted: var(--cover-muted); --raised: color-mix(in srgb, var(--cover-ink) 16%, transparent);
+    --line-2: transparent; --shadow-1: none;
+    position: fixed; z-index: 45; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+    display: flex; align-items: center; gap: 12px; padding: 4px; padding-inline-start: 16px; border-radius: 999px;
+    font-size: 13px; color: var(--muted);
+    background: rgba(20, 14, 6, 0.72); border-color: rgba(255, 240, 200, 0.14);
+  }
+  .compare .seg { background: rgba(255, 240, 200, 0.06); }
+  .compare .seg button { min-width: 56px; }
+  /* on the mushaf pages the surah ruler holds the foot, so the switch sits above it */
+  :global(body:has(.dock-row)) .compare { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+</style>
