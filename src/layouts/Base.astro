@@ -74,13 +74,13 @@ const map = (axis: "x" | "y", edge: number) => {
     <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
     <meta name="format-detection" content="telephone=no" />
     <link rel="preload" href="/fonts/thmanyah/thmanyahseriftext-Regular.woff2" as="font" type="font/woff2" crossorigin />
-    <!-- the face the first screen's title is set in: the regular cut for the cover's name, the bold one for the reading
-         pages' running heads and surah plates -->
+    {/* the face the first screen's title is set in: the regular cut for the cover's name, the bold one for the reading
+         pages' running heads and surah plates */}
     <link rel="preload" href={`/fonts/thmanyah/thmanyahserifdisplay-${cover ? "Regular" : "Bold"}.woff2`} as="font" type="font/woff2" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#f4f1e8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0a08" media="(prefers-color-scheme: dark)" />
-    <!-- the link preview: Open Graph for most apps, the Twitter card for X -->
+    {/* the link preview: Open Graph for most apps, the Twitter card for X */}
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
@@ -99,8 +99,8 @@ const map = (axis: "x" | "y", edge: number) => {
     <meta name="twitter:image:alt" content={imageAlt} />
     <script type="application/ld+json" set:html={ld} />
     {Object.entries(verify).map(([name, content]) => content && <meta name={name} content={content} />)}
-    <!-- Apply the saved theme, view, tajweed and size before first paint so nothing flashes. html.motion turns on the
-         entrance choreography (motion.ts); if that script never runs, the content is shown anyway after a moment. -->
+    {/* Apply the saved theme, view, tajweed and size before first paint so nothing flashes. html.motion turns on the
+         entrance choreography (motion.ts); if that script never runs, the content is shown anyway after a moment. */}
     <script is:inline>
       try {
         var d = document.documentElement;
@@ -126,8 +126,8 @@ const map = (axis: "x" | "y", edge: number) => {
   </head>
   <body class={reader ? "is-reader" : undefined}>
     <svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
-      <!-- capsules: the bend reaches well in from the ends; panels: only a thin band at each rim, so what lies under
-           their options is not distorted -->
+      {/* capsules: the bend reaches well in from the ends; panels: only a thin band at each rim, so what lies under
+           their options is not distorted */}
       {[["lg", 16, 34, 22], ["lg-panel", 5, 5, 16]].map(([id, ex, ey, scale]) => (
         <filter id={id} x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
           <feImage href={map("x", ex as number)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx" />
@@ -137,13 +137,13 @@ const map = (axis: "x" | "y", edge: number) => {
         </filter>
       ))}
     </svg>
-    <!-- The controls float on their own layer above the content: capsules sized to what they hold, never a bar.
+    {/* The controls float on their own layer above the content: capsules sized to what they hold, never a bar.
          Navigation (home, and on a reading page the surah title, which opens the index), search and, on the reading
-         pages only, the reading settings each get their own. -->
+         pages only, the reading settings each get their own. */}
     <header class="hd gutter" id="hd">
       <div class="hd-start">
-      <!-- Where you are and where you can go: the mark (home), and beside it the index. On the surah text view the index
-           is opened by the surah's own title, with the page and juz beside it; the mushaf pages name those themselves. -->
+      {/* Where you are and where you can go: the mark (home), and beside it the index. On the surah text view the index
+           is opened by the surah's own title, with the page and juz beside it; the mushaf pages name those themselves. */}
       <nav class="cap glass cap-nav" aria-label="التنقل">
         <a class="brand" href="/" aria-label="مثاني، الصفحة الرئيسية">
           <span class="brand-mark" aria-hidden="true"><Star /></span>
@@ -160,13 +160,13 @@ const map = (axis: "x" | "y", edge: number) => {
           </button>
         ) : (
           <button class="cap-index" data-open="drawer" aria-haspopup="dialog" aria-controls="drawer">
-            <!-- a list read right to left: the marks at the start (right), the lines running left -->
+            {/* a list read right to left: the marks at the start (right), the lines running left */}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h11M4 12h11M4 18h11"></path><path d="m19.5 4.5 1.5 1.5-1.5 1.5-1.5-1.5zM19.5 10.5l1.5 1.5-1.5 1.5-1.5-1.5zM19.5 16.5l1.5 1.5-1.5 1.5-1.5-1.5z" fill="currentColor" stroke-width="1"></path></svg>
             <span>الفهرس</span>
           </button>
         )}
       </nav>
-      <!-- search and jump, always there, right after the navigation -->
+      {/* search and jump, always there, right after the navigation */}
         <button class="cap glass cap-search" data-open="palette" aria-label="ابحث أو انتقل">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
           <span>ابحث أو انتقل</span>
@@ -186,7 +186,7 @@ const map = (axis: "x" | "y", edge: number) => {
                 {modes.map(([m, label]) => <button data-mode-btn={m} aria-pressed="false">{label}</button>)}
               </div>
             </div>
-            <!-- the pages view fits the screen, so it offers one page or two instead of a text size -->
+            {/* the pages view fits the screen, so it offers one page or two instead of a text size */}
             <div class="set-pages">
               <div class="set-sep"></div>
               <h3>الصفحات <small>تظهر صفحتان حين تتسع الشاشة لهما</small></h3>
@@ -229,8 +229,8 @@ const map = (axis: "x" | "y", edge: number) => {
 
     <div class="scrim" id="scrim"></div>
 
-    <!-- The index: every surah, or the thirty juz, with where the reader stopped at the top. A panel from the right
-         on wide screens, a sheet from the bottom on phones. Filled by shell.ts. -->
+    {/* The index: every surah, or the thirty juz, with where the reader stopped at the top. A panel from the right
+         on wide screens, a sheet from the bottom on phones. Filled by shell.ts. */}
     <aside class="drawer glass glass-panel" id="drawer" role="dialog" aria-modal="true" aria-labelledby="ix-title" data-current={current} aria-hidden="true" tabindex="-1">
       <div class="ix-head">
         <div class="ix-top">
@@ -247,7 +247,7 @@ const map = (axis: "x" | "y", edge: number) => {
           <input id="ix-q" type="search" placeholder="اسم السورة أو رقمها" autocomplete="off" enterkeyhint="go" aria-label="ابحث عن سورة" />
         </label>
         <div class="ix-bar">
-          <!-- a .seg, so motion.ts slides one marker between the tabs; here it is drawn as a gold underline -->
+          {/* a .seg, so motion.ts slides one marker between the tabs; here it is drawn as a gold underline */}
           <div class="seg ix-tabs" role="group" aria-label="ترتيب الفهرس">
             <button data-ix="surah" aria-pressed="true">السور</button>
             <button data-ix="juz" aria-pressed="false">الأجزاء</button>
@@ -271,8 +271,8 @@ const map = (axis: "x" | "y", edge: number) => {
       </div>
     </aside>
 
-    <!-- Search and jump: a surah, a page, a juz, a verse number or any word. Before typing it offers where the reader
-         stopped and four places most people go; examples to try sit under the field. Filled by shell.ts. -->
+    {/* Search and jump: a surah, a page, a juz, a verse number or any word. Before typing it offers where the reader
+         stopped and four places most people go; examples to try sit under the field. Filled by shell.ts. */}
     <dialog class="palette glass glass-panel" id="palette" aria-label="ابحث أو انتقل">
       <div class="pal-input">
         <span class="pal-lens" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
@@ -296,8 +296,8 @@ const map = (axis: "x" | "y", edge: number) => {
       </div>
     </dialog>
 
-    <!-- the keyboard shortcuts, on ? (shell.ts): what works everywhere, while reading, and in the index; a page adds its
-         own rows through the "keys" slot -->
+    {/* the keyboard shortcuts, on ? (shell.ts): what works everywhere, while reading, and in the index; a page adds its
+         own rows through the "keys" slot */}
     <dialog class="keys glass glass-panel" id="keys" aria-labelledby="keys-title" tabindex="-1">
       <div class="keys-head">
         <h2 id="keys-title">اختصارات لوحة المفاتيح</h2>

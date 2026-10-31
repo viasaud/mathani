@@ -58,7 +58,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
 
 <Base cover schema={[quranBook(Astro.site!)]}>
   <main class="home">
-    <!-- ---------- the cover ---------- -->
+    {/* ---------- the cover ---------- */}
     <section class="cover" data-tone="cover" id="cover" aria-labelledby="cover-title">
       <canvas class="cover-gl" id="cover-gl" aria-hidden="true"></canvas>
       <div class="cover-veil" aria-hidden="true"></div>
@@ -67,9 +67,9 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
           <h1 id="cover-title" data-hero-title><span>مثاني</span></h1>
           <p class="epigraph" data-hero><span>﴿كِتَٰبٗا مُّتَشَٰبِهٗا مَّثَانِيَ﴾</span> <small>الزمر ٢٣</small></p>
           <p class="hero-lead" data-hero>مصحف المدينة النبوية كما طُبع، صفحةً&nbsp;صفحة، مع التفسير الميسّر لكل آية</p>
-          <!-- what to do next: one pill that says where reading goes. For a returning reader the place they stopped and
+          {/* what to do next: one pill that says where reading goes. For a returning reader the place they stopped and
                how far into the mushaf that is (the ring); for a new one, the first surah. Searching is in the header,
-               always there. Filled by home.ts. -->
+               always there. Filled by home.ts. */}
           <div class="actions" data-hero>
             <a class="resume glass" id="continue" href="/page/1" data-names={JSON.stringify(chapters.map((c) => c.name))} data-pages={JSON.stringify(startPage)} data-juz-pages={JSON.stringify(juzPage)}>
               <span class="resume-ring" aria-hidden="true">
@@ -105,7 +105,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
     </section>
 
     <div class="wrap gutter" id="start">
-      <!-- ---------- where to begin ---------- -->
+      {/* ---------- where to begin ---------- */}
       <section class="section" aria-labelledby="picks-title">
         <div class="section-head" data-reveal>
           <div>
@@ -125,7 +125,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
         </div>
       </section>
 
-      <!-- ---------- the thirty juz ---------- -->
+      {/* ---------- the thirty juz ---------- */}
       <section class="section" aria-labelledby="juz-title">
         <div class="section-head" data-reveal>
           <div>
@@ -151,7 +151,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
         </div>
       </section>
 
-      <!-- ---------- the surahs ---------- -->
+      {/* ---------- the surahs ---------- */}
       <section class="section" aria-labelledby="surah-title">
         <div class="section-head" data-reveal>
           <div>
@@ -175,7 +175,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
               <span class="sc-medal" aria-hidden="true"><Star /><b>{ar(c.id)}</b></span>
               <span class="nm">{c.name}</span>
               <span class="sc-rule" aria-hidden="true"><i></i></span>
-              <!-- the details, and in their place on hover an invitation to read: the two roll past each other -->
+              {/* the details, and in their place on hover an invitation to read: the two roll past each other */}
               <span class="sc-roll">
                 <span class="meta">{placeLabel(c.place)} · {ayahs(c.n)} · ص {ar(startPage[i])}</span>
                 <span class="sc-cta" aria-hidden="true">اقرأ السورة <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></span>

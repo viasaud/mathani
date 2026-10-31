@@ -1,11 +1,11 @@
-// Interactions on a mushaf page: verse sheet, page turning (buttons, arrows, swipes), the surah strip, line balancing, last-read memory. Pages turn in place: the next page is fetched and swapped into this one,
-// so the controls stay put and every press counts, however quickly they come.
+// Interactions on a mushaf page: verse sheet, page turning (buttons, arrows, swipes), the surah strip, line balancing,
+// last-read memory. Pages turn in place: the next page is fetched and swapped into this one, so the controls stay put
+// and every press counts, however quickly they come.
 import { gsap } from "gsap";
-import { ar, ayahs, normalize, westernDigits } from "../lib/arabic";
+import { ar } from "../lib/arabic";
 import { closeSheet, initSheet, openSheet, sheetOpen } from "../lib/sheet";
-import { siteIndex } from "../lib/site-index";
 import { load, save } from "../lib/storage";
-import { $, flash, isTyping, STAR_SVG, toast } from "../lib/ui";
+import { $, flash, isTyping, toast } from "../lib/ui";
 import { moving } from "./motion";
 
 type PageData = { verses: Record<string, [text: string, label: string, tafsir: string]>; names: Record<string, string> };

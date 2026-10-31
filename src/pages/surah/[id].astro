@@ -63,10 +63,10 @@ const schema = [
   context={{ title: `سورة ${chapter.name}`, meta: [placeLabel(chapter.place), `${ar(chapter.n)} آية`, pagesLabel] }}
   reader
 >
-  <!-- In the page view (the default), a surah link opens the mushaf page where the verse starts: for a reader who chose
+  {/* In the page view (the default), a surah link opens the mushaf page where the verse starts: for a reader who chose
        the pages, or who followed a link here from another page of the site. Someone arriving from outside, from a
        search result or a shared link, reads the surah here, in the continuous text, and can switch to the pages from
-       the settings; so does a search engine, which therefore finds this page's text and tafsir instead of a redirect. -->
+       the settings; so does a search engine, which therefore finds this page's text and tafsir instead of a redirect. */}
   <script is:inline slot="head" define:vars={{ s: chapter.id, pages: verses.map((v) => v[1]) }}>
     try {
       var mode = JSON.parse(localStorage.getItem("mushaf:mode"));
@@ -83,7 +83,7 @@ const schema = [
 
   <div class="progress" aria-hidden="true"><i id="progress"></i></div>
   <main class="read gutter" id="reader" data-surah={chapter.id} data-name={chapter.name}>
-    <!-- the title plate of the printed mushaf: the surah's order on one side, its verse count on the other -->
+    {/* the title plate of the printed mushaf: the surah's order on one side, its verse count on the other */}
     <header class="surah-head">
       <div class="plate">
         <i></i><i></i><i></i><i></i>

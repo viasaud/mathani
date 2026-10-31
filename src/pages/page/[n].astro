@@ -107,9 +107,9 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
       (hasBism && !spread.some((pg) => pg.page === 1) ? `@font-face{font-family:"${font(1)}";src:url("${fontUrl(1)}") format("truetype");font-display:block}` : "") +
       (hasTitle ? `@font-face{font-family:"surah-header";src:url("${HEADER_FONT}") format("woff2");font-display:block}` : "")} />
     {hasTitle && <link rel="preload" href={HEADER_FONT} as="font" type="font/woff2" crossorigin />}
-    <!-- the page's own font comes first: nothing on the page can be read without it -->
+    {/* the page's own font comes first: nothing on the page can be read without it */}
     <link rel="preload" href={fontUrl(n)} as="font" type="font/ttf" crossorigin fetchpriority="high" />
-    <!-- in the two-page view the facing page's font is needed at once -->
+    {/* in the two-page view the facing page's font is needed at once */}
     <script is:inline define:vars={{ partnerFont: fontUrl(partner.page) }}>
       if (document.documentElement.dataset.spread !== "off" && innerWidth >= 900 && innerWidth > innerHeight) {
         var l = document.createElement("link");
@@ -120,8 +120,8 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
   </Fragment>
 
   <main class="reader-main fit gutter" id="mushaf" data-page={n} data-first={`${first.s}:${first.a}`}>
-    <!-- the printed page names itself in its running head and footer; for screen readers and search engines it gets a
-         heading in words, and a way to the same surah as text with its tafsir -->
+    {/* the printed page names itself in its running head and footer; for screen readers and search engines it gets a
+         heading in words, and a way to the same surah as text with its tafsir */}
     <h1 class="sr-only">صفحة {ar(n)} من القرآن الكريم، سورة {surahName}</h1>
     <p class="sr-only"><a href={`/surah/${first.s}`}>سورة {surahName} مكتوبة مع التفسير الميسّر</a></p>
     <div class="stage" data-fit-shift>
@@ -135,7 +135,7 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
               <span>سورة {h.surah}</span>
               <span>الجزء {JUZ_NAMES[h.juz]}</span>
             </div>
-            <!-- The page font maps private code points to whole words, so screen readers get the plain text instead. -->
+            {/* The page font maps private code points to whole words, so screen readers get the plain text instead. */}
             <div class="sr-only">{pageVerses(pg).map((text) => <p>{text}</p>)}</div>
             <div class="mlines" aria-hidden="true">
               {pg.lines.map((line) =>
@@ -163,9 +163,9 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
     </div>
   </main>
 
-  <!-- Bottom controls across the whole width: the previous and next page at the ends, and between them the mushaf as a
+  {/* Bottom controls across the whole width: the previous and next page at the ends, and between them the mushaf as a
        row of lines, one per surah, all alike, all 114 at once (the first on the right); the line of the surah being
-       read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). -->
+       read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). */}
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
       <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("الصفحة السابقة")} />

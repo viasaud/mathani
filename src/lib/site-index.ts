@@ -22,8 +22,6 @@ export function siteIndex() {
   return cached;
 }
 
-// The surah a page opens with.
-export const surahOfPage = (index: SiteIndex, page: number) => index.chapters[index.pages[page - 1][0] - 1];
 // The page a verse is on: the last page whose first verse comes at or before it.
 export function pageOfVerse(index: SiteIndex, s: number, a: number) {
   let lo = 1, hi = 604;

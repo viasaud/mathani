@@ -37,7 +37,6 @@ export type Placement = [glyph: string, page: number, line: number];
 export const getLayout = (id: number) => layouts[`/data/layout/${pad(id)}.json`] as Placement[][];
 
 export const getChapters = () => files["/data/chapters.json"] as Chapter[];
-export const getChapter = (id: number) => getChapters()[id - 1];
 
 // A verse's page is where its first word sits in the mushaf, so every view agrees with the page view.
 const verseCache = new Map<number, VerseRow[]>();
