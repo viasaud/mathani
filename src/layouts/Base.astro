@@ -128,10 +128,10 @@ const map = (axis: "x" | "y", edge: number) => {
     <svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
       {/* capsules: the bend reaches well in from the ends; panels: only a thin band at each rim, so what lies under
            their options is not distorted */}
-      {[["lg", 16, 34, 22], ["lg-panel", 5, 5, 16]].map(([id, ex, ey, scale]) => (
+      {([["lg", 16, 34, 22], ["lg-panel", 5, 5, 16]] as const).map(([id, ex, ey, scale]) => (
         <filter id={id} x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
-          <feImage href={map("x", ex as number)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx" />
-          <feImage href={map("y", ey as number)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="my" />
+          <feImage href={map("x", ex)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx" />
+          <feImage href={map("y", ey)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="my" />
           <feComposite in="mx" in2="my" operator="arithmetic" k2="1" k3="1" result="map" />
           <feDisplacementMap in="SourceGraphic" in2="map" scale={scale} xChannelSelector="R" yChannelSelector="G" />
         </filter>
