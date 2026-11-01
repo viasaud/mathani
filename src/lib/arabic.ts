@@ -39,6 +39,9 @@ export function ayahs(n: number) {
   return `${ar(n)} ${n <= 10 ? "آيات" : "آية"}`;
 }
 
+// the four quarters of a hizb, each named from where it begins: «ربع الحزب ٣»
+export const QUARTERS = ["الحزب", "ربع الحزب", "نصف الحزب", "ثلاثة أرباع الحزب"];
+
 // "٧ سور", "١١ سورة": the counted noun agrees with the number
 export const surahCount = (n: number) =>
   n === 0 ? "لا توجد سور" : n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n <= 10 ? "سور" : "سورة"}`;

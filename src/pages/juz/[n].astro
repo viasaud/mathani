@@ -4,7 +4,7 @@
 import Base from "../../layouts/Base.astro";
 import "../../styles/reader.css";
 import Star from "../../components/Star.astro";
-import { ar, ayahs, JUZ_COMMON, JUZ_NAMES, surahCount } from "../../lib/arabic";
+import { ar, ayahs, JUZ_COMMON, JUZ_NAMES, QUARTERS, surahCount } from "../../lib/arabic";
 import { getChapters, getJuz, getNav, getVerses } from "../../lib/quran";
 import { breadcrumbs } from "../../lib/seo";
 
@@ -41,7 +41,6 @@ const surahs = chapters.slice(start.surah - 1, end.surah).map((c) => {
   return { c, from, to, whole: from === 1 && to === c.n, page: row(c.id, from)[1] };
 });
 // its two hizb, each in four quarters; under the hizb's own heading a quarter is named by how far into it it begins
-const QUARTERS = ["الحزب", "ربع الحزب", "نصف الحزب", "ثلاثة أرباع الحزب"];
 const PART = ["أوله", "ربعه", "نصفه", "ثلاثة أرباعه"];
 const quarters = rubs.slice((n - 1) * 8, n * 8).map(([s, a], k) => {
   const hizb = (n - 1) * 2 + Math.floor(k / 4) + 1;
@@ -110,7 +109,7 @@ const schema = [
 
       {/* the stretch of the mushaf it fills: a line for each page, from the first (right) to the last (left), the
            quarters marked where they fall, and under it a key to the marks */}
-      <section class="j-sec" aria-labelledby="j-pages">
+      <section class="sheet-sec" aria-labelledby="j-pages">
         <h2 id="j-pages">صفحاته<small>{ar(pages.length)} صفحة، من {ar(firstPage)} إلى {ar(lastPage)}</small></h2>
         <nav class="j-ruler" aria-labelledby="j-pages" style={`--n:${pages.length}`}>
           {pages.map(({ p, q }, i) => (
@@ -128,7 +127,7 @@ const schema = [
         </p>
       </section>
 
-      <section class="j-sec" aria-labelledby="j-surahs">
+      <section class="sheet-sec" aria-labelledby="j-surahs">
         <h2 id="j-surahs">{surahs.length === 1 ? "سورته" : "سوره"}<small>{surahCount(surahs.length)}</small></h2>
         <div class="j-list">
           {surahs.map(({ c, from, to, whole, page }) => (
@@ -142,7 +141,7 @@ const schema = [
         </div>
       </section>
 
-      <section class="j-sec" aria-labelledby="j-quarters">
+      <section class="sheet-sec" aria-labelledby="j-quarters">
         <h2 id="j-quarters">أرباعه<small>ثمانية، في حزبين</small></h2>
         <div class="j-hizbs">
           {hizbs.map((rows) => (

@@ -314,10 +314,21 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 }
 .v-span a:hover { border-color: var(--gold-2); }
 .v-span [aria-current] { background: var(--gold-soft); border-color: var(--gold-2); color: var(--gold-text); }
-.v-go { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
-/* in the page view a surah link opens the mushaf page too (shell.ts), so «read it in the surah» would only repeat the
-   first button */
-html[data-mode="pages"] .v-go .btn-ghost { display: none; }
+/* the sheet's parts, each after the first opened by one hairline with even space either side: a heading, and its count
+   or span beside it in the text face; the rows inside them are set apart by space alone */
+.sheet-sec { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--line); }
+.sheet-sec h2 { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.4; }
+.sheet-sec h2 small { font-family: var(--f-ui); font-size: 14px; color: var(--muted); }
+/* a verse's page: the verse alone across the sheet, larger than in the flow, under a line naming the quarter it opens
+   (if it does) with the copy tools at the far side; then its tafsir as plain text under its heading, no box */
+.vp-top { display: flex; align-items: center; gap: 16px; min-height: 44px; margin-bottom: 4px; }
+.vp-rub { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; color: var(--gold-text); }
+.vp-rub b { font: 400 20px/1 var(--f-quran); font-weight: 400; }
+.vp-top .v-tools { margin-inline-start: auto; }
+.vp-verse:is(:hover, :focus-within) .v-tools { opacity: 1; }
+.vp-verse .v-text { font-size: calc(var(--qsize) * 1.15); line-height: 2.1; }
+.vp-tafsir p { margin: 0; max-width: 72ch; font-size: 17px; line-height: 2; color: var(--ink-2); }
+.vp-tafsir .v-span { margin-top: 16px; }
 /* «الجزء الحادي والعشرون» is longer than any surah name: a little smaller, and free to take two lines */
 .juz-page .plate h1 { font-size: clamp(28px, 6vw, 56px); white-space: normal; text-wrap: balance; }
 /* its first words and its last, a row each across the whole sheet: where it is, then the words on one line, running
@@ -367,11 +378,6 @@ html.motion .j-ruler .j-mark { animation: fade-in 900ms var(--e-out) both; anima
 .j-key > span { display: inline-flex; align-items: center; gap: 8px; }
 .j-key i { width: 2px; height: 16px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 22%, transparent); }
 .j-key .j-mark { width: 20px; height: 24px; }
-/* the sections under it, each opened by one hairline with even space either side: a heading, and its count beside it
-   in the text face; the rows inside them are set apart by space alone */
-.j-sec { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--line); }
-.j-sec h2 { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.4; }
-.j-sec h2 small { font-family: var(--f-ui); font-size: 14px; color: var(--muted); }
 /* the index drawer's rows, in as many columns as fit (a lone surah takes the whole width, its page at the far edge);
    pulled out so the row's tint reaches past the text column */
 .j-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 4px 12px; margin-inline: -12px; }
@@ -444,5 +450,4 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .v-tools { margin-inline-end: -12px; }
   .j-verse { font-size: 22px; }
   .j-hizbs { grid-template-columns: 1fr; row-gap: 24px; }
-  .v-go .btn { flex: 1 1 100%; }
 }

@@ -1,12 +1,11 @@
 ---
-// One page per verse: the verse, its tafsir, where it sits in the mushaf, and the way on to its neighbours, its surah
-// and its mushaf page. A page of its own, so a search for a verse or its tafsir lands on exactly that.
+// One page per verse: the verse, its tafsir, where it sits in the mushaf (its page and juz linked under the title),
+// and the way on to its neighbours. A page of its own, so a search for a verse or its tafsir lands on exactly that.
 import Base from "../../../layouts/Base.astro";
 import "../../../styles/reader.css";
-import Star from "../../../components/Star.astro";
 import TajweedLegend from "../../../components/TajweedLegend.astro";
-import { ar, JUZ_NAMES, verseName } from "../../../lib/arabic";
-import { getChapters, getNav, getTafsirSpans, getVerses, tafsirLabel, verseHtml, type Chapter } from "../../../lib/quran";
+import { ar, JUZ_NAMES, QUARTERS, verseName } from "../../../lib/arabic";
+import { getChapters, getNav, getTafsirSpans, getVerses, verseHtml, type Chapter } from "../../../lib/quran";
 import { breadcrumbs, clip, ogSurah } from "../../../lib/seo";
 
 export function getStaticPaths() {
@@ -28,7 +27,8 @@ const a = i + 1;
 const span = getTafsirSpans(c.id)[i];
 const named = verseName(c.id, a);
 const hizb = Math.ceil(rub / 4);
-const startsRub = getNav().rubStarts.has(`${c.id}:${a}`);
+// a verse that opens a quarter says which: «يبدأ بها ربع الحزب ٣»
+const opens = getNav().rubStarts.has(`${c.id}:${a}`) ? `${QUARTERS[(rub - 1) % 4]} ${ar(hizb)}` : null;
 // the verse before and after, across the ends of the surah
 const prevChapter = chapters[c.id - 2];
 const nextChapter = chapters[c.id];
@@ -100,43 +100,37 @@ const schema = [
 
     <article class="text-sheet">
       <TajweedLegend />
-      <div class="verses">
-        <section class="v">
-          <div class="v-top">
-            <span class="v-num">
-              <span class="badge"><Star /><span>{ar(a)}</span></span>
-              <span class="v-meta"><span>سورة {c.name}</span>{startsRub && <span class="v-rub" title="بداية ربع حزب"><b class="rub-mark" aria-hidden="true">۞</b> <span class="v-rub-text">بداية ربع</span></span>}</span>
-            </span>
-            <div class="v-tools" role="group" aria-label="أدوات الآية">
-              <button class="ib" id="v-copy" aria-label="نسخ الآية" title="نسخ الآية">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
-              </button>
-              <button class="ib" id="v-link" aria-label="نسخ رابط الآية" title="نسخ رابط الآية">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg>
-              </button>
-            </div>
+      {/* the verse alone, across the whole sheet and larger than in the surah's flow; above it, where it opens a
+           quarter, and the copy tools at the far side */}
+      <section class="vp-verse" aria-label={`سورة ${c.name}، الآية ${ar(a)}`}>
+        <div class="vp-top">
+          {opens && <span class="vp-rub"><b aria-hidden="true">۞</b>يبدأ بها {opens}</span>}
+          <div class="v-tools" role="group" aria-label="أدوات الآية">
+            <button class="ib" id="v-copy" aria-label="نسخ الآية" title="نسخ الآية">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+            </button>
+            <button class="ib" id="v-link" aria-label="نسخ رابط الآية" title="نسخ رابط الآية">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg>
+            </button>
           </div>
-          <div class="v-text"><span class="t" set:html={verseHtml(verses[i])} />{sajda ? <span class="sajda">سجدة</span> : null}{" "}<span class="end">۝{ar(a)}</span></div>
-          <div class="tafsir">
-            <h2>{tafsirLabel(span)}</h2>
-            <p>{span.text}</p>
-            {span.end > span.start && (
-              <nav class="v-span" aria-label="الآيات التي يجمعها هذا التفسير">
-                {verses.slice(span.start, span.end + 1).map((_, k) => {
-                  const n = span.start + k + 1;
-                  return n === a ? <span aria-current="page">{ar(n)}</span> : <a href={`/surah/${c.id}/${n}`}>{ar(n)}</a>;
-                })}
-              </nav>
-            )}
-          </div>
-        </section>
-      </div>
-    </article>
+        </div>
+        <div class="v-text"><span class="t" set:html={verseHtml(verses[i])} />{sajda ? <span class="sajda">سجدة</span> : null}{" "}<span class="end">۝{ar(a)}</span></div>
+      </section>
 
-    <div class="v-go">
-      <a class="btn btn-primary" href={`/page/${page}#v${c.id}-${a}`}>اقرأها في المصحف، صفحة {ar(page)}</a>
-      <a class="btn btn-ghost" href={`/surah/${c.id}#a${a}`}>اقرأها في سورة {c.name}</a>
-    </div>
+      {/* its tafsir, the sheet's second part; one that explains several verses names them, and links each */}
+      <section class="sheet-sec vp-tafsir" aria-labelledby="vp-tafsir">
+        <h2 id="vp-tafsir">التفسير الميسّر{span.end > span.start && <small>للآيات {ar(span.start + 1)}–{ar(span.end + 1)}</small>}</h2>
+        <p>{span.text}</p>
+        {span.end > span.start && (
+          <nav class="v-span" aria-label="الآيات التي يجمعها هذا التفسير">
+            {verses.slice(span.start, span.end + 1).map((_, k) => {
+              const n = span.start + k + 1;
+              return n === a ? <span aria-current="page">{ar(n)}</span> : <a href={`/surah/${c.id}/${n}`}>{ar(n)}</a>;
+            })}
+          </nav>
+        )}
+      </section>
+    </article>
 
     <nav class="pager" aria-label="التنقل بين الآيات">
       {prev && <a href={`/surah/${prev.s.id}/${prev.a}`} rel="prev"><small>الآية السابقة</small><strong>{prev.s.name} {ar(prev.a)}</strong></a>}
