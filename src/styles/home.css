@@ -9,20 +9,41 @@
 .cover {
   position: relative; isolation: isolate; overflow: hidden; margin-top: calc(var(--top) * -1); padding-top: var(--top);
   min-height: min(100svh, 1000px); display: grid; align-items: center;
-  background: radial-gradient(1100px 700px at 22% 46%, var(--cover-2), transparent 70%), var(--cover);
+  /* the tooling's two strokes: the cut, and the edge the light catches just below it (on the leather, its shadow) */
+  --tool: color-mix(in srgb, var(--cover-gold) 34%, transparent);
+  --tool-edge: color-mix(in srgb, var(--cover-2) 90%, #fff);
+  --shade: color-mix(in srgb, var(--cover-ink) 10%, transparent);
+  background:
+    radial-gradient(48% 62% at 30% 50%, color-mix(in srgb, var(--cover-2) 70%, transparent), transparent 100%),
+    linear-gradient(170deg, color-mix(in srgb, var(--cover-2) 40%, transparent), transparent 55%),
+    var(--cover);
   color: var(--ink);
 }
-/* the live gilt lattice (cover-gl.ts); without WebGL a still drawing of it stands in */
-.cover-gl { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; display: block; }
-.cover-gl.off {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23dcb767' stroke-width='.6' opacity='.22'%3E%3Crect x='22' y='22' width='36' height='36'/%3E%3Crect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 22px;
+:root[data-theme="dark"] .cover {
+  --tool: color-mix(in srgb, var(--cover-gold) 22%, transparent);
+  --tool-edge: rgba(0, 0, 0, 0.55);
+  --shade: rgba(0, 0, 0, 0.5);
 }
-.cover-veil { /* the edges fall away into the binding, and the cover meets the paper below with a soft edge */
+/* the cover is tooled like a binding: a lattice of eight-pointed stars, each in its ring and tied to the next, pressed
+   into the board. It is deepest around the rosette and wears away toward the title, so the words sit on plain paper */
+.cover-tooling {
+  --tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23000' stroke-width='.7'%3E%3Crect x='12.5' y='12.5' width='23' height='23'/%3E%3Crect x='12.5' y='12.5' width='23' height='23' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='16.3' stroke-width='.45'/%3E%3Cpath d='M40.3 24H48M0 24h7.7M24 0v7.7M24 40.3V48M0 5.1L5.1 0M42.9 0L48 5.1M48 42.9L42.9 48M5.1 48L0 42.9'/%3E%3C/g%3E%3C/svg%3E");
+  position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  -webkit-mask: radial-gradient(62% 80% at 30% 50%, #000 0%, rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.08) 100%);
+  mask: radial-gradient(62% 80% at 30% 50%, #000 0%, rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.08) 100%);
+}
+.cover-tooling::before, .cover-tooling::after {
+  content: ""; position: absolute; inset: 0;
+  -webkit-mask: var(--tile) 50% 50% / 48px repeat; mask: var(--tile) 50% 50% / 48px repeat;
+}
+.cover-tooling::before { background: var(--tool-edge); transform: translateY(1px); }
+.cover-tooling::after { background: var(--tool); }
+.cover-veil { /* a fine grain in the board, the corners falling into shadow, and a soft edge where the cover meets the paper */
   position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(42% 60% at 76% 52%, color-mix(in srgb, var(--cover) 78%, transparent), transparent 100%),
-    radial-gradient(120% 90% at 30% 45%, transparent 40%, color-mix(in srgb, var(--cover) 85%, transparent) 100%),
-    linear-gradient(transparent 70%, var(--cover) 100%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 180px,
+    radial-gradient(130% 110% at 40% 45%, transparent 50%, var(--shade) 100%),
+    linear-gradient(transparent 72%, var(--cover) 100%);
 }
 .cover::after { /* the gilt edge where the cover ends */
   content: ""; position: absolute; inset: auto 0 0; height: 1px; z-index: 1;
@@ -42,7 +63,7 @@
    line and out beyond the word's end */
 .cover h1 span {
   display: inline-block; padding: 0.06em 0.3em 0.42em; margin: -0.06em -0.3em -0.42em;
-  background: linear-gradient(170deg, #fff6df 0%, var(--cover-gold) 46%, #a7802f 64%, #f5dfa6 82%, var(--cover-gold) 100%);
+  background: linear-gradient(170deg, var(--gilt-hi) 0%, var(--cover-gold) 46%, var(--gilt-lo) 64%, color-mix(in srgb, var(--gilt-hi) 55%, var(--cover-gold)) 82%, var(--cover-gold) 100%);
   background-size: 100% 220%; background-position: 50% 0%;
   -webkit-background-clip: text; background-clip: text; color: transparent;
   animation: leaf 9s var(--e-in-out) infinite alternate;
@@ -61,10 +82,10 @@
 .resume {
   position: relative; flex: 0 1 auto; min-width: 0; width: min(100%, 420px); height: 70px; display: flex; align-items: center; gap: 14px;
   /* liquid glass over the cover (.glass gives the blur and the lens): the gilt lattice shows through */
-  padding: 6px; padding-inline-start: 9px; border-radius: 999px; border: 1px solid rgba(255, 240, 200, 0.18);
-  background: rgba(20, 14, 6, 0.24);
+  padding: 6px; padding-inline-start: 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--cover-ink) 18%, transparent);
+  background: color-mix(in srgb, var(--cover-2) 24%, transparent);
   box-shadow: 0 26px 56px -26px rgba(0, 0, 0, 0.9);
-  transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-3) var(--e-out);
+  transition: transform var(--t-3) var(--e-out), box-shadow var(--t-3) var(--e-out);
 }
 .resume:hover { transform: translateY(-2px); box-shadow: 0 32px 60px -26px rgba(0, 0, 0, 0.95); }
 .resume:active { transform: scale(0.98); }
@@ -86,28 +107,52 @@
    out into a capsule and the arrow travels forward; no glow */
 .resume-go {
   position: relative; flex: none; width: 56px; height: 56px; border-radius: 999px; display: grid; place-items: center;
-  transition: width var(--t-3) var(--e-spring);
-  background: var(--cover-gold); color: #1a1305;
+  transition: width var(--t-3) var(--e-out);
+  background: var(--cover-gold); color: var(--on-gold);
   box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6);
 }
-.resume-go svg { transition: transform var(--t-3) var(--e-spring); }
+.resume-go svg { transition: transform var(--t-3) var(--e-out); }
 .resume:hover .resume-go { width: 76px; }
 .resume:hover .resume-go svg { transform: translateX(-6px); }
 
-/* the rosette: three rings turning at their own pace, pushed by the pointer (motion.ts) */
+
+/* the rosette: it unfolds from the star at its heart, then rests, its rings turning a notch now and then into the same
+   figure, while a beam of light goes slowly round it (motion.ts) */
 .cover-art { position: relative; aspect-ratio: 1; width: 100%; max-width: 560px; justify-self: center; }
 .halo { position: absolute; inset: 14%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--gold) 26%, transparent), transparent 66%); filter: blur(20px); animation: breathe 7s var(--e-in-out) infinite alternate; }
-@keyframes breathe { from { opacity: 0.55; transform: scale(0.94); } to { opacity: 1; transform: scale(1.04); } }
-.rosette { position: relative; width: 100%; height: 100%; overflow: visible; }
-.ro { transform-box: view-box; transform-origin: 300px 300px; }
-.ro-outer { animation: turn 140s linear infinite; }
-.ro-middle { animation: turn 90s linear infinite reverse; }
-.ro-inner { animation: turn 60s linear infinite; }
-.rosette .g { stroke: var(--gold); }
-.rosette .i { stroke: var(--ink); opacity: 0.22; }
-.ro-core { fill: var(--gold); transform-box: fill-box; transform-origin: center; animation: turn 30s linear infinite reverse; filter: drop-shadow(0 0 10px var(--gold)); }
-html.motion .rosette path { stroke-dasharray: 1; stroke-dashoffset: 1; }
-html.motion .ro-core { opacity: 0; }
+@keyframes breathe { from { opacity: 0.55; transform: scale(0.98); } to { opacity: 1; transform: scale(1.04); } }
+.ro-stage, .ro-turn { position: absolute; inset: 0; }
+.ro-turn { animation: turn 240s linear infinite; }
+.rosette { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rosette .g { stroke: var(--ro-g, var(--gold)); }
+.rosette .b { stroke: var(--ro-g, var(--gold)); opacity: 0.45; }
+.rosette .i { stroke: var(--ro-i, var(--ink)); opacity: 0.2; }
+.rosette .t { stroke: var(--ro-i, var(--ink)); opacity: 0.32; }
+.ro-core { fill: var(--ro-g, var(--gold)); }
+.ro-glow-hi { stop-color: var(--gilt-hi); stop-opacity: 0.5; }
+.ro-glow-lo { stop-color: var(--gold); stop-opacity: 0; }
+.ro-wave { fill: none; stroke: var(--gilt-hi); stroke-width: 1.2; opacity: 0; }
+/* the light: the bright copy shows only through two soft beams, a strong one and a faint one across from it. The beams
+   turn with their frame and the copy turns back inside it by as much, so the drawing stays put and only the light
+   moves; both are transforms, so the turning costs no repaint */
+.ro-lit {
+  position: absolute; inset: 0; animation: turn 20s linear infinite;
+  mask-image: conic-gradient(transparent 0deg, #000 38deg, transparent 84deg, transparent 180deg, rgba(0, 0, 0, 0.45) 218deg, transparent 262deg);
+}
+.ro-lit .rosette { --ro-g: var(--gilt-hi); --ro-i: var(--gilt-hi); animation: turn 20s linear infinite reverse; }
+.ro-lit .rosette :is(.b, .i, .t) { opacity: 0.55; }
+/* points of light travelling the main gilt lines, each its own pace */
+.rosette .tr { stroke: var(--gilt-hi); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 0.045 0.955; animation: trace 16s linear infinite; }
+.ro-outer .tr + .tr { animation-duration: 21s; animation-delay: -8s; }
+.ro-middle .tr { animation-duration: 13s; animation-direction: reverse; }
+.ro-inner .tr { stroke-dasharray: 0.06 0.94; animation-duration: 10s; }
+@keyframes trace { to { stroke-dashoffset: -1; } }
+@media (prefers-reduced-motion: reduce) { .rosette .tr { display: none; } }
+.cover.asleep :is(.ro-turn, .ro-lit, .ro-lit .rosette, .halo, .rosette .tr) { animation-play-state: paused; }
+html.motion .rosette path:not(.tr) { stroke-dasharray: 1; stroke-dashoffset: 1; }
+html.motion .rosette .tr { opacity: 0; }
+html.motion :is(.ro-core, .ro-glow, .ro-lit) { opacity: 0; }
+
 
 /* waiting for the opening (motion.ts) */
 html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
@@ -137,21 +182,21 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
   position: relative; isolation: isolate; display: grid; justify-items: center; align-content: center; gap: 4px; text-align: center;
   min-height: 248px; padding: 28px 18px 24px; border-radius: 24px; border: 1px solid var(--line);
   background: var(--sheet);
-  transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
+  transition: transform var(--t-3) var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
 }
 .pick::after {
   content: ""; position: absolute; inset: 8px; z-index: -1; border-radius: 17px; pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--gold-2) 26%, transparent); transition: border-color var(--t-3) ease;
 }
-.pick:hover { transform: translateY(-6px); box-shadow: var(--shadow-2); border-color: transparent; }
+.pick:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: transparent; }
 .pick:hover::after { border-color: color-mix(in srgb, var(--gold-2) 70%, transparent); }
 .pick:active { transform: translateY(-2px) scale(0.98); }
 .pick:focus-visible { border-radius: 24px; }
 .pick-medal { position: relative; width: 60px; height: 60px; display: grid; place-items: center; margin-bottom: 12px; }
-.pick-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 900ms var(--e-spring); }
+.pick-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1400ms var(--e-out); }
+.pick:hover .pick-medal svg { transform: rotate(45deg); }
 .pick-medal svg circle { display: none; }
 .pick-medal b { position: relative; font-family: var(--f-display); font-weight: 700; font-size: 15px; color: var(--gold-text); font-variant-numeric: tabular-nums; }
-.pick:hover .pick-medal svg { transform: rotate(45deg); }
 .pick-name { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.3; }
 /* the opening words keep to one line, ending in an ellipsis if the card is too narrow for them */
 .pick-verse {
@@ -167,13 +212,13 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 .juz-tile {
   position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 132px; padding: 18px 8px 16px;
   border-radius: 20px; background: var(--sheet); border: 1px solid var(--line); text-align: center;
-  transition: transform 600ms var(--e-spring), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
+  transition: transform 600ms var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
 }
 .juz-num { font-family: var(--f-display); font-weight: 700; font-size: 34px; line-height: 1.1; color: var(--gold-text); font-variant-numeric: tabular-nums; }
 .juz-from { max-width: 100%; font-size: 12px; color: var(--muted-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .juz-tile .sc-cta { font-size: 12px; }
 @media (hover: hover) {
-  .juz-tile:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
+  .juz-tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
 }
 .juz-tile:active { transform: translateY(-2px) scale(0.98); }
 .juz-tile:focus-visible { border-radius: 20px; }
@@ -211,12 +256,12 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 .surah-card {
   position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 172px; padding: 20px 14px 16px;
   border-radius: 22px; text-align: center; background: var(--sheet); border: 1px solid var(--line);
-  transition: transform 600ms var(--e-spring), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
+  transition: transform 600ms var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
 }
 /* while the filter settles the cards, their own transitions stand aside (home.ts) */
 .settling .surah-card { transition: none !important; }
 .sc-medal { position: relative; width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 2px; }
-.sc-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 900ms var(--e-spring); }
+.sc-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1400ms var(--e-out); }
 .sc-medal svg g { transition: fill var(--t-3) ease; }
 .sc-medal svg circle { display: none; }
 .sc-medal b { position: relative; font-size: 13px; font-weight: 700; color: var(--gold-text); font-variant-numeric: tabular-nums; }
@@ -227,18 +272,18 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 /* the ornament: a diamond between two hairlines */
 .sc-rule { display: flex; align-items: center; gap: 6px; height: 8px; }
 .sc-rule::before, .sc-rule::after { content: ""; width: 14px; height: 1px; background: color-mix(in srgb, var(--gold-2) 55%, transparent); transition: width 600ms var(--e-out); }
-.sc-rule i { width: 5px; height: 5px; rotate: 45deg; border: 1px solid var(--gold-2); transition: rotate 700ms var(--e-spring), background-color var(--t-3) ease; }
+.sc-rule i { width: 5px; height: 5px; rotate: 45deg; border: 1px solid var(--gold-2); transition: rotate 1200ms var(--e-out), background-color var(--t-3) ease; }
 /* the details and the invitation share one line's window and roll past each other */
 .sc-roll { display: grid; overflow: hidden; max-width: 100%; height: 22px; }
 .sc-roll > * { grid-area: 1 / 1; line-height: 22px; transition: transform 520ms var(--e-out), filter 420ms ease; }
 .surah-card .meta { max-width: 100%; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sc-cta { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--gold-text); transform: translateY(100%); filter: blur(4px); }
-.sc-cta svg { transition: transform var(--t-3) var(--e-spring); }
+.sc-cta svg { transition: transform var(--t-3) var(--e-out); }
 /* hover: the plate lifts and its rim turns gold, the star turns and fills, the ornament draws out, the details roll
    away for the invitation. Everything stays on the card: no glow, nothing following the pointer */
 @media (hover: hover) {
-  .surah-card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
   .surah-card:hover .sc-medal svg { transform: rotate(45deg); }
+  .surah-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
   .surah-card:hover .sc-medal svg g { fill: color-mix(in srgb, var(--gold-soft) 85%, transparent); }
   :is(.surah-card, .juz-tile):hover .sc-rule::before, :is(.surah-card, .juz-tile):hover .sc-rule::after { width: 30px; }
   :is(.surah-card, .juz-tile):hover .sc-rule i { rotate: 225deg; background: var(--gold-2); }
@@ -255,11 +300,11 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
   border: 1px solid var(--line-2); background: var(--sheet); color: var(--ink-2); font-size: 14px;
   /* hidden but holding its place until the reader has rested at the bottom (home.ts), so nothing shifts when it appears */
   opacity: 0; visibility: hidden; transform: translateY(8px);
-  transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-spring), visibility var(--t-2), border-color var(--t-1) ease;
+  transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-out), visibility var(--t-2), border-color var(--t-1) ease;
 }
 .to-top.on { opacity: 1; visibility: visible; transform: none; }
 .to-top:hover { border-color: var(--gold-2); color: var(--ink); }
-.to-top svg { transition: transform var(--t-3) var(--e-spring); }
+.to-top svg { transition: transform var(--t-3) var(--e-out); }
 .to-top:hover svg { transform: translateY(-3px); }
 .to-top:focus-visible { border-radius: 999px; }
 @media (pointer: coarse) { .to-top { min-height: 44px; } }
@@ -278,7 +323,7 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 @media (max-width: 900px) {
   .cover { min-height: auto; }
   .cover-inner { grid-template-columns: minmax(0, 1fr); padding-block: 24px 88px; gap: 0; }
-  .cover-art { position: absolute; z-index: -1; inset-block-start: -6%; inset-inline-end: -48%; width: 110%; max-width: none; opacity: 0.32; pointer-events: none; }
+  .cover-art { grid-row: auto; grid-column: auto; position: absolute; z-index: -1; inset-block-start: -6%; inset-inline-end: -48%; width: 110%; max-width: none; opacity: 0.32; pointer-events: none; }
   .cover-copy { position: relative; z-index: 1; max-width: 600px; }
   .scroll-cue { display: none; }
 }

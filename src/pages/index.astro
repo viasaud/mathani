@@ -11,35 +11,50 @@ const { starts } = getJuz();
 const startPage = chapters.map((c) => getVerses(c.id)[0][1]);
 const juzPage = starts.map((s) => getVerses(s.surah)[s.ayah - 1][1]);
 
-// The cover's rosette: an eight-fold pattern built from the rub' al-hizb star, in three rings that turn on their own.
-// Every stroke has pathLength 1, so motion.ts can draw it in.
+// The cover's rosette: an eight-fold pattern built from the rub' al-hizb star, in three rings around a star at the
+// heart. Every stroke has pathLength 1, so motion.ts can draw it in; motion.ts also turns the rings, a notch at a time.
 const C = 300;
 const pt = (r: number, deg: number) => {
   const t = ((deg - 90) * Math.PI) / 180;
   return [C + r * Math.cos(t), C + r * Math.sin(t)].map((n) => n.toFixed(2)).join(" ");
 };
+const at = (r: number, deg: number) => pt(r, deg).split(" ").map(Number);
 const polygon = (r: number, step: number, offset = 0, n = 8) =>
   "M" + Array.from({ length: n }, (_, i) => pt(r, offset + ((i * step) % n) * (360 / n))).join(" L") + " Z";
 const square = (r: number, rot: number) => "M" + [0, 90, 180, 270].map((d) => pt(r, d + 45 + rot)).join(" L") + " Z";
-const ring = (r: number) => `M${pt(r, 0)} A${r} ${r} 0 1 1 ${pt(r, 180)} A${r} ${r} 0 1 1 ${pt(r, 0)}`;
+const circle = (x: number, y: number, r: number) =>
+  `M${(x + r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x - r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x + r).toFixed(2)} ${y.toFixed(2)}`;
+const ring = (r: number) => circle(C, C, r);
+const spoke = (r1: number, r2: number, deg: number) => `M${pt(r1, deg)} L${pt(r2, deg)}`;
+const star = ([x, y]: number[], r: number) => {
+  const p = (a: number) => [x + r * Math.cos(a), y + r * Math.sin(a)].map((n) => n.toFixed(2)).join(" ");
+  const sq = (o: number) => "M" + [0, 1, 2, 3].map((k) => p(o + (k * Math.PI) / 2)).join(" L") + " Z";
+  return sq(0) + sq(Math.PI / 4);
+};
+// g: a gilt line, b: its fainter twin beside it (the lines run in pairs, like tooled bands), i: a fine ink rule,
+// t: the ticks of the outer scale, an astrolabe's rim, tr: a point of light travelling the main gilt lines
 const outer = [
-  { d: ring(292), cls: "i" }, { d: ring(250), cls: "g" },
+  { d: ring(292), cls: "i" }, { d: ring(284), cls: "i" },
+  ...Array.from({ length: 64 }, (_, k) => ({ d: spoke(k % 8 ? 286 : 280, 290, k * 5.625), cls: "t" })),
+  { d: ring(250), cls: "g" },
   { d: square(250, 0), cls: "g" }, { d: square(250, 45), cls: "g" },
-  ...Array.from({ length: 8 }, (_, k) => ({ d: `M${pt(214, k * 45)} L${pt(292, k * 45)}`, cls: "i" })),
+  { d: square(236, 0), cls: "b" }, { d: square(236, 45), cls: "b" },
+  { d: square(250, 0), cls: "tr" }, { d: square(250, 45), cls: "tr" },
+  ...Array.from({ length: 8 }, (_, k) => ({ d: spoke(214, 280, k * 45), cls: "i" })),
 ];
 const middle = [
-  { d: ring(214), cls: "i" }, { d: polygon(196, 3, 22.5), cls: "g" },
-  ...Array.from({ length: 8 }, (_, k) => ({ d: smallRing(pt(158, k * 45 + 22.5), 22), cls: "i" })),
+  { d: ring(214), cls: "i" },
+  { d: polygon(196, 3, 22.5), cls: "g" }, { d: polygon(183, 3, 22.5), cls: "b" }, { d: polygon(196, 3, 22.5), cls: "tr" },
+  ...Array.from({ length: 8 }, (_, k) => ({ d: star(at(158, k * 45 + 22.5), 10), cls: "g" })),
+  ...Array.from({ length: 8 }, (_, k) => ({ d: circle(...(at(158, k * 45 + 22.5) as [number, number]), 19), cls: "i" })),
 ];
-function smallRing(at: string, r: number) {
-  const [x, y] = at.split(" ").map(Number);
-  return `M${(x + r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x - r).toFixed(2)} ${y.toFixed(2)} A${r} ${r} 0 1 1 ${(x + r).toFixed(2)} ${y.toFixed(2)}`;
-}
 const inner = [
-  { d: ring(120), cls: "g" }, { d: ring(64), cls: "g" },
+  { d: ring(120), cls: "g" }, { d: ring(112), cls: "i" }, { d: ring(64), cls: "g" },
   { d: square(120, 22.5), cls: "i" }, { d: square(120, 67.5), cls: "i" },
-  ...Array.from({ length: 16 }, (_, k) => ({ d: `M${pt(64, k * 22.5)} L${pt(120, k * 22.5)}`, cls: "g" })),
+  ...Array.from({ length: 16 }, (_, k) => ({ d: spoke(64, 112, k * 22.5), cls: "g" })),
+  { d: polygon(52, 3, 0), cls: "b" }, { d: ring(120), cls: "tr" },
 ];
+const rings = [["outer", outer, 1], ["middle", middle, 1], ["inner", inner, 1.1]] as const;
 
 // Where most readers begin. Each card is a small illuminated plate: its number in the star (the surah's, or for a
 // single passage the verse's), the name, and the first words in the Uthmani script.
@@ -60,7 +75,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
   <main class="home">
     {/* ---------- the cover ---------- */}
     <section class="cover" data-tone="cover" id="cover" aria-labelledby="cover-title">
-      <canvas class="cover-gl" id="cover-gl" aria-hidden="true"></canvas>
+      <div class="cover-tooling" aria-hidden="true"></div>
       <div class="cover-veil" aria-hidden="true"></div>
       <div class="cover-inner gutter">
         <div class="cover-copy">
@@ -87,18 +102,30 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
         </div>
         <div class="cover-art" aria-hidden="true">
           <div class="halo"></div>
-          <svg viewBox="0 0 600 600" class="rosette" id="rosette">
-            <g class="ro ro-outer" fill="none" stroke-width="1.1" stroke-linejoin="round">
-              {outer.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
-            </g>
-            <g class="ro ro-middle" fill="none" stroke-width="1.1" stroke-linejoin="round">
-              {middle.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
-            </g>
-            <g class="ro ro-inner" fill="none" stroke-width="1.2" stroke-linejoin="round">
-              {inner.map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
-            </g>
-            <path class="ro-core" d={square(26, 0) + square(26, 45)}></path>
-          </svg>
+          {/* the rosette twice over: as drawn, and again in bright gilt seen only through a beam of light that goes
+               round it (home.css), so the gold seems to catch the light as it turns. The whole of it turns very slowly */}
+          <div class="ro-stage" id="rosette"><div class="ro-turn">
+            {[false, true].map((lit) => {
+              const art = (
+                <svg viewBox="0 0 600 600" class="rosette">
+                  {!lit && (
+                    <>
+                      <defs><radialGradient id="ro-glow"><stop class="ro-glow-hi" offset="0"></stop><stop class="ro-glow-lo" offset="1"></stop></radialGradient></defs>
+                      <circle class="ro-wave" cx="300" cy="300" r="40"></circle>
+                      <circle class="ro-glow" cx="300" cy="300" r="70" fill="url(#ro-glow)"></circle>
+                    </>
+                  )}
+                  {rings.map(([name, list, w]) => (
+                    <g class={`ro ro-${name}`} fill="none" stroke-width={w} stroke-linejoin="round">
+                      {list.filter((s) => !lit || s.cls !== "tr").map((s) => <path class={s.cls} d={s.d} pathLength="1"></path>)}
+                    </g>
+                  ))}
+                  <path class="ro-core" d={square(24, 0) + square(24, 45)}></path>
+                </svg>
+              );
+              return lit ? <div class="ro-lit">{art}</div> : art;
+            })}
+          </div></div>
         </div>
       </div>
       <a class="scroll-cue" href="#start" aria-label="إلى المحتوى"><i></i></a>

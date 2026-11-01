@@ -78,8 +78,8 @@ const map = (axis: "x" | "y", edge: number) => {
          pages' running heads and surah plates */}
     <link rel="preload" href={`/fonts/thmanyah/thmanyahserifdisplay-${cover ? "Regular" : "Bold"}.woff2`} as="font" type="font/woff2" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta name="theme-color" content="#f4f1e8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0a08" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3e8e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b050a" media="(prefers-color-scheme: dark)" />
     {/* the link preview: Open Graph for most apps, the Twitter card for X */}
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={fullTitle} />
@@ -105,8 +105,12 @@ const map = (axis: "x" | "y", edge: number) => {
       try {
         var d = document.documentElement;
         var g = function (k) { var v = localStorage.getItem("mushaf:" + k); return v == null ? null : JSON.parse(v); };
+        // one of the three tones; with none chosen, the system's light or dark. A choice saved before the three
+        // (the sepia paper) is carried to its nearest tone
         var t = g("theme");
-        if (t) d.dataset.theme = t;
+        if (t === "sepia") t = "mid";
+        if (t !== "light" && t !== "mid" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        d.dataset.theme = t;
         d.dataset.mode = g("mode") || "pages";
         d.dataset.spread = g("spread") || "on";
         d.dataset.tajweed = g("tajweed") || "off";
@@ -174,6 +178,16 @@ const map = (axis: "x" | "y", edge: number) => {
         </button>
       </div>
       <div class="hd-actions">
+        {/* on the home page, the book's three tones: a capsule like the others, each tone a small disc of its own paper
+             with its gold star; the chosen one sits in a lit well. On a phone only the chosen tone shows, and a tap
+             turns to the next (home.ts). shell.ts wires [data-theme-btn] */}
+        {cover && (
+          <div class="cap glass cap-tones" role="group" aria-label="لون المصحف">
+            {[["light", "فاتح"], ["mid", "متوسط"], ["dark", "داكن"]].map(([t, label]) => (
+              <button class="cap-tone" data-theme-btn={t} aria-pressed="false" aria-label={label} title={label}><Star filled /></button>
+            ))}
+          </div>
+        )}
         {reader && (
         <div class="settings-wrap">
           <button class="cap glass cap-circle" id="settings-btn" aria-expanded="false" aria-controls="settings" aria-label="إعدادات القراءة" title="إعدادات القراءة">
@@ -207,9 +221,8 @@ const map = (axis: "x" | "y", edge: number) => {
             <div class="set-sep"></div>
             <h3>المظهر</h3>
             <div class="themes" role="group" aria-label="المظهر">
-              <button class="theme-opt" data-theme-btn="auto"><i></i>تلقائي</button>
               <button class="theme-opt" data-theme-btn="light"><i></i>فاتح</button>
-              <button class="theme-opt" data-theme-btn="sepia"><i></i>ورقي</button>
+              <button class="theme-opt" data-theme-btn="mid"><i></i>متوسط</button>
               <button class="theme-opt" data-theme-btn="dark"><i></i>داكن</button>
             </div>
             <div class="set-sep"></div>

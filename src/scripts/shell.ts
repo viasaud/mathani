@@ -181,25 +181,31 @@ spreadButtons.forEach((b) =>
 );
 
 const themeButtons = document.querySelectorAll<HTMLElement>("[data-theme-btn]");
-const syncTheme = () => themeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeBtn === (root.dataset.theme || "auto"))));
+// one of the three tones is always set (Base.astro); the browser's own bar takes its ground
+const themeMetas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+const syncTheme = () => {
+  themeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeBtn === root.dataset.theme)));
+  const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+  themeMetas.forEach((m) => (m.content = bg));
+};
 syncTheme();
-// the new theme spreads out from the button as a widening circle (a view transition; global.css), where supported
+// until a tone is chosen, the page follows the system between light and dark as it changes
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  if (load<string | null>("theme", null)) return;
+  root.dataset.theme = e.matches ? "dark" : "light";
+  syncTheme();
+});
+// the page passes slowly from the old tone into the new (a view transition; global.css), where supported
 themeButtons.forEach((b) =>
   b.addEventListener("click", () => {
     const t = b.dataset.themeBtn!;
     const apply = () => {
-      if (t === "auto") delete root.dataset.theme;
-      else root.dataset.theme = t;
+      root.dataset.theme = t;
       syncTheme();
     };
-    save("theme", t === "auto" ? null : t);
-    if ((root.dataset.theme || "auto") === t) return;
+    save("theme", t);
+    if (root.dataset.theme === t) return;
     if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
-    const r = b.getBoundingClientRect();
-    const x = r.left + r.width / 2, y = r.top + r.height / 2;
-    root.style.setProperty("--vx", `${x}px`);
-    root.style.setProperty("--vy", `${y}px`);
-    root.style.setProperty("--vr", `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
     root.classList.add("theme-vt");
     const vt = document.startViewTransition(apply);
     vt.ready.catch(() => {}); // skipped (a hidden tab, say): the theme still changes

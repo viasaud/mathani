@@ -43,8 +43,10 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
   }
   html[data-spread="on"] .fit .mpage.facing { display: flex; }
   html[data-spread="on"] .fit .mhead { display: flex; }
-  html[data-spread="on"] .fit .mpage:first-child { border-left-width: 0; border-radius: 0 8px 8px 0; } /* the right page */
-  html[data-spread="on"] .fit .mpage:last-child { border-right-width: 0; border-radius: 8px 0 0 8px; } /* the left page */
+  /* a page's side is its place on the stage; a turn's copies carry theirs in data-side (page.ts), since in the turn
+     they sit in any order */
+  html[data-spread="on"] .fit :is(.stage > .mpage:first-child, .flip .mpage[data-side="right"]) { border-left-width: 0; border-radius: 0 8px 8px 0; } /* the right page */
+  html[data-spread="on"] .fit :is(.stage > .mpage:last-child, .flip .mpage[data-side="left"]) { border-right-width: 0; border-radius: 8px 0 0 8px; } /* the left page */
   html[data-spread="on"] .fit :is(.stage, .flip-spine)::after { /* the spine; over a turn too, so it never changes under it */
     content: ""; position: absolute; inset: 0 auto 0 50%; z-index: 1; width: 1px; translate: -50% 0; pointer-events: none;
     /* solid: the pages' gilt rule as it shows on the paper, so a second line over it during a turn can't change its
@@ -115,7 +117,7 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
   position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0px); z-index: 40; /* the lines stand on the screen's edge */
   padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); /* the header's gutter */
   display: flex; justify-content: center; pointer-events: none;
-  transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-spring);
+  transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-out);
 }
 .dock-row > * { pointer-events: auto; }
 /* the whole width: the page arrows at the far ends, the ruler of surahs filling everything between */
@@ -124,11 +126,11 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 .dround {
   position: relative; flex: none; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2);
 }
-.dround svg { width: 22px; height: 22px; stroke-width: 2.2; transition: transform var(--t-3) var(--e-spring); }
+.dround svg { width: 22px; height: 22px; stroke-width: 2.2; transition: transform var(--t-3) var(--e-out); }
 .dround:hover { background-image: linear-gradient(color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 8%, transparent)); }
 #prev:hover svg { transform: translateX(3px); }
 #next:hover svg { transform: translateX(-3px); }
-.dround:active { transform: scale(0.9); }
+.dround:active { transform: scale(0.98); }
 .dround[aria-disabled] { opacity: 0.35; cursor: default; filter: none; }
 .dround:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
 /* with room beside the pages (page.ts), the arrows leave the dock and stand either side of the pages, half way down and
@@ -158,7 +160,7 @@ html.side-arrows .dcap {
 .ruler:has(.rl-track:focus-visible) { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
 .rl-label {
   position: absolute; top: 0; left: var(--lx); translate: -50% 0; z-index: 1; height: var(--pill); padding-inline: 12px; display: flex; align-items: center;
-  border-radius: 999px; background: var(--gold-2); color: #1d1607; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  border-radius: 999px; background: var(--gold-2); color: var(--on-gold); box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
   white-space: nowrap; pointer-events: none;
   transition: left 520ms var(--e-out), background-color var(--t-2) ease, color var(--t-2) ease;
 }
@@ -232,10 +234,10 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .plate > i:nth-of-type(3) { bottom: 4px; background: var(--rule); animation-delay: 80ms; }
 .plate > i:nth-of-type(4) { bottom: 0; }
 @keyframes draw-rule { from { transform: scaleX(0); } }
+@keyframes fade-in { from { opacity: 0; } }
 .plate::before, .plate::after {
   content: ""; position: absolute; top: 50%; width: 11px; height: 11px; border: 1px solid var(--gold); background: var(--bg);
-@keyframes fade-in { from { opacity: 0; } }
-  transform: translateY(-50%) rotate(45deg); animation: pop 700ms var(--e-spring) 600ms both;
+  transform: translateY(-50%) rotate(45deg); animation: fade-in 900ms var(--e-out) 600ms both;
 }
 .plate::before { right: 8px; }
 .plate::after { left: 8px; }
@@ -270,7 +272,6 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .v-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .v-num { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .v-num .badge { width: 42px; height: 42px; font-size: 12px; }
-.v:hover .badge svg { transform: rotate(90deg); }
 .v-meta { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .v-rub { position: relative; display: inline-flex; align-items: center; gap: 4px; padding-inline-start: 10px; border-inline-start: 1px solid var(--line-2); color: var(--gold-text); line-height: 1.2; }
 @media (max-width: 359px) { .v-rub-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
@@ -280,6 +281,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 /* the 44px hit areas reach 13px past the 17px icons: pull them out so the icons line up with the text column's edge */
 .v-tools { margin-inline-end: -13.5px; }
 .v:hover .v-tools, .v-tools:focus-within { opacity: 1; }
+.v:hover .badge svg { transform: rotate(45deg); }
 @media (hover: none) { .v-tools { opacity: 1; } }
 .v-text { font-family: var(--f-quran); font-size: var(--qsize); line-height: 2.2; text-wrap: pretty; transition: color var(--t-2) ease; }
 .tafsir {
@@ -291,9 +293,9 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
 .pager a {
   position: relative; display: grid; gap: 2px; padding: 18px 22px; border-radius: 20px; background: var(--sheet); border: 1px solid var(--line);
-  transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
+  transition: transform var(--t-3) var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
 }
-.pager a:hover { transform: translateY(-3px); box-shadow: var(--shadow-1); border-color: transparent; }
+.pager a:hover { transform: translateY(-2px); box-shadow: var(--shadow-1); border-color: transparent; }
 .pager a:active { transform: scale(0.98); }
 .pager a[rel="next"] { text-align: end; grid-column: 2; }
 .pager small { color: var(--muted); font-size: 13px; }
@@ -451,3 +453,76 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .j-verse { font-size: 22px; }
   .j-hizbs { grid-template-columns: 1fr; row-gap: 24px; }
 }
+
+/* ---------- the binding's tooling ----------
+   The site's signature, in all three tones: the rose-gold work of a leather binding, carried by every reading surface
+   alike. Inside each page's gilt edge runs a fine fillet with a small stamp at each corner, running into the spine on
+   an open spread; the pages lie in a leather board; the folio sits on a ruled line; the text view's sheet takes the
+   same frame. The plate's diamonds are inlaid solid rose gold, a chosen verse is marked by a tooled rule beside it
+   rather than looking like a hover, and the two glows that survived the polish pass stand down. */
+:root .mpage::before {
+  content: ""; position: absolute; inset: 4px; z-index: 1; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--gold-2) 36%, transparent);
+  --k: linear-gradient(var(--gold-2), var(--gold-2));
+  background: var(--k) 0 0 / 4px 4px, var(--k) 100% 0 / 4px 4px, var(--k) 0 100% / 4px 4px, var(--k) 100% 100% / 4px 4px;
+  background-repeat: no-repeat; background-origin: border-box;
+}
+@container (min-width: 700px) and (min-aspect-ratio: 11 / 10) {
+  /* the right page: its spine is on its left, so the fillet runs to the spine line with no corner stamps there */
+  :root[data-spread="on"] .fit :is(.stage > .mpage:first-child, .flip .mpage[data-side="right"])::before {
+    left: 0; border-left-width: 0;
+    background: var(--k) 100% 0 / 4px 4px, var(--k) 100% 100% / 4px 4px; background-repeat: no-repeat; background-origin: border-box;
+  }
+  /* the left page: its spine is on its right */
+  :root[data-spread="on"] .fit :is(.stage > .mpage:last-child, .flip .mpage[data-side="left"])::before {
+    right: 0; border-right-width: 0;
+    background: var(--k) 0 0 / 4px 4px, var(--k) 0 100% / 4px 4px; background-repeat: no-repeat; background-origin: border-box;
+  }
+}
+/* the surah band's cartouche filled with a leather onlay, a shade lighter than the page, following its rounded ends */
+:root .sh-band::before {
+  content: ""; position: absolute; inset-inline: 5cqi; top: 50%; height: 8cqi; translate: 0 -50%; border-radius: 999px; background: var(--gold-soft);
+}
+/* the open pages lie in a leather board, its edge tooled like theirs, its radius concentric with theirs */
+@container (min-width: 600px) {
+  :root .stage::before {
+    content: ""; position: absolute; inset: -8px; z-index: -1; pointer-events: none; border-radius: 16px;
+    background: var(--bg-2); border: 1px solid color-mix(in srgb, var(--gold-2) 20%, transparent); box-shadow: var(--shadow-page);
+  }
+}
+/* the folio: the page number's star on a ruled line that stops short of it */
+:root .mfoot > span { grid-area: 1 / 1; }
+:root .mfoot::before {
+  content: ""; grid-area: 1 / 1; width: 100%; height: 1px;
+  --fr: color-mix(in srgb, var(--gold-2) 32%, transparent);
+  background: linear-gradient(90deg, var(--fr) 0 calc(50% - 6.4cqi), transparent 0 calc(50% + 6.4cqi), var(--fr) 0 100%);
+}
+/* the text view's sheet: the page's gilt edge and the same fillet with its corner stamps */
+:root .text-sheet { border: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent); border-radius: 16px; }
+:root .text-sheet::before {
+  inset: 8px; border-radius: 0; box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--gold-2) 36%, transparent);
+  --k: linear-gradient(var(--gold-2), var(--gold-2));
+  background: var(--k) 0 0 / 4px 4px, var(--k) 100% 0 / 4px 4px, var(--k) 0 100% / 4px 4px, var(--k) 100% 100% / 4px 4px;
+  background-repeat: no-repeat; background-origin: border-box;
+}
+@media (max-width: 640px) {
+  :root .text-sheet { border: 0; border-radius: 0; }
+  :root .text-sheet::before { display: none; }
+}
+/* the plate's diamonds inlaid in solid rose gold, each in a tooled ring */
+:root .plate::before, :root .plate::after {
+  width: 8px; height: 8px; border: 0; background: var(--gold-2);
+  outline: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent); outline-offset: 4px;
+}
+:root .plate::before { right: 12px; }
+:root .plate::after { left: 12px; }
+/* a chosen verse: a solid tint, and in the verse-and-tafsir view a gilt rule beside it like the tafsir's own edge */
+:root .ayah.sel { background: var(--accent-soft); }
+:root .v.sel::before {
+  content: ""; position: absolute; inset-block: 8px; inset-inline-start: -12px; width: 2px; border-radius: 2px; background: var(--gold-2);
+}
+/* no glows: the progress line is flat, and a verse a link points to settles from rose gold to ink by colour alone */
+:root .progress i { box-shadow: none; }
+@keyframes glint-wine { 0%, 35% { color: var(--gold-3); } }
+:root .flash { animation: glint-wine 1.6s var(--e-out); }

@@ -314,6 +314,7 @@ function copyOf(a: HTMLElement) {
   const cs = getComputedStyle(a);
   c.classList.remove("facing");
   c.classList.add("ready"); // a turn waits for the new page's fonts, so its copy shows its words, not the placeholder
+  c.dataset.side = a === a.parentElement!.firstElementChild ? "right" : "left"; // its edges follow its side, not its place in the turn
   c.removeAttribute("aria-label");
   c.setAttribute("aria-hidden", "true");
   c.querySelectorAll(".hover, .sel").forEach((g) => g.classList.remove("hover", "sel"));
@@ -365,20 +366,20 @@ function flip(old: Shot, dir: 1 | -1) {
 // smaller, as if lower in the stack, and comes up to full size.
 function slide(old: HTMLElement, now: HTMLElement, dir: 1 | -1, layer: HTMLElement, place: (el: HTMLElement, at: HTMLElement) => HTMLElement) {
   const away = innerWidth - now.getBoundingClientRect().left + 24; // clear of the screen's right edge
-  const depth = 0.94;
+  const depth = 0.97;
   let top: gsap.core.Tween, beneath: gsap.core.Tween;
   if (dir > 0) {
     // the page being left slides off to the right; the new one, already in place, rises beneath it
     layer.append(place(old, now));
-    top = gsap.to(old, { x: away, rotation: 2.5, transformOrigin: "0% 100%", duration: 0.55, ease: "power2.in" });
-    beneath = gsap.fromTo(now, { scale: depth }, { scale: 1, duration: 0.6, ease: "power1.inOut", clearProps: "transform" }); // rising as it is uncovered
+    top = gsap.to(old, { x: away, rotation: 1.2, transformOrigin: "0% 100%", duration: 0.7, ease: "power2.inOut" });
+    beneath = gsap.fromTo(now, { scale: depth }, { scale: 1, duration: 0.7, ease: "power1.inOut", clearProps: "transform" }); // rising as it is uncovered
   } else {
     // the page before slides in from the right over the page being left, which settles back beneath it
     const leaving = place(Object.assign(old, { className: old.className + " still" }), now);
     const coming = place(copyOf(now), now);
     layer.append(leaving, coming);
-    beneath = gsap.to(leaving, { scale: depth, duration: 0.6, ease: "power2.out" });
-    top = gsap.fromTo(coming, { x: away, rotation: 2.5, transformOrigin: "0% 100%" }, { x: 0, rotation: 0, duration: 0.6, ease: "power3.out" });
+    beneath = gsap.to(leaving, { scale: depth, duration: 0.7, ease: "power2.out" });
+    top = gsap.fromTo(coming, { x: away, rotation: 1.2, transformOrigin: "0% 100%" }, { x: 0, rotation: 0, duration: 0.75, ease: "power3.out" });
   }
   top.eventCallback("onComplete", () => flipEnd?.());
   flipEnd = () => {

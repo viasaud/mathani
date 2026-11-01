@@ -1,8 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <style>.s{stroke:#a5802e}.f{fill:#74511a}@media (prefers-color-scheme:dark){.s{stroke:#d6b56c}.f{fill:#f3dca6}}</style>
-  <g class="s" fill="none" stroke-width="3" stroke-linejoin="round">
-    <rect x="10.5" y="10.5" width="27" height="27"/>
-    <rect x="10.5" y="10.5" width="27" height="27" transform="rotate(45 24 24)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Mathani: the rub' al-hizb star as a faceted gold medal on wine leather. The leather is the tile; everything on it
+       is in the mark group (scripts/og.mjs lifts it out for the icons the platform crops itself) -->
+  <defs>
+    <radialGradient id="hide" cx="0.3" cy="0.22" r="1">
+      <stop offset="0" stop-color="#a1314c"/>
+      <stop offset="0.5" stop-color="#761b31"/>
+      <stop offset="1" stop-color="#3d0915"/>
+    </radialGradient>
+    <linearGradient id="gilt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbe2d5"/>
+      <stop offset="0.55" stop-color="#e3a58f"/>
+      <stop offset="1" stop-color="#a8634b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#hide)"/>
+  <g id="mark">
+    <circle cx="32" cy="32" r="27.5" fill="none" stroke="url(#gilt)" stroke-width="0.9" opacity="0.65"/>
+    <path d="M32.00 9.50 L38.59 16.09 L47.91 16.09 L47.91 25.41 L54.50 32.00 L47.91 38.59 L47.91 47.91 L38.59 47.91 L32.00 54.50 L25.41 47.91 L16.09 47.91 L16.09 38.59 L9.50 32.00 L16.09 25.41 L16.09 16.09 L25.41 16.09 Z" fill="#1e030a" opacity="0.45" transform="translate(0 1.6)"/>
+    <path d="M32.00 32.00 L25.41 16.09 L32.00 9.50 Z" fill="#f5d3c4"/><path d="M32.00 32.00 L38.59 16.09 L32.00 9.50 Z" fill="#e9b09b"/><path d="M32.00 32.00 L38.59 16.09 L47.91 16.09 Z" fill="#efc1af"/><path d="M32.00 32.00 L47.91 25.41 L47.91 16.09 Z" fill="#ce8d75"/><path d="M32.00 32.00 L47.91 25.41 L54.50 32.00 Z" fill="#dd9e87"/><path d="M32.00 32.00 L47.91 38.59 L54.50 32.00 Z" fill="#ba765e"/><path d="M32.00 32.00 L47.91 38.59 L47.91 47.91 Z" fill="#c17f67"/><path d="M32.00 32.00 L38.59 47.91 L47.91 47.91 Z" fill="#bc7961"/><path d="M32.00 32.00 L38.59 47.91 L32.00 54.50 Z" fill="#b8745c"/><path d="M32.00 32.00 L25.41 47.91 L32.00 54.50 Z" fill="#d4947c"/><path d="M32.00 32.00 L25.41 47.91 L16.09 47.91 Z" fill="#c6846c"/><path d="M32.00 32.00 L16.09 38.59 L16.09 47.91 Z" fill="#ecb8a4"/><path d="M32.00 32.00 L16.09 38.59 L9.50 32.00 Z" fill="#e4a58e"/><path d="M32.00 32.00 L16.09 25.41 L9.50 32.00 Z" fill="#f4d1c1"/><path d="M32.00 32.00 L16.09 25.41 L16.09 16.09 Z" fill="#f1c7b6"/><path d="M32.00 32.00 L25.41 16.09 L16.09 16.09 Z" fill="#f3cebd"/>
+    <path d="M32.00 9.50 L38.59 16.09 L47.91 16.09 L47.91 25.41 L54.50 32.00 L47.91 38.59 L47.91 47.91 L38.59 47.91 L32.00 54.50 L25.41 47.91 L16.09 47.91 L16.09 38.59 L9.50 32.00 L16.09 25.41 L16.09 16.09 L25.41 16.09 Z" fill="none" stroke="#fff3ea" stroke-opacity="0.35" stroke-width="0.6" stroke-linejoin="round"/>
+    <circle cx="32" cy="32" r="3.4" fill="#5e0f22" stroke="#f6d3c4" stroke-width="1"/>
   </g>
-  <circle class="f" cx="24" cy="24" r="5.5"/>
 </svg>

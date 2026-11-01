@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/icon.svg" alt="Mathani" width="96">
+  <img src="public/favicon.svg" alt="Mathani" width="96">
 </p>
 
 <h1 align="center">مثاني · Mathani</h1>

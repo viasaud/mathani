@@ -168,7 +168,7 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
        read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). */}
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
-      <a class="dround glass" id="prev" data-magnetic aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("الصفحة السابقة")} />
+      <a class="dround glass" id="prev" data-lean aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("الصفحة السابقة")} />
       <div class="ruler" id="ruler">
         <div class="rl-label" aria-hidden="true"><b id="rl-name">سورة {surahName}</b></div>
         <span class="rl-link" aria-hidden="true"></span>
@@ -176,7 +176,7 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
           {chapters.map((c, i) => <i data-s={c.id} data-p={startPages[i]} data-name={c.name} style={`--i:${i}`}></i>)}
         </div>
       </div>
-      <a class="dround glass next" id="next" data-magnetic aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6") + cap("الصفحة التالية")} />
+      <a class="dround glass next" id="next" data-lean aria-label="الصفحة التالية" {...(n < 604 ? { href: `/page/${n + 1}` } : { "aria-disabled": "true" })} set:html={chev("m15 6-6 6 6 6") + cap("الصفحة التالية")} />
     </nav>
   </div>
 

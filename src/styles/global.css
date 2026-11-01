@@ -9,42 +9,51 @@
 @font-face { font-family: "Thmanyah Serif Field"; src: url("/fonts/thmanyah/thmanyahseriftext-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; ascent-override: 100%; descent-override: 50%; }
 @font-face { font-family: "Thmanyah Serif Display"; src: url("/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 
-/* Concept: tadhhib in motion. An illuminated mushaf whose gold leaf catches the light: a dark bound cover (the home
-   page's opening and every page's foot) over warm ivory paper, gold-brown for action, gold for ornament,
-   and the eight-pointed star of the rub' al-hizb as the recurring mark. Motion is the light moving across the gilt:
-   things rise, settle and glint, never bounce for show, and all of it stands down under reduced motion. */
+/* Concept: a mushaf bound in wine-red leather and tooled in rose gold, in three tones of one book: by day (the base
+   below), by lamplight ([data-theme="mid"]) and at night ([data-theme="dark"]). One metal, rose gold, for everything:
+   the printed ornament (bands, frames, verse markers, the cover's pattern) in its deeper shade, what the reader touches
+   in wine or its lighter shade; and the eight-pointed star of the rub' al-hizb as the recurring mark. Motion is the
+   light moving across the tooling: things rise, settle and glint, never bounce for show, and all of it stands down
+   under reduced motion. */
+/* light: the book opened by day. Paper with a blush in it, wine-dark ink, wine for what the reader touches, and the
+   rose gold in its deepest shade so it holds on paper. Text 5.8:1 and up, wine 9.4:1, rose gold 5.7:1, the control
+   edges 3.2:1 */
 :root {
-  --bg: #f4f1e8;
-  --bg-2: #ebe6d8;
-  --sheet: #fbf9f3;
-  --page: #fdfbf4; /* the mushaf page's own paper */
-  --ink: #1c1710;
-  --ink-2: #352d22;
-  --muted: #5d5446;
-  --faint: #6b6152;
-  --ctl: #8f8572; /* the edge of a switch or slider: 3:1 against the paper */
-  --line: #e3ddce;
-  --line-2: #d3cbb8;
-  --accent: #74511a; /* gold-brown: the gold family, deep enough to carry white text and to mark a verse */
-  --accent-ink: #ffffff;
-  --accent-soft: #f1e5c8;
+  --bg: #f3e8e3;
+  --bg-2: #ecdfd9;
+  --sheet: #faf2ee;
+  --page: #fdf7f3; /* the mushaf page's own paper */
+  --ink: #2a0f15;
+  --ink-2: #46222a;
+  --muted: #6d4950;
+  --faint: #7b5960;
+  --ctl: #a17f84; /* the edge of a switch or slider: 3:1 against the paper */
+  --line: #ebdcd6;
+  --line-2: #dbc7bf;
+  --accent: #7d1d34; /* wine: deep enough to carry light text and to mark a verse */
+  --accent-ink: #fff7f4;
+  --accent-soft: #f4dde0;
   --raised: #ffffff;
-  --gold: #87631a;
-  --gold-2: #bf9849;
-  --gold-3: #e3c47e;
-  --gold-soft: #f2e7c9;
+  --hover: #f1e2dc; /* the surface a hovered row or control steps to */
+  --well: color-mix(in srgb, var(--ink) 6%, transparent); /* the channel a segmented control sits in */
+  --gold: #93503c;
+  --gold-2: #c08068;
+  --gold-3: #e6b6a2;
+  --gold-soft: #f5e0d9;
   --gold-text: color-mix(in srgb, var(--gold) 72%, var(--ink));
-  --shadow-1: 0 1px 2px rgba(40, 32, 12, 0.05), 0 8px 22px -12px rgba(40, 32, 12, 0.16);
-  --shadow-2: 0 30px 70px -30px rgba(30, 26, 10, 0.38), 0 2px 8px rgba(30, 26, 10, 0.06);
-  --shadow-page: 0 1px 1px rgba(60, 46, 16, 0.06), 0 20px 50px -26px rgba(60, 46, 16, 0.34), 0 2px 10px -4px rgba(60, 46, 16, 0.08);
+  --shadow-1: 0 1px 2px rgba(60, 15, 25, 0.06), 0 8px 22px -12px rgba(60, 15, 25, 0.18);
+  --shadow-2: 0 30px 70px -30px rgba(60, 15, 25, 0.38), 0 2px 8px rgba(60, 15, 25, 0.06);
+  --shadow-page: 0 1px 1px rgba(60, 15, 25, 0.06), 0 20px 50px -26px rgba(60, 15, 25, 0.32), 0 2px 10px -4px rgba(60, 15, 25, 0.08);
 
-  /* the cover: the dark binding the home page opens on and every page ends with, in every theme */
-  --cover: #0d0a06;
-  --cover-2: #1e160c;
-  --cover-ink: #f4ecd8;
-  --cover-muted: #bcb09a;
-  --cover-gold: #dcb767;
-  --cover-line: rgba(220, 183, 103, 0.18);
+  /* the cover the home page opens on: the paper itself by day and by lamplight, the leather at night */
+  --cover: #f1e4de;
+  --cover-2: #fcf6f2;
+  --cover-ink: #2a0f15;
+  --cover-muted: #6d4950;
+  --cover-gold: #93503c;
+  --cover-line: rgba(147, 80, 60, 0.2);
+  --gilt-hi: #c48a72; --gilt-lo: #6e3426; /* the light and shadow in the tooling of the cover's title */
+  --on-gold: #2a0a10; /* text set on the rose gold */
 
   --f-quran: "Scheherazade New", "Amiri Quran", "Traditional Arabic", serif;
   --f-ui: "Thmanyah Serif Text", "Geeza Pro", "Segoe UI", system-ui, serif;
@@ -53,7 +62,6 @@
   /* motion: one vocabulary for the whole site */
   --e-out: cubic-bezier(0.22, 1, 0.36, 1);
   --e-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --e-spring: linear(0, 0.034 1.6%, 0.135 3.4%, 0.538 9.3%, 0.743 12.6%, 0.896 16.5%, 0.996 21.2%, 1.042 25.6%, 1.059 30.6%, 1.054 35.4%, 1.012 50.6%, 0.998 61.1%, 1);
   --t-1: 160ms;
   --t-2: 300ms;
   --t-3: 520ms;
@@ -64,10 +72,10 @@
   --cap: 48px;
   --hd-h: 58px;
   --top: calc(env(safe-area-inset-top, 0px) + var(--hd-h) + 14px);
-  --glass: color-mix(in srgb, var(--sheet) 34%, transparent); /* liquid glass: the page shows through, blurred */
-  --glass-solid: color-mix(in srgb, var(--sheet) 58%, transparent); /* panels: liquid glass too, a little denser for their text */
-  --glass-edge: rgba(40, 32, 12, 0.12);
-  --glass-shadow: 0 1px 2px rgba(40, 32, 12, 0.06), 0 12px 32px -12px rgba(40, 32, 12, 0.28);
+  --glass: color-mix(in srgb, var(--sheet) 52%, transparent); /* liquid glass: the page shows through, blurred */
+  --glass-solid: color-mix(in srgb, var(--sheet) 84%, transparent); /* panels: dense enough that the page never reads through */
+  --glass-edge: color-mix(in srgb, var(--gold-2) 22%, transparent); /* a rose-gold hairline */
+  --glass-shadow: 0 1px 2px rgba(60, 15, 25, 0.06), 0 12px 32px -12px rgba(60, 15, 25, 0.26);
   --qsize: 28px;
 
   /* tajweed rule colors (the common mushaf-al-tajweed scheme) */
@@ -75,59 +83,84 @@
   --tj-qalqala: #dd0008; --tj-ikhfa: #9400a8; --tj-ikhfa-shafawi: #d200b5; --tj-iqlab: #177ca6;
   --tj-idgham-ghunna: #138367; --tj-idgham: #148500; --tj-idgham-shafawi: #418300; --tj-idgham-other: #747474; --tj-ghunna: #bb5609;
   color-scheme: light;
+  scrollbar-color: var(--line-2) var(--bg);
 }
-:root[data-theme="sepia"] {
-  --bg: #ebe0c8; --bg-2: #e1d4b8; --sheet: #f6eedb; --page: #f8f0de; --ink: #32281a; --ink-2: #4a3d2a; --muted: #62533b; --faint: #715f44; --ctl: #8b7b5f;
-  --line: #dacbad; --line-2: #cbb995; --accent: #6a4818; --accent-ink: #fbf6e9; --accent-soft: #e8d6ae; --raised: #fffaf0;
-  --glass-edge: rgba(60, 40, 10, 0.14);
-  --gold: #7c5b1e; --gold-2: #a98240; --gold-3: #d4b073; --gold-soft: #ead9b2;
-  --shadow-1: 0 1px 2px rgba(60, 40, 10, 0.08), 0 8px 22px -12px rgba(60, 40, 10, 0.2);
-  --shadow-2: 0 30px 70px -30px rgba(60, 40, 10, 0.45), 0 2px 8px rgba(60, 40, 10, 0.08);
-  --shadow-page: 0 1px 1px rgba(60, 40, 10, 0.08), 0 20px 50px -26px rgba(60, 40, 10, 0.42), 0 2px 10px -4px rgba(60, 40, 10, 0.1);
-  --cover: #1d140a; --cover-2: #2c1f10; --cover-ink: #f6ead0; --cover-muted: #c7b694; --cover-gold: #dcb26a; --cover-line: rgba(220, 178, 106, 0.2);
-  --tj-silent: #656e6b; --tj-qalqala: #da0008; --tj-ikhfa-shafawi: #c600aa; --tj-iqlab: #16749b;
-  --tj-idgham-ghunna: #127a60; --tj-idgham: #137e00; --tj-idgham-shafawi: #3d7b00; --tj-idgham-other: #6b6b6b; --tj-ghunna: #ae5009;
+/* mid: the same book read by lamplight. The same paper and wine ink, the paper dimmed by a third (luminance 0.65
+   against 0.94) and the ink eased off full black, so a dark room gets no glare from the page; the cover the same dimmed
+   paper. The tajweed colours are deepened to hold on it. Text 5.2:1 and up, wine 6.9:1, rose gold 4.8:1, tajweed
+   4.5:1, the control edges 3.2:1 */
+:root[data-theme="mid"] {
+  --bg: #d3bfb8; --bg-2: #cbb5ad; --sheet: #ddcac3; --page: #e2d0c9;
+  --ink: #2b1016; --ink-2: #46232b; --muted: #5d3a41; --faint: #69464c; --ctl: #89656a;
+  --line: #cfb8b0; --line-2: #bba198; --accent: #731a30; --accent-ink: #fbefeb; --accent-soft: #d9bcbb; --raised: #e9dad4;
+  --hover: #d6c1b9; --well: color-mix(in srgb, var(--ink) 7%, transparent);
+  --gold: #82432f; --gold-2: #b07259; --gold-3: #c79580; --gold-soft: #d8bfb6; --on-gold: #1e0609;
+  --glass-shadow: 0 1px 2px rgba(60, 15, 25, 0.08), 0 12px 32px -12px rgba(60, 15, 25, 0.3);
+  --shadow-1: 0 1px 2px rgba(60, 15, 25, 0.08), 0 8px 22px -12px rgba(60, 15, 25, 0.22);
+  --shadow-2: 0 30px 70px -30px rgba(60, 15, 25, 0.42), 0 2px 8px rgba(60, 15, 25, 0.08);
+  --shadow-page: 0 1px 1px rgba(60, 15, 25, 0.08), 0 20px 50px -26px rgba(60, 15, 25, 0.36), 0 2px 10px -4px rgba(60, 15, 25, 0.1);
+  --cover: #cfbab2; --cover-2: #ddcbc4; --cover-ink: #2b1016; --cover-muted: #5d3a41; --cover-gold: #723826; --cover-line: rgba(114, 56, 38, 0.2);
+  --gilt-hi: #b07259; --gilt-lo: #5e2b1c;
+  --tj-silent: #555c5a; --tj-madd-2: #2a52c8; --tj-madd-246: #2f3fd8; --tj-madd-45: #1d3aa8; --tj-madd-6: #000ebc;
+  --tj-qalqala: #b30007; --tj-ikhfa: #82009a; --tj-ikhfa-shafawi: #a3008d; --tj-iqlab: #0f6185;
+  --tj-idgham-ghunna: #0d6650; --tj-idgham: #0f6600; --tj-idgham-shafawi: #336400; --tj-idgham-other: #595959; --tj-ghunna: #933f05;
 }
-/* dark: warm lamp-black and charcoal, so the gold belongs to the page rather than sitting on it; the text a soft
-   ivory, a little under full contrast for long reading; --band, the surah heading bands, a calmer gold */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --bg: #0b0a08; --bg-2: #12100c; --sheet: #17140f; --page: #1a1712; --ink: #e6dcc6; --ink-2: #cbc1ab; --muted: #a49a86; --faint: #8f8676; --ctl: #6f6759;
-    --line: #28231b; --line-2: #383126; --accent: #e6c886; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #2c271f;
-    --glass-edge: rgba(255, 255, 255, 0.12); --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.75);
-    --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold); --band: #a98a4b;
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -12px rgba(0, 0, 0, 0.6);
-    --shadow-2: 0 30px 70px -26px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-page: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 60px -28px rgba(0, 0, 0, 0.9);
-    --cover: #090705; --cover-2: #18120a; --cover-line: rgba(220, 183, 103, 0.14);
-    --tj-silent: #8a8478; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
-    --tj-qalqala: #ff6b70; --tj-ikhfa: #d27be6; --tj-ikhfa-shafawi: #f07ddd; --tj-iqlab: #5fd0ff;
-    --tj-idgham-ghunna: #46c9a5; --tj-idgham: #5ccc4a; --tj-idgham-shafawi: #9ade4f; --tj-idgham-other: #a9a9a9; --tj-ghunna: #ffa25e;
-    color-scheme: dark;
-  }
-}
+/* dark: the book at night, its wine leather. The ground is the leather itself, deep enough to read on for an hour;
+   the paper a step lighter; the text a blush pearl, the quieter roles a rose taupe from the same hide, the rose gold
+   in its lighter shades. The surfaces climb in even steps on one hue, so the paper reads as a step above the leather
+   and the hairlines draw; the cover is the leather, with lamplight pooled where the pattern is. Text 4.9:1 and up,
+   rose gold 5.1:1, the tajweed colours (the reds toward coral, the blues and purples lifted) 5.2:1, the control
+   edges 3.2:1 */
 :root[data-theme="dark"] {
-  --bg: #0b0a08; --bg-2: #12100c; --sheet: #17140f; --page: #1a1712; --ink: #e6dcc6; --ink-2: #cbc1ab; --muted: #a49a86; --faint: #8f8676; --ctl: #6f6759;
-  --line: #28231b; --line-2: #383126; --accent: #e6c886; --accent-ink: #1a1305; --accent-soft: #2b2416; --raised: #2c271f;
-  --glass-edge: rgba(255, 255, 255, 0.12); --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.75);
-  --gold: #d8b76d; --gold-2: #c9a65c; --gold-3: #ecd29a; --gold-soft: #2a2415; --gold-text: var(--gold); --band: #a98a4b;
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -12px rgba(0, 0, 0, 0.6);
-  --shadow-2: 0 30px 70px -26px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-page: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 60px -28px rgba(0, 0, 0, 0.9);
-  --cover: #090705; --cover-2: #18120a; --cover-line: rgba(220, 183, 103, 0.14);
-  --tj-silent: #8a8478; --tj-madd-2: #8fb0ff; --tj-madd-246: #8c95ff; --tj-madd-45: #7a90ff; --tj-madd-6: #a4a9ff;
-  --tj-qalqala: #ff6b70; --tj-ikhfa: #d27be6; --tj-ikhfa-shafawi: #f07ddd; --tj-iqlab: #5fd0ff;
-  --tj-idgham-ghunna: #46c9a5; --tj-idgham: #5ccc4a; --tj-idgham-shafawi: #9ade4f; --tj-idgham-other: #a9a9a9; --tj-ghunna: #ffa25e;
+  --bg: #1b050a; --bg-2: #22080e; --sheet: #2a0c13; --page: #331018;
+  --ink: #f4e0dc; --ink-2: #dcc0bc; --muted: #be9b96; --faint: #ab8b87; --ctl: #8c6b6a;
+  --line: #481f27; --line-2: #65313a; --accent: #f0b29c; --accent-ink: #2a0a10; --accent-soft: #522127; --raised: #411822;
+  --hover: var(--raised); --well: rgba(8, 0, 2, 0.4);
+  --gold: #e3a58f; --gold-2: #c4876f; --gold-3: #f5cdbd; --gold-soft: #451c22; --gold-text: var(--gold); --band: #d49a83; --on-gold: #2a0a10;
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 14px 36px -12px rgba(8, 0, 2, 0.8);
+  --shadow-1: 0 1px 2px rgba(8, 0, 2, 0.45), 0 8px 22px -12px rgba(8, 0, 2, 0.65);
+  --shadow-2: 0 30px 70px -26px rgba(8, 0, 2, 0.85), 0 2px 8px rgba(8, 0, 2, 0.45);
+  --shadow-page: 0 0 0 1px rgba(255, 220, 200, 0.03), 0 24px 60px -28px rgba(8, 0, 2, 0.92);
+  --cover: #1d060b; --cover-2: #591828; --cover-ink: #f7e5e0; --cover-muted: #d5ada0; --cover-gold: #e9ac95; --cover-line: rgba(233, 172, 149, 0.18);
+  --gilt-hi: #ffe9e0; --gilt-lo: #8e4e3a;
+  --tj-silent: #a8918f; --tj-madd-2: #a8c2ff; --tj-madd-246: #a9aeff; --tj-madd-45: #97a8ff; --tj-madd-6: #c1c3ff;
+  --tj-qalqala: #ff8f8a; --tj-ikhfa: #e7a0f5; --tj-ikhfa-shafawi: #f9a0e6; --tj-iqlab: #78d8ff;
+  --tj-idgham-ghunna: #5ed6b4; --tj-idgham: #86dc70; --tj-idgham-shafawi: #b8e271; --tj-idgham-other: #bdb2b0; --tj-ghunna: #ffb684;
   color-scheme: dark;
 }
-/* anything set on the cover reads light on the dark binding, whatever the theme */
+
+/* the chrome belongs to the leather: the glass blurs without pushing the red toward crimson; hovers step to the
+   theme's own surface (--hover) instead of a grey tint; the switch is a recessed channel and the segments sit in a
+   well (--well); on the paper covers the pill to resume reads in wine with a light arrow and a soft shadow. Each rule is
+   scoped under :root so it outranks the rule it refines. (The binding's tooling on the reading surfaces is in
+   reader.css.) */
+:root .glass { -webkit-backdrop-filter: blur(9px) saturate(1.1); backdrop-filter: blur(9px) saturate(1.1); }
+:root .glass-panel { -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1); }
+:root.lg .glass:not(.glass-panel) { backdrop-filter: url(#lg) blur(7px) saturate(1.1); }
+:root.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.1); }
+:root :is(.brand, .cap-index, .cap-title, .ix-item, .ix-foot a, .ix-foot button):hover,
+:root label.set-row:hover { background: var(--hover); }
+:root :is(.cap-search, .cap-circle):hover { background-image: linear-gradient(var(--hover), var(--hover)); }
+:root .switch { background: var(--raised); box-shadow: inset 0 0 0 1px var(--ctl); }
+:root .switch::after { background: var(--muted); box-shadow: none; }
+:root .switch:checked { background: var(--accent); box-shadow: none; }
+:root .switch:checked::after { background: var(--accent-ink); }
+:root .settings .seg { background: var(--well); }
+:root .settings .seg-pill,
+:root .settings .seg:not(.pilled) button[aria-pressed="true"] { box-shadow: var(--shadow-1), inset 0 0 0 1px color-mix(in srgb, var(--gold-2) 30%, transparent); }
+:root .resume { background: color-mix(in srgb, var(--cover) 60%, transparent); border-color: color-mix(in srgb, var(--cover-gold) 30%, transparent); }
+:root:not([data-theme="dark"]) .resume-go { color: #fff7f4; }
+:root:not([data-theme="dark"]) :is(.resume, .resume:hover) { box-shadow: var(--shadow-1); }
+:root:not([data-theme="dark"]).on-cover .hd .cap.glass { box-shadow: var(--glass-shadow); }
+/* anything set on the cover takes the cover's colours: dark on the paper covers, light on the leather */
 [data-tone="cover"] {
   --ink: var(--cover-ink); --ink-2: color-mix(in srgb, var(--cover-ink) 86%, var(--cover)); --muted: var(--cover-muted); --faint: var(--cover-muted);
-  --gold: var(--cover-gold); --gold-text: var(--cover-gold); --line: var(--cover-line); --line-2: rgba(244, 236, 216, 0.16);
+  --gold: var(--cover-gold); --gold-text: var(--cover-gold); --line: var(--cover-line); --line-2: color-mix(in srgb, var(--cover-ink) 16%, transparent);
   --sheet: color-mix(in srgb, var(--cover-ink) 6%, var(--cover)); --bg: var(--cover); --bg-2: color-mix(in srgb, var(--cover-ink) 10%, var(--cover));
-  --accent: var(--cover-gold); --accent-ink: #1a1305; --accent-soft: rgba(220, 183, 103, 0.14); --gold-soft: rgba(220, 183, 103, 0.16);
-  color-scheme: dark;
+  --accent: var(--cover-gold); --accent-ink: #fff7f4; --accent-soft: color-mix(in srgb, var(--cover-gold) 14%, transparent); --gold-soft: color-mix(in srgb, var(--cover-gold) 16%, transparent);
+  color-scheme: light;
 }
+:root[data-theme="dark"] [data-tone="cover"] { --accent-ink: var(--on-gold); color-scheme: dark; }
 
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -159,7 +192,7 @@ html:not([data-mode="list"]) .list-view { display: none; }
 
 /* every pressable thing gives a little under the finger and springs back */
 .ib, .chip, .btn, .cap-circle, .seg button, .theme-opt, .dround, .pal-item, .ix-item, .vs-foot button {
-  transition: transform var(--t-2) var(--e-spring), background-color var(--t-1) ease, color var(--t-1) ease,
+  transition: transform var(--t-2) var(--e-out), background-color var(--t-1) ease, color var(--t-1) ease,
     border-color var(--t-1) ease, box-shadow var(--t-2) var(--e-out), opacity var(--t-1) ease;
 }
 
@@ -169,19 +202,19 @@ html:not([data-mode="list"]) .list-view { display: none; }
 }
 .ib::before { content: ""; position: absolute; inset: -2px; } /* a 44px touch target around the 40px button */
 .ib:hover { background: var(--bg-2); color: var(--ink); }
-.ib:active { transform: scale(0.88); }
+.ib:active { transform: scale(0.98); }
 .ib[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
 /* copied: the icon gives way to a check that draws itself */
 .ib.done { color: var(--accent); }
 .ib.done > svg { opacity: 0; transform: scale(0.6); }
-.ib > svg { transition: opacity var(--t-1) ease, transform var(--t-2) var(--e-spring); }
+.ib > svg { transition: opacity var(--t-1) ease, transform var(--t-2) var(--e-out); }
 .ib.done::after {
   content: ""; position: absolute; inset: 0; margin: auto; width: 18px; height: 18px; background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7'/%3E%3C/svg%3E") center / contain no-repeat;
-  animation: pop var(--t-3) var(--e-spring);
+  animation: pop var(--t-3) var(--e-out);
 }
-@keyframes pop { from { transform: scale(0.3) rotate(-20deg); opacity: 0; } }
+@keyframes pop { from { transform: scale(0.98); opacity: 0; } }
 kbd {
   direction: ltr; unicode-bidi: isolate;
   font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; line-height: 1; padding: 4px 6px; border-radius: 6px;
@@ -192,7 +225,7 @@ kbd {
   border: 1px solid var(--line); background: var(--sheet); color: var(--ink-2); font-size: 14px; white-space: nowrap;
 }
 .chip:hover { border-color: var(--gold-2); color: var(--ink); transform: translateY(-1px); }
-.chip:active { transform: scale(0.95); }
+.chip:active { transform: scale(0.98); }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
 .chip:focus-visible { border-radius: 999px; }
 /* a segmented control. motion.ts slides one pill under the pressed segment (.seg.pilled); without it the pressed
@@ -202,7 +235,7 @@ kbd {
   position: relative; height: 38px; padding: 0 15px; border-radius: 999px; font-size: 14px; color: var(--muted); white-space: nowrap;
 }
 .seg button:hover { color: var(--ink); }
-.seg button:active { transform: scale(0.95); }
+.seg button:active { transform: scale(0.98); }
 /* pressed: the colour changes, never the weight, so no segment changes width and the pill never has to chase it */
 .seg button[aria-pressed="true"] { color: var(--ink); }
 .seg:not(.pilled) button[aria-pressed="true"], .seg-pill {
@@ -213,13 +246,13 @@ kbd {
   position: relative; width: 40px; height: 40px; flex: none; display: grid; place-items: center;
   font-size: 13px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums;
 }
-.badge svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform var(--t-3) var(--e-spring); }
+.badge svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1200ms var(--e-out); }
 .badge svg circle { display: none; } /* the star's centre ring would sit behind the number */
 .btn {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 24px;
   border-radius: 999px; font-size: 15px; font-weight: 500; overflow: hidden; isolation: isolate;
 }
-.btn:active { transform: scale(0.96); }
+.btn:active { transform: scale(0.98); }
 .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 26px -12px var(--accent); }
 .btn-primary:hover { box-shadow: 0 16px 34px -12px var(--accent); }
 .btn-ghost { border: 1px solid var(--line-2); color: var(--ink); background: var(--sheet); }
@@ -252,18 +285,37 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 /* a capsule: 48px tall, its buttons 44px circles 2px in, so every radius is concentric with the one around it */
 .cap {
   position: relative; height: var(--cap); flex: none; display: inline-flex; align-items: center; padding: 1px; border-radius: 999px; color: var(--ink-2);
-  transition: transform var(--t-3) var(--e-spring), opacity var(--t-2) ease, filter var(--t-2) ease, visibility var(--t-2),
+  transition: transform var(--t-3) var(--e-out), opacity var(--t-2) ease, filter var(--t-2) ease, visibility var(--t-2),
     background-color var(--t-3) var(--e-out), color var(--t-3) var(--e-out), border-color var(--t-3) ease, box-shadow var(--t-3) ease;
 }
-.cap:active:not(:has(.range:active)) { transform: scale(0.96); }
+.cap:active:not(:has(.range:active)) { transform: scale(0.98); }
 .cap-circle { width: var(--cap); justify-content: center; padding: 0; color: var(--muted); }
 .cap-circle:hover { color: var(--ink); }
 .cap-circle[aria-expanded="true"] { color: var(--accent); }
 /* the settings sliders slide when the panel opens */
-.cap-circle svg path, .cap-circle svg circle { transition: transform var(--t-3) var(--e-spring); }
+.cap-circle svg path, .cap-circle svg circle { transition: transform var(--t-3) var(--e-out); }
 .cap-circle:hover .k1, .cap-circle[aria-expanded="true"] .k1 { transform: translateX(-4px); }
 .cap-circle:hover .k2, .cap-circle[aria-expanded="true"] .k2 { transform: translateX(4px); }
 .cap:focus-visible, .cap :focus-visible { border-radius: 999px; }
+/* the tones (home page): 44px wells, 2px in like every capsule's buttons, each holding a disc of that tone's paper with
+   its gold star. The chosen well is lit and its disc ringed in gold; both fade across, nothing moves */
+.cap-tones { gap: 0; }
+.cap-tone {
+  width: 44px; height: 44px; margin: 1px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: transparent; transition: background-color 600ms ease;
+}
+.cap-tone svg {
+  width: 26px; height: 26px; padding: 6px; border-radius: 50%; color: var(--sw-gold);
+  background: radial-gradient(circle at 38% 28%, color-mix(in srgb, var(--sw-paper) 80%, #fff), var(--sw-paper) 65%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sw-gold) 40%, transparent), 0 0 0 0 transparent;
+  transition: box-shadow 600ms ease;
+}
+.cap-tone[data-theme-btn="light"] { --sw-paper: #fdf7f3; --sw-gold: #93503c; }
+.cap-tone[data-theme-btn="mid"] { --sw-paper: #ddc8c0; --sw-gold: #7a3a28; }
+.cap-tone[data-theme-btn="dark"] { --sw-paper: #3a121b; --sw-gold: #eaae97; }
+.cap-tone:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.cap-tone[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 11%, transparent); cursor: default; }
+.cap-tone[aria-pressed="true"] svg { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sw-gold) 40%, transparent), 0 0 0 1.5px var(--gold); }
 
 .hd {
   position: fixed; inset: 0 0 auto; z-index: 40; padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
@@ -282,10 +334,10 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 /* on a reading page the mark stands alone (no «مثاني»): an even circle around it */
 .brand:not(:has(.brand-name)) { width: 44px; padding-inline: 5px; }
 .brand:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
-.brand:active { transform: scale(0.95); }
+.brand:active { transform: scale(0.98); }
 .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; }
-.brand-mark svg { width: 24px; height: 24px; color: var(--gold); transition: transform 900ms var(--e-spring); }
-.brand:hover .brand-mark svg { transform: rotate(135deg); }
+.brand-mark svg { width: 24px; height: 24px; color: var(--gold); transition: transform 1400ms var(--e-out); }
+.brand:hover .brand-mark svg { transform: rotate(90deg); }
 /* the display face sits lower in its box than the text face: lifted so «مثاني» shares one baseline with «الفهرس» and
    the search label beside it */
 .brand-name { font-family: var(--f-display); font-weight: 700; font-size: 20px; line-height: 1; color: var(--ink); translate: 0 -0.12em; transition: color var(--t-3) ease; }
@@ -293,12 +345,12 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 /* the index, named rather than hidden behind a bare icon */
 .cap-index {
   flex: none; display: inline-flex; align-items: center; gap: 9px; height: 44px; padding-inline: 13px 16px; border-radius: 22px;
-  font-size: 14.5px; font-weight: 500; color: var(--ink-2); transition: background-color var(--t-1) ease, color var(--t-1) ease, transform var(--t-2) var(--e-spring);
+  font-size: 14.5px; font-weight: 500; color: var(--ink-2); transition: background-color var(--t-1) ease, color var(--t-1) ease, transform var(--t-2) var(--e-out);
 }
-.cap-index svg { color: var(--gold); transition: transform var(--t-3) var(--e-spring); }
+.cap-index svg { color: var(--gold); transition: transform var(--t-3) var(--e-out); }
 .cap-index:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
 .cap-index:hover svg { transform: translateX(-2px); }
-.cap-index:active { transform: scale(0.95); }
+.cap-index:active { transform: scale(0.98); }
 /* on a reading page the surah title opens the index. Title and facts share one 44px row: when the facts don't fit
    they wrap onto a hidden second row, so the title is never cut short for them; the chevron always stays */
 .cap-title {
@@ -307,7 +359,7 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 }
 .cap-title:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
 .cap-title-text { min-width: 0; height: 44px; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; gap: 30px 10px; }
-.cap-chev { flex: none; color: var(--gold); transition: transform var(--t-3) var(--e-spring); }
+.cap-chev { flex: none; color: var(--gold); transition: transform var(--t-3) var(--e-out); }
 .cap-title:hover .cap-chev { transform: translateY(2px); }
 .hd-title { min-width: 0; line-height: 44px; translate: 0 -0.07em; font-family: var(--f-display); font-weight: 700; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hd-meta { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
@@ -316,8 +368,7 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
   padding: 3px 11px; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 .cap-search { gap: 10px; min-width: 240px; padding-inline: 16px 11.5px; font-size: 14.5px; color: var(--muted); }
-.cap-search svg { color: var(--gold); flex: none; transition: transform var(--t-3) var(--e-spring); }
-.cap-search:hover svg { transform: rotate(-12deg) scale(1.1); }
+.cap-search svg { color: var(--gold); flex: none; transition: transform var(--t-3) var(--e-out); }
 .cap-search span { flex: 1; text-align: start; }
 /* hovering an option tints just that option (over paper glass or the cover's dark glass alike) */
 .cap-search:hover, .cap-circle:hover { color: var(--ink); background-image: linear-gradient(color-mix(in srgb, var(--ink) 10%, transparent), color-mix(in srgb, var(--ink) 10%, transparent)); }
@@ -326,8 +377,8 @@ html.lg .glass-panel { backdrop-filter: url(#lg-panel) blur(14px) saturate(1.8) 
 
 /* over the cover the controls turn to dark glass */
 html.on-cover .hd .cap.glass {
-  --ink: var(--cover-ink); --ink-2: var(--cover-ink); --muted: var(--cover-muted); --gold: var(--cover-gold); --line-2: rgba(244, 236, 216, 0.2); --sheet: transparent;
-  background: rgba(20, 14, 6, 0.22); border-color: rgba(255, 240, 200, 0.16);
+  --ink: var(--cover-ink); --ink-2: var(--cover-ink); --muted: var(--cover-muted); --gold: var(--cover-gold); --line-2: color-mix(in srgb, var(--cover-ink) 20%, transparent); --sheet: transparent;
+  background: color-mix(in srgb, var(--cover-2) 22%, transparent); border-color: color-mix(in srgb, var(--cover-ink) 16%, transparent);
   box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
 }
 
@@ -337,7 +388,7 @@ html.recede .hd-actions > .cap, html.recede .hd-actions > .settings-wrap > .cap 
   opacity: 0; visibility: hidden; transform: scale(0.5); filter: blur(6px); pointer-events: none;
 }
 html.recede .cap-nav:has(.cap-title) :is(.brand, .cap-div) { width: 0; min-width: 0; padding-inline: 0; opacity: 0; filter: blur(4px); }
-html.recede .cap-nav:has(.cap-title) .brand-mark svg { transform: scale(0.4) rotate(-90deg); }
+html.recede .cap-nav:has(.cap-title) .brand-mark svg { transform: scale(0.4); }
 html.recede .cap-title { padding-inline-start: 14px; }
 
 /* ---------- settings popover ---------- */
@@ -346,10 +397,10 @@ html.recede .cap-title { padding-inline-start: 14px; }
   position: fixed; top: calc(env(safe-area-inset-top, 0px) + var(--hd-h) + 8px); left: max(12px, env(safe-area-inset-left, 0px));
   z-index: 50; width: 330px; border-radius: 28px; padding: 10px; transform-origin: 24px -12px;
   max-height: calc(100vh - var(--hd-h) - 24px); max-height: calc(100dvh - var(--hd-h) - 24px); overflow-y: auto; overscroll-behavior: contain;
-  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease, display var(--t-2) allow-discrete;
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease, display var(--t-2) allow-discrete;
 }
-.settings[hidden] { opacity: 0; transform: scale(0.9) translateY(-8px); filter: blur(4px); }
-@starting-style { .settings:not([hidden]) { opacity: 0; transform: scale(0.9) translateY(-8px); filter: blur(4px); } }
+.settings[hidden] { opacity: 0; transform: scale(0.98) translateY(-8px); filter: blur(4px); }
+@starting-style { .settings:not([hidden]) { opacity: 0; transform: scale(0.98) translateY(-8px); filter: blur(4px); } }
 .settings h3 { margin: 8px 12px 4px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 12px; border-radius: 18px; font-size: 15px; transition: background-color var(--t-1) ease; }
 label.set-row { cursor: pointer; }
@@ -363,19 +414,18 @@ html[data-mode="pages"] .set-text, html:not([data-mode="pages"]) .set-pages { di
 .size-row .aa { font-family: var(--f-quran); color: var(--muted); line-height: 1; }
 .size-row .aa.sm { font-size: 18px; }
 .size-row .aa.lg { font-size: 30px; }
-.themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 4px 10px 10px; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 4px 10px 10px; }
 .theme-opt { display: grid; justify-items: center; gap: 6px; font-size: 13px; color: var(--muted); border-radius: 12px; }
 .theme-opt i {
   width: 100%; height: 42px; border-radius: 999px; border: 1px solid var(--line-2); position: relative; overflow: hidden;
-  transition: box-shadow var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring);
+  transition: box-shadow var(--t-2) var(--e-out), transform var(--t-3) var(--e-out);
 }
 .theme-opt i::after { content: ""; position: absolute; inset: 13px 10px auto; height: 4px; border-radius: 4px; background: currentColor; opacity: 0.5; box-shadow: 0 8px 0 currentColor; }
 .theme-opt:hover i { transform: translateY(-2px); }
-.theme-opt:active { transform: scale(0.94); }
-.theme-opt[data-theme-btn="auto"] i { background: linear-gradient(135deg, #fbf9f3 50%, #17140f 50%); color: #8f8676; }
-.theme-opt[data-theme-btn="light"] i { background: #fbf9f3; color: #1c1710; }
-.theme-opt[data-theme-btn="sepia"] i { background: #f6eedb; color: #32281a; }
-.theme-opt[data-theme-btn="dark"] i { background: #17140f; color: #e6dcc6; }
+.theme-opt:active { transform: scale(0.98); }
+.theme-opt[data-theme-btn="light"] i { background: #fdf7f3; color: #7d1d34; border-color: color-mix(in srgb, #93503c 38%, transparent); }
+.theme-opt[data-theme-btn="mid"] i { background: #e2d0c9; color: #731a30; border-color: color-mix(in srgb, #82432f 38%, transparent); }
+.theme-opt[data-theme-btn="dark"] i { background: #331018; color: #e3a58f; border-color: color-mix(in srgb, #e3a58f 38%, transparent); }
 .theme-opt[aria-pressed="true"] { color: var(--ink); font-weight: 500; }
 .theme-opt[aria-pressed="true"] i { box-shadow: 0 0 0 2px var(--sheet), 0 0 0 4px var(--gold-2); transform: translateY(-1px); }
 .settings .seg { width: 100%; background: color-mix(in srgb, var(--ink) 6%, transparent); }
@@ -390,11 +440,11 @@ input[type="range"].range {
 .range::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--accent); }
 .range::-webkit-slider-thumb {
   -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px; border-radius: 50%; background: var(--sheet);
-  border: 2px solid var(--accent); box-shadow: var(--shadow-1); transition: transform var(--t-2) var(--e-spring);
+  border: 2px solid var(--accent); box-shadow: var(--shadow-1); transition: transform var(--t-2) var(--e-out);
 }
 .range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--sheet); border: 2px solid var(--accent); }
 .range:hover::-webkit-slider-thumb { transform: scale(1.1); }
-.range:active::-webkit-slider-thumb { transform: scale(1.3); }
+.range:active::-webkit-slider-thumb { transform: scale(1.1); }
 
 .switch {
   appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 999px; background: var(--ctl);
@@ -402,7 +452,7 @@ input[type="range"].range {
 }
 .switch::after {
   content: ""; position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%;
-  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: right var(--t-3) var(--e-spring), width var(--t-2) var(--e-out);
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: right var(--t-3) var(--e-out), width var(--t-2) var(--e-out);
 }
 .switch:active::after { width: 28px; }
 .switch:checked { background: var(--accent); }
@@ -422,7 +472,7 @@ input[type="range"].range {
   visibility: hidden; transform: translateX(calc(100% + 24px)); opacity: 0.6;
   transition: transform var(--t-3) var(--e-out), opacity var(--t-2) ease, visibility 0s linear var(--t-3);
 }
-.drawer.on { visibility: visible; transform: none; opacity: 1; transition: transform 640ms var(--e-spring), opacity var(--t-2) ease, visibility 0s; }
+.drawer.on { visibility: visible; transform: none; opacity: 1; transition: transform 640ms var(--e-out), opacity var(--t-2) ease, visibility 0s; }
 /* the head: title and count, the search, then the tabs and the Makki / Madani filter on one ruled line */
 .ix-head { display: grid; gap: 14px; padding: 22px 20px 0; }
 .ix-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -447,10 +497,10 @@ input[type="range"].range {
 .ix-place { display: flex; gap: 6px; }
 .ix-place button {
   height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; color: var(--muted); border: 1px solid var(--line);
-  transition: background-color var(--t-1) ease, color var(--t-1) ease, border-color var(--t-1) ease, transform var(--t-2) var(--e-spring);
+  transition: background-color var(--t-1) ease, color var(--t-1) ease, border-color var(--t-1) ease, transform var(--t-2) var(--e-out);
 }
 .ix-place button:hover { color: var(--ink); border-color: var(--gold-2); }
-.ix-place button:active { transform: scale(0.94); }
+.ix-place button:active { transform: scale(0.98); }
 .ix-place button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
 .field { position: relative; display: block; }
 .field svg { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; transition: color var(--t-1) ease; }
@@ -471,9 +521,9 @@ input[type="range"].range {
 .ix-item:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .ix-item:focus-visible { outline-offset: -2px; border-radius: 16px; }
 .ix-num { position: relative; width: 42px; height: 42px; display: grid; place-items: center; }
-.ix-num svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 700ms var(--e-spring); }
-.ix-num b { position: relative; font-size: 13px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ix-num svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1200ms var(--e-out); }
 .ix-item:hover .ix-num svg { transform: rotate(45deg); }
+.ix-num b { position: relative; font-size: 13px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; }
 .ix-main { display: grid; min-width: 0; }
 .ix-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-family: var(--f-display); font-weight: 700; font-size: 19px; line-height: 1.35; white-space: nowrap; }
 .ix-sub { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
@@ -511,7 +561,7 @@ input[type="range"].range {
   border: 1px solid var(--glass-edge); border-radius: 32px; color: var(--ink); overflow: hidden; display: none; flex-direction: column;
   box-shadow: var(--shadow-2);
   opacity: 0; transform: translateY(-12px) scale(0.97); filter: blur(6px);
-  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease,
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease,
     display var(--t-2) allow-discrete, overlay var(--t-2) allow-discrete;
 }
 .palette[open] { display: flex; opacity: 1; transform: none; filter: none; }
@@ -531,10 +581,10 @@ input[type="range"].range {
 .pal-try span { font-size: 12.5px; color: var(--muted); margin-inline-end: 4px; }
 .pal-try button {
   height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13.5px; color: var(--ink-2); border: 1px solid var(--glass-edge); background: color-mix(in srgb, var(--ink) 5%, transparent);
-  transition: border-color var(--t-1) ease, color var(--t-1) ease, transform var(--t-2) var(--e-spring);
+  transition: border-color var(--t-1) ease, color var(--t-1) ease, transform var(--t-2) var(--e-out);
 }
 .pal-try button:hover { border-color: var(--gold-2); color: var(--ink); }
-.pal-try button:active { transform: scale(0.94); }
+.pal-try button:active { transform: scale(0.98); }
 .palette:has(#pal-q:not(:placeholder-shown)) .pal-try { display: none; }
 .palette:has(#pal-q:not(:placeholder-shown)) .pal-input { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
 .pal-results { overflow-y: auto; overflow-x: hidden; padding: 10px 12px 14px; flex: 1; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
@@ -549,7 +599,7 @@ input[type="range"].range {
 .pal-results.fresh .pal-item, .ix-list.fresh .ix-item { animation: rise var(--t-3) var(--e-out) both; animation-delay: calc(min(var(--i, 0), 14) * 26ms + 60ms); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } }
 .pal-medal { position: relative; width: 42px; height: 42px; display: grid; place-items: center; color: var(--gold-2); }
-.pal-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 700ms var(--e-spring); }
+.pal-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 700ms var(--e-out); }
 .pal-medal svg circle { display: none; }
 .pal-medal b { position: relative; font-size: 12px; font-weight: 700; color: var(--gold-text); font-variant-numeric: tabular-nums; }
 .pal-item .pi { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: var(--gold-text); border: 1px solid color-mix(in srgb, var(--gold-2) 45%, transparent); }
@@ -607,7 +657,7 @@ input[type="range"].range {
   width: min(460px, calc(100vw - 24px)); max-height: min(80vh, 640px); max-height: min(80dvh, 640px); margin: auto; padding: 6px 24px 18px;
   border: 1px solid var(--glass-edge); border-radius: 28px; color: var(--ink); overflow-y: auto; overscroll-behavior: contain; box-shadow: var(--shadow-2);
   display: none; opacity: 0; transform: translateY(-12px) scale(0.97); filter: blur(6px);
-  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease,
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease,
     display var(--t-2) allow-discrete, overlay var(--t-2) allow-discrete;
 }
 .keys[open] { display: block; opacity: 1; transform: none; filter: none; }
@@ -643,11 +693,11 @@ input[type="range"].range {
   transform: translate(-50%, calc(100% + 24px)); visibility: hidden; overflow: hidden;
   transition: transform var(--t-3) var(--e-out), visibility 0s linear var(--t-3);
 }
-.vsheet.on { transform: translate(-50%, 0); visibility: visible; transition: transform 620ms var(--e-spring), visibility 0s; }
+.vsheet.on { transform: translate(-50%, 0); visibility: visible; transition: transform 620ms var(--e-out), visibility 0s; }
 .vsheet.dragging { transition: none; }
 /* a hairline of gold along the top edge of the sheet */
 /* with the verse sheet open the page behind stays legible, so the highlighted verse can be seen beside its tafsir */
-.vs-handle { width: 44px; height: 5px; border-radius: 5px; background: var(--line-2); margin: 10px auto 2px; flex: none; cursor: grab; transition: width var(--t-2) var(--e-spring), background-color var(--t-1) ease; }
+.vs-handle { width: 44px; height: 5px; border-radius: 5px; background: var(--line-2); margin: 10px auto 2px; flex: none; cursor: grab; transition: width var(--t-2) var(--e-out), background-color var(--t-1) ease; }
 .vsheet:hover .vs-handle, .vsheet.dragging .vs-handle { width: 56px; background: var(--gold-2); }
 .vs-head { display: flex; align-items: center; gap: 8px; padding: 6px 11px 10px; padding-inline-start: 22px; }
 .vs-ref { flex: 1; font-weight: 500; font-size: 15px; }
@@ -670,24 +720,24 @@ input[type="range"].range {
 .vs-taf p { margin: 0; }
 .vs-foot { display: flex; justify-content: space-between; gap: 10px; padding: 10px 8px 14px; border-top: 1px solid var(--line); }
 .vs-foot button { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border-radius: 999px; font-size: 14px; color: var(--muted); }
-.vs-foot button svg { transition: transform var(--t-3) var(--e-spring); }
+.vs-foot button svg { transition: transform var(--t-3) var(--e-out); }
 .vs-foot button:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
 #vs-prev:hover:not(:disabled) svg { transform: translateX(3px); }
 #vs-next:hover:not(:disabled) svg { transform: translateX(-3px); }
-.vs-foot button:active:not(:disabled) { transform: scale(0.95); }
+.vs-foot button:active:not(:disabled) { transform: scale(0.98); }
 .vs-foot button:disabled { opacity: 0.35; cursor: default; }
 
 .toast {
   position: fixed; z-index: 95; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); translate: -50% 0;
   display: flex; align-items: center; gap: 10px; color: var(--ink); padding: 10px 20px 10px 18px; width: max-content; max-width: calc(100vw - 32px);
   border: 1px solid var(--glass-edge); border-radius: 999px; font-size: 14.5px; line-height: 1.6; text-align: center; box-shadow: var(--shadow-2);
-  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-spring), filter var(--t-2) ease, display var(--t-2) allow-discrete;
+  transition: opacity var(--t-2) var(--e-out), transform var(--t-3) var(--e-out), filter var(--t-2) ease, display var(--t-2) allow-discrete;
 }
 .toast::before { content: ""; width: 14px; height: 14px; flex: none; background: var(--gold-2);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='%23000'%3E%3Crect x='10' y='10' width='28' height='28'/%3E%3Crect x='10' y='10' width='28' height='28' transform='rotate(45 24 24)'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='%23000'%3E%3Crect x='10' y='10' width='28' height='28'/%3E%3Crect x='10' y='10' width='28' height='28' transform='rotate(45 24 24)'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; }
-.toast[hidden] { opacity: 0; transform: translateY(16px) scale(0.92); filter: blur(4px); }
-@starting-style { .toast:not([hidden]) { opacity: 0; transform: translateY(16px) scale(0.92); filter: blur(4px); } }
+.toast[hidden] { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(4px); }
+@starting-style { .toast:not([hidden]) { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(4px); } }
 
 body:has(.dock-row) .toast { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); } /* above the reader's page dock */
 /* with the verse sheet open the toast would cover its buttons, so it moves to the top */
@@ -711,7 +761,7 @@ body:has(.vsheet.on) .toast { bottom: auto; top: calc(16px + env(safe-area-inset
 .results > li { animation: rise var(--t-3) var(--e-out) both; animation-delay: calc(min(var(--i, 0), 12) * 30ms); }
 .results a {
   display: grid; gap: 6px; padding: 18px 22px; background: var(--sheet); border: 1px solid var(--line); border-radius: 20px;
-  transition: transform var(--t-3) var(--e-spring), box-shadow var(--t-2) var(--e-out), border-color var(--t-1) ease;
+  transition: transform var(--t-3) var(--e-out), box-shadow var(--t-2) var(--e-out), border-color var(--t-1) ease;
 }
 .results a:hover { transform: translateY(-2px); box-shadow: var(--shadow-1); border-color: transparent; }
 .r-ref { font-size: 13px; color: var(--gold-text); font-weight: 500; }
@@ -756,12 +806,14 @@ html.motion [data-reveal] { opacity: 0; }
 .cap-search { view-transition-name: hd-search; }
 #settings-btn { view-transition-name: hd-settings; }
 ::view-transition-group(hd-nav), ::view-transition-group(hd-search), ::view-transition-group(hd-settings) { animation-duration: 320ms; }
-/* switching themes: the new theme spreads out as a circle from the button pressed (shell.ts) */
+/* switching themes: the page passes slowly from one tone into the other (shell.ts) */
 html.theme-vt :is(.cap-nav, .cap-search, #settings-btn) { view-transition-name: none; }
 html.theme-vt *, html.theme-vt *::before, html.theme-vt *::after { transition: none !important; }
 html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-html.theme-vt::view-transition-new(root) { animation: theme-in 640ms var(--e-in-out) both; }
-@keyframes theme-in { from { clip-path: circle(0 at var(--vx, 50%) var(--vy, 0%)); } to { clip-path: circle(var(--vr, 150vmax) at var(--vx, 50%) var(--vy, 0%)); } }
+html.theme-vt::view-transition-old(root) { animation: theme-out 900ms ease both; }
+html.theme-vt::view-transition-new(root) { animation: theme-in 900ms ease both; }
+@keyframes theme-out { to { opacity: 0; } }
+@keyframes theme-in { from { opacity: 0; } }
 
 /* ---------- responsive ---------- */
 .hd-meta span:nth-child(n + 3) { display: none; } /* two facts at most beside the title */
@@ -774,6 +826,8 @@ html.theme-vt::view-transition-new(root) { animation: theme-in 640ms var(--e-in-
   .cap-search span, .cap-search kbd { display: none; }
 }
 @media (max-width: 640px) {
+  .cap-tone:not([aria-pressed="true"]) { display: none; }
+  .cap-tone[aria-pressed="true"] { cursor: pointer; background: transparent; }
   .hd-title { font-size: 17px; }
   .hd-actions, .hd-start { gap: 6px; }
   .pal-foot { display: none; }

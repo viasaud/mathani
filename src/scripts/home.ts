@@ -16,8 +16,26 @@ const header = document.getElementById("hd")!;
 const tone = () => root.classList.toggle("on-cover", cover.getBoundingClientRect().bottom > header.offsetHeight * 0.6);
 addEventListener("scroll", tone, { passive: true });
 tone();
-// the gilt lattice is drawn by WebGL; it loads after everything else, and a still pattern stands in until then
-import("./cover-gl").then((m) => m.start(document.getElementById("cover-gl") as HTMLCanvasElement, cover)).catch(() => {});
+
+// ---------- the tones ----------
+// The tones' capsule in the header is wired in shell.ts. On a phone it shows only the tone in use, and a tap on it turns
+// to the next. Whenever the tone changes, from there or anywhere else, the rosette answers with a slow turn of one notch,
+// back to the same figure.
+const rosette = document.getElementById("rosette")!;
+const narrow = matchMedia("(max-width: 640px)");
+const toneButtons = [...document.querySelectorAll<HTMLButtonElement>(".cap-tone")];
+let turning = false; // the next tone's own click must not turn again
+toneButtons.forEach((b, i) =>
+  b.addEventListener("click", () => {
+    if (turning || !narrow.matches || b.getAttribute("aria-pressed") !== "true") return;
+    turning = true;
+    toneButtons[(i + 1) % toneButtons.length].click();
+    turning = false;
+  }),
+);
+new MutationObserver(() => {
+  if (moving()) gsap.to(rosette, { rotation: "+=45", duration: 2.8, ease: "sine.inOut" });
+}).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 
 // ---------- continue reading ----------
 // One pill: for a new reader «ابدأ القراءة, من سورة الفاتحة» with a star; for a returning one «تابع القراءة» over

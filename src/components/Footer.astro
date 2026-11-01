@@ -75,8 +75,9 @@ const links = [
     -webkit-mask: var(--scene) 50% 100% / cover no-repeat; mask: var(--scene) 50% 100% / cover no-repeat;
     mask-mode: luminance; -webkit-mask-source-type: luminance;
   }
-  /* the ink: the deep gold of the text on light paper, the warm gold of the leaf on dark */
-  .foot { --scene-ink: var(--gold); }
+  /* the ink: the theme's rose gold, eased toward the ground so the engraving is tooled rather than floodlit and is
+     never the brightest thing on the page */
+  .foot { --scene-ink: color-mix(in srgb, var(--gold) 60%, var(--bg)); }
 
   @media (min-width: 768px) {
     .foot-text, .foot-scene { grid-area: 1 / 1; }

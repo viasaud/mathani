@@ -3,6 +3,7 @@
 //   public/icons/apple-touch-icon.png, icon-192.png, icon-512.png, icon-maskable-512.png, favicon-48.png
 // The images are committed, so a deployment needs none of this. Run it again after changing the cards or the data:
 //   npm run og
+// or, for the icons alone: npm run og -- --icons
 // It needs a headless Chromium for playwright-core: `npx playwright-core install chromium-headless-shell` once, or set
 // CHROMIUM_PATH to any Chromium or Chrome binary. A Playwright browser already downloaded for another version is
 // used as it is.
@@ -98,13 +99,19 @@ const cards = [
   }),
 ];
 
-// The icons: the star in gilt on the cover's black, the maskable one with room for the launcher's crop.
-const icon = (size, scale) => `<!doctype html><html><head><style>*{margin:0}html,body{width:${size}px;height:${size}px;background:#0d0a06;display:grid;place-items:center}svg{width:${Math.round(size * scale)}px;height:${Math.round(size * scale)}px}</style></head><body>${star("#dcb767", 2.4, "#dcb767")}</body></html>`;
+// The icons: public/favicon.svg as it is (the faceted rose-gold star on a wine-leather tile) for the ones shown as
+// drawn, and for the ones the platform crops itself (iOS rounds the corners, a launcher masks to its own shape) its
+// mark, lifted out of the tile, on leather run to the edges, the maskable one with room for the crop.
+const favicon = readFileSync(join(ROOT, "public/favicon.svg"), "utf8");
+const defs = favicon.match(/<defs>[\s\S]*?<\/defs>/)[0];
+const mark = `<svg viewBox="0 0 64 64">${defs}${favicon.match(/<g id="mark">[\s\S]*?\n  <\/g>/)[0]}</svg>`;
+const tile = (size, scale) => `<!doctype html><html><head><style>*{margin:0}html,body{width:${size}px;height:${size}px;display:grid;place-items:center;background:radial-gradient(circle at 30% 22%, #a1314c, #761b31 50%, #3d0915 100%)}svg{width:${Math.round(size * scale)}px;height:${Math.round(size * scale)}px}</style></head><body>${mark}</body></html>`;
+const drawn = (size) => `<!doctype html><html><head><style>*{margin:0}html,body{width:${size}px;height:${size}px;background:transparent}svg{display:block;width:100%;height:100%}</style></head><body>${favicon}</body></html>`;
 const icons = [
-  { file: "icons/apple-touch-icon.png", size: 180, html: icon(180, 0.78) },
-  { file: "icons/icon-192.png", size: 192, html: icon(192, 0.78) },
-  { file: "icons/icon-512.png", size: 512, html: icon(512, 0.78) },
-  { file: "icons/icon-maskable-512.png", size: 512, html: icon(512, 0.56) },
+  { file: "icons/apple-touch-icon.png", size: 180, html: tile(180, 1) },
+  { file: "icons/icon-192.png", size: 192, html: drawn(192) },
+  { file: "icons/icon-512.png", size: 512, html: drawn(512) },
+  { file: "icons/icon-maskable-512.png", size: 512, html: tile(512, 0.8) },
 ];
 
 const work = join(tmpdir(), "mathani-og");
@@ -141,13 +148,14 @@ async function render(html, file, size, type) {
     const meta = document.querySelector(".meta");
     for (let px = parseFloat(getComputedStyle(meta ?? document.body).fontSize); meta && meta.scrollWidth > room && px > 18; px -= 1) meta.style.fontSize = `${px}px`;
   });
-  await tab.screenshot({ path: join(ROOT, "public", file), type, ...(type === "jpeg" ? { quality: 80 } : {}) });
+  await tab.screenshot({ path: join(ROOT, "public", file), type, ...(type === "jpeg" ? { quality: 80 } : { omitBackground: true }) });
 }
-for (const c of cards) await render(c.html, c.file, 0, "jpeg");
+const iconsOnly = process.argv.includes("--icons");
+if (!iconsOnly) for (const c of cards) await render(c.html, c.file, 0, "jpeg");
 for (const i of icons) await render(i.html, i.file, i.size, "png");
-// the small favicon is the SVG one itself, drawn for a light page (the colours it uses outside dark mode)
+// the small favicon is the SVG one itself
 await tab.setViewportSize({ width: 48, height: 48 });
 await tab.goto(pathToFileURL(join(ROOT, "public/favicon.svg")).href);
 await tab.screenshot({ path: join(ROOT, "public/icons/favicon-48.png"), omitBackground: true });
 await browser.close();
-console.log(`${cards.length} cards and ${icons.length + 1} icons written to public/`);
+console.log(`${iconsOnly ? 0 : cards.length} cards and ${icons.length + 1} icons written to public/`);
