@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/og/home.jpg" alt="Mathani: the Madinah mushaf with Tafsir al-Muyassar" width="100%">
+  <img src=".github/icon.svg" alt="Mathani" width="96">
 </p>
 
 <h1 align="center">مثاني · Mathani</h1>
