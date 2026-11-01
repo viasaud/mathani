@@ -234,6 +234,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 @keyframes draw-rule { from { transform: scaleX(0); } }
 .plate::before, .plate::after {
   content: ""; position: absolute; top: 50%; width: 11px; height: 11px; border: 1px solid var(--gold); background: var(--bg);
+@keyframes fade-in { from { opacity: 0; } }
   transform: translateY(-50%) rotate(45deg); animation: pop 700ms var(--e-spring) 600ms both;
 }
 .plate::before { right: 8px; }
@@ -319,22 +320,83 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 html[data-mode="pages"] .v-go .btn-ghost { display: none; }
 /* «الجزء الحادي والعشرون» is longer than any surah name: a little smaller, and free to take two lines */
 .juz-page .plate h1 { font-size: clamp(28px, 6vw, 56px); white-space: normal; text-wrap: balance; }
-.j-ends { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.j-end {
-  display: grid; align-content: start; gap: 2px; padding: 14px 20px; border-radius: 18px; background: var(--bg);
-  border-inline-start: 2px solid var(--gold-2); transition: background-color var(--t-2) ease;
+/* its first words and its last, a row each across the whole sheet: where it is, then the words on one line, running
+   until the width ends and trailing off there, the ornate brackets always shown either side */
+.j-ends { display: grid; gap: 24px; }
+.j-end { display: grid; gap: 4px; }
+.j-cap { font-size: 14px; line-height: 20px; }
+.j-cap small { font-size: inherit; color: var(--muted); }
+.j-ref { color: var(--gold-text); }
+.j-verse { display: flex; min-width: 0; font-family: var(--f-quran); font-size: 28px; line-height: 1.9; color: var(--ink); transition: color var(--t-2) ease; }
+.j-verse-words { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.j-verse .orn { flex: none; color: var(--gold-2); }
+.j-end:hover .j-verse { color: var(--accent); }
+/* its pages: a line for each, standing on the same baseline, from the first page (right) to the last (left), as the
+   page view's ruler draws the surahs; a quarter's page carries its mark and a taller line in rose gold. The end pages
+   are numbered, the rest say their number when pointed at. Each line is centred in an equal cell, and the ruler reaches
+   half a cell past the text column on both sides, so the first and last lines stand exactly on its edges. */
+.j-ruler { display: flex; margin-inline: calc(-50% / (var(--n) - 1)); padding-top: 4px; }
+.j-ruler a {
+  flex: 1 1 0; min-width: 0; display: grid; grid-template-rows: 24px 28px 16px; justify-items: center; align-items: end; row-gap: 8px;
+  border-radius: 8px;
 }
-.j-end:hover { background: color-mix(in srgb, var(--gold-soft) 55%, var(--bg)); }
-.j-end small { font-size: 13px; color: var(--muted); }
-.j-end strong { font-family: var(--f-display); font-weight: 700; font-size: 19px; line-height: 1.4; }
-.j-words { font-family: var(--f-quran); font-size: 20px; line-height: 2; color: var(--ink-2); }
-.j-sec { margin-top: 36px; }
-.j-sec h2 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 700; font-size: 22px; line-height: 1.4; }
-/* the index drawer's rows, in as many columns as fit; pulled out so the row's tint reaches past the text column */
-.j-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 2px 12px; margin-inline: -12px; }
+.j-ruler i {
+  grid-row: 2; width: 2px; height: 16px; border-radius: 2px; transform-origin: bottom; background: color-mix(in srgb, var(--ink) 22%, transparent);
+  transition: background-color var(--t-2) ease, transform 320ms var(--e-out);
+}
+.j-ruler a.q i { height: 28px; background: var(--gold-2); }
+.j-ruler small {
+  grid-row: 3; font-size: 11px; line-height: 16px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap;
+  opacity: 0; transition: opacity var(--t-2) ease;
+}
+.j-ruler a:is(:first-child, :last-child) small, .j-ruler a:is(:hover, :focus-visible) small { opacity: 1; }
+.j-ruler a:focus-visible { outline-offset: 2px; }
+@media (hover: hover) {
+  .j-ruler a:hover i { background: color-mix(in srgb, var(--ink) 60%, transparent); transform: scaleY(1.14); }
+  .j-ruler a.q:hover i { background: var(--gold); }
+}
+html.motion .j-ruler i { animation: wave-in 900ms var(--e-out) both; animation-delay: calc(var(--i) * 24ms + 420ms); }
+html.motion .j-ruler .j-mark { animation: fade-in 900ms var(--e-out) both; animation-delay: calc(var(--i) * 24ms + 720ms); }
+/* the marks: ۞ where a hizb opens, and a ring filled a quarter, a half, three quarters of the way round */
+.j-mark { grid-row: 1; display: grid; place-items: center; width: 20px; height: 24px; color: var(--gold-text); }
+.j-mark svg { width: 18px; height: 18px; fill: none; stroke: color-mix(in srgb, var(--ink) 20%, transparent); stroke-width: 1.5; }
+.j-mark .arc { stroke: var(--gold-2); stroke-width: 2.5; transform: rotate(-90deg); transform-origin: center; }
+.j-rub { font: 400 20px/1 var(--f-quran); }
+/* the key under it: a page's line, ۞ and a ring, each with what it means */
+.j-key { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; font-size: 13px; line-height: 24px; color: var(--muted); }
+.j-key > span { display: inline-flex; align-items: center; gap: 8px; }
+.j-key i { width: 2px; height: 16px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.j-key .j-mark { width: 20px; height: 24px; }
+/* the sections under it, each opened by one hairline with even space either side: a heading, and its count beside it
+   in the text face; the rows inside them are set apart by space alone */
+.j-sec { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--line); }
+.j-sec h2 { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.4; }
+.j-sec h2 small { font-family: var(--f-ui); font-size: 14px; color: var(--muted); }
+/* the index drawer's rows, in as many columns as fit (a lone surah takes the whole width, its page at the far edge);
+   pulled out so the row's tint reaches past the text column */
+.j-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 4px 12px; margin-inline: -12px; }
 .j-list .ix-num svg circle { display: none; }
-.j-rub { font: 400 24px/1 var(--f-quran); color: var(--gold-text); }
-.ix-sub .j-words { font-size: 15px; line-height: 1.7; }
+/* a row's padding is for its tint, not space: the lists end on their text, so each divider has even space either side */
+.j-list, .j-hizb ol { margin-bottom: -10px; }
+/* the quarters, a column for each hizb, in rows cut like the surahs' above (the same pull, padding, mark column and
+   gap, so the names and the pages line up from one list to the next): the mark, how far into the hizb, its first
+   words, and where it falls */
+.j-hizbs { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; margin-inline: -12px; }
+.j-hizb h3 { margin: 0; padding: 0 12px 4px; font-family: var(--f-ui); font-size: 14px; font-weight: 500; line-height: 20px; color: var(--gold-text); }
+.j-hizb ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.j-q {
+  display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 16px;
+  transition: background-color var(--t-2) ease;
+}
+.j-q .j-mark { grid-row: auto; justify-self: center; }
+.j-q-main { display: grid; min-width: 0; }
+.j-q-name { font-size: 15px; line-height: 24px; transition: color var(--t-2) ease; }
+.j-q-words { font-family: var(--f-quran); font-size: 18px; line-height: 32px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.j-q-ref { display: grid; justify-items: end; font-size: 13px; line-height: 20px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.j-q-ref small { font-size: 12px; }
+.j-q:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.j-q:hover .j-q-name { color: var(--accent); }
+.j-q:focus-visible { outline-offset: -2px; }
 
 /* tajweed */
 .legend { display: none; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 16px; font-size: 13.5px; background: var(--bg); }
@@ -380,6 +442,7 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   .text-sheet { margin-inline: -16px; border-radius: 0; box-shadow: none; padding-inline: 20px; }
   .text-sheet::before { display: none; }
   .v-tools { margin-inline-end: -12px; }
-  .j-ends { grid-template-columns: 1fr; }
+  .j-verse { font-size: 22px; }
+  .j-hizbs { grid-template-columns: 1fr; row-gap: 24px; }
   .v-go .btn { flex: 1 1 100%; }
 }

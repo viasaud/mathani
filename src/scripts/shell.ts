@@ -1,6 +1,6 @@
 // Runs on every page: the header that steps aside while reading, the index drawer, the quick-jump palette,
 // reading settings and keyboard shortcuts.
-import { ar, ayahs, JUZ_NAMES, juzGenitive, normalize, westernDigits } from "../lib/arabic";
+import { ar, ayahs, JUZ_NAMES, juzGenitive, normalize, surahCount, westernDigits } from "../lib/arabic";
 import { fold, matchRanges, verseIndex } from "../lib/search";
 import { warmPage } from "../lib/page-fonts";
 import { pageOfVerse, siteIndex, type SiteIndex } from "../lib/site-index";
@@ -274,9 +274,6 @@ async function renderIndex() {
     ixList.innerHTML = rows || `<div class="ix-empty"><p>${why} ${hint}</p>${inVerses}</div>`;
   }
 }
-// "٧ سور", "١١ سورة": the counted noun agrees with the number
-const surahCount = (n: number) => (n === 0 ? "لا توجد سور" : n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n >= 3 && n <= 10 ? "سور" : "سورة"}`);
-
 let drawerOpener: HTMLElement | null = null;
 function openDrawer() {
   setSettings(false);

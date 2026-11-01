@@ -39,6 +39,10 @@ export function ayahs(n: number) {
   return `${ar(n)} ${n <= 10 ? "آيات" : "آية"}`;
 }
 
+// "٧ سور", "١١ سورة": the counted noun agrees with the number
+export const surahCount = (n: number) =>
+  n === 0 ? "لا توجد سور" : n === 1 ? "سورة واحدة" : n === 2 ? "سورتان" : `${ar(n)} ${n <= 10 ? "سور" : "سورة"}`;
+
 // Strip diacritics and unify letter forms so "ابراهيم" finds "إبراهيم" (the same folding as src/lib/search.ts).
 export const normalize = (s: string) =>
   s
