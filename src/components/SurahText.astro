@@ -44,7 +44,7 @@ const startsRub = (i: number) => rubStarts.has(`${c.id}:${i + 1}`);
         <section class="v" data-i={i} data-p={page} data-j={juz} data-r={rub} data-g={s.start}>
           <div class="v-top">
             <span class="v-num">
-              <a class="badge" href={`/surah/${c.id}/${i + 1}`} aria-label={`الآية ${ar(i + 1)} وتفسيرها في صفحتها`}><Star /><span>{ar(i + 1)}</span></a>
+              <a class="badge" href={`/surah/${c.id}/${i + 1}`} aria-label={`الآية ${ar(i + 1)} وتفسيرها في صفحتها`}><Star plain /><span>{ar(i + 1)}</span></a>
               <span class="v-meta"><span>صفحة {ar(page)}</span>{startsRub(i) && <span class="v-rub" title="بداية ربع حزب"><b class="rub-mark" aria-hidden="true">۞</b> <span class="v-rub-text">بداية ربع</span></span>}</span>
             </span>
             <div class="v-tools" role="group" aria-label={`أدوات الآية ${ar(i + 1)}`}>

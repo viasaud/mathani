@@ -4,8 +4,6 @@
    controls, so it never scrolls. Every page has the printed proportion, 1 : 1.6, and its fifteen lines share the
    height evenly. */
 html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
-/* a soft pool of light behind the page, so the sheet sits on the desk rather than floats in nothing */
-body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--gold-soft) 55%, transparent), transparent 70%), var(--bg); }
 .reader-main.fit {
   --r: 1.6; --r-max: 1.8; /* the printed 1 : 1.6, let out to 1 : 1.8 on tall phone screens so the lines breathe instead of leaving bands of empty paper */
   --dock-h: 82px; /* the space the bottom controls take, with as much clear space above the surah tag as below the header */
@@ -75,7 +73,6 @@ body:has(#mushaf.fit) { background: radial-gradient(70% 60% at 50% 45%, color-mi
 .mfoot span { position: relative; width: 9.6cqi; height: 9.6cqi; display: grid; place-items: center; font-size: max(11px, 2.2cqi); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .mfoot svg { position: absolute; inset: 0; color: var(--gold-2); }
 /* the star's centre ring would sit behind the digits */
-.mfoot svg circle, .read .badge svg circle { display: none; }
 .mlines { font-family: var(--pf), serif; font-size: 6.2cqi; line-height: 1; color: var(--ink); }
 .ml { --fit: 1; display: flex; justify-content: space-between; align-items: center; height: 1.95em; white-space: nowrap; }
 /* a line whose words would run past the edge is set a touch smaller, by itself (--fit, page.ts) */
@@ -299,7 +296,7 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .pager a:active { transform: scale(0.98); }
 .pager a[rel="next"] { text-align: end; grid-column: 2; }
 .pager small { color: var(--muted); font-size: 13px; }
-.pager strong { font-family: var(--f-display); font-weight: 700; font-size: 24px; }
+.pager strong { font-family: var(--f-display); font-weight: 400; font-size: 24px; }
 
 /* ---------- a verse's own page, a juz's own page ---------- */
 /* the facts under the plate link on: the mushaf page, the juz; a name the verse is known by sits on its own line above
@@ -383,7 +380,6 @@ html.motion .j-ruler .j-mark { animation: fade-in 900ms var(--e-out) both; anima
 /* the index drawer's rows, in as many columns as fit (a lone surah takes the whole width, its page at the far edge);
    pulled out so the row's tint reaches past the text column */
 .j-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 4px 12px; margin-inline: -12px; }
-.j-list .ix-num svg circle { display: none; }
 /* a row's padding is for its tint, not space: the lists end on their text, so each divider has even space either side */
 .j-list, .j-hizb ol { margin-bottom: -10px; }
 /* the quarters, a column for each hizb, in rows cut like the surahs' above (the same pull, padding, mark column and

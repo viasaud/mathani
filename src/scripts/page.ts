@@ -275,7 +275,6 @@ function swap(doc: Document, to: number, push: boolean) {
   const before = moving() ? snapshot() : null;
   root.dataset.page = next.dataset.page;
   root.dataset.first = next.dataset.first;
-  stage.style.transform = "";
   stage.innerHTML = next.querySelector(".stage")!.innerHTML;
   data = JSON.parse(json.textContent!) as PageData;
   $("page-data").textContent = json.textContent;

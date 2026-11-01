@@ -83,7 +83,7 @@ export function trapTab(panel: HTMLElement, e: KeyboardEvent, wrapTo?: HTMLEleme
   else if (!e.shiftKey && active === last) { e.preventDefault(); (wrapTo ?? first).focus(); }
 }
 
-export const STAR_SVG =
-  '<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="10.5" y="10.5" width="27" height="27"/><rect x="10.5" y="10.5" width="27" height="27" transform="rotate(45 24 24)"/></g></svg>';
+// the star from the layout's sprite (Base.astro), without its centre ring, for markup built in the browser
+export const STAR_SVG = '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><use href="#star"/></svg>';
 
 export const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);

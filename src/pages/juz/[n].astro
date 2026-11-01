@@ -132,7 +132,7 @@ const schema = [
         <div class="j-list">
           {surahs.map(({ c, from, to, whole, page }) => (
             <a class="ix-item" href={`/surah/${c.id}${from > 1 ? `#a${from}` : ""}`}>
-              <span class="ix-num"><Star /><b>{ar(c.id)}</b></span>
+              <span class="ix-num"><Star plain /><b>{ar(c.id)}</b></span>
               <span class="ix-main"><span class="ix-name">{c.name}</span>
               <span class="ix-sub">{whole ? `كاملة، ${ayahs(c.n)}` : from === to ? `الآية ${ar(from)}` : `الآيات ${ar(from)}–${ar(to)}`}</span></span>
               <span class="ix-page">ص {ar(page)}</span>

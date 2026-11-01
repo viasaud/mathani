@@ -1,6 +1,7 @@
-// The home page: the cover (its live gilt and the header's tone over it), the continue button and the line under it
-// saying where the reader stopped, the juz they are in, the surah filter and the back-to-top button.
+// The home page: the cover (its opening, its live gilt and the header's tone over it), the continue button and the
+// line under it saying where the reader stopped, the juz they are in, the surah filter and the back-to-top button.
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ar } from "../lib/arabic";
 import { warmPage } from "../lib/page-fonts";
 import { lastReadHref, load, type LastRead } from "../lib/storage";
@@ -12,16 +13,87 @@ const root = document.documentElement;
 // ---------- the cover ----------
 // The header turns to dark glass while it floats over the cover, and back to paper once the cover has scrolled away.
 const cover = document.getElementById("cover")!;
+const rosette = document.getElementById("rosette")!;
 const header = document.getElementById("hd")!;
 const tone = () => root.classList.toggle("on-cover", cover.getBoundingClientRect().bottom > header.offsetHeight * 0.6);
 addEventListener("scroll", tone, { passive: true });
 tone();
 
+// ---------- the cover opens ----------
+gsap.registerPlugin(ScrollTrigger);
+if (moving()) {
+  const title = cover.querySelector<HTMLElement>("[data-hero-title] span")!;
+  const rest = [...cover.querySelectorAll<HTMLElement>("[data-hero]")];
+  const paths = (sel: string) => cover.querySelectorAll(`${sel} path:not(.tr)`);
+  const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.1 });
+  tl.fromTo(title,
+    { opacity: 1, clipPath: "inset(-30% -10% -45% 100%)", filter: "blur(16px)", y: 18 },
+    { clipPath: "inset(-30% -10% -45% -10%)", filter: "blur(0px)", y: 0, duration: 1.5, ease: "expo.out", clearProps: "clipPath,filter" })
+    .fromTo(rest[0], { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.9 }, 0.15)
+    .fromTo(rest.slice(1), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 1, stagger: 0.12, clearProps: "transform" }, 0.55);
+
+  // The rosette unfolds from its heart: the star turns up out of a soft light, a faint ring of light passes outward to
+  // where the pattern will reach, and the rings are drawn from the centre out, each sweeping round into place as it is
+  // drawn and settling without overshoot. Then the light comes up on the gold and begins to travel its lines. Both
+  // copies (the drawing and its lit twin) move together.
+  const q = (sel: string) => cover.querySelectorAll(sel);
+  const O = { svgOrigin: "300 300" };
+  tl.fromTo(q(".ro-core"), { opacity: 0, scale: 0.4, rotation: -90, ...O }, { opacity: 1, scale: 1, rotation: 0, duration: 2.2, ease: "expo.out" }, 0.1)
+    .fromTo(q(".ro-glow"), { opacity: 0, scale: 0.4, ...O }, { opacity: 1, scale: 1, duration: 2.2, ease: "expo.out" }, 0.1)
+    .fromTo(q(".ro-wave"), { opacity: 0.8, scale: 0.6, ...O }, { opacity: 0, scale: 7.4, duration: 2.4, ease: "power2.out" }, 0.35);
+  ([["inner", -75, 0.35, 1.6, 0.012], ["middle", 50, 0.6, 1.8, 0.02], ["outer", -30, 0.85, 2, 0.004]] as const).forEach(([ring, from, at, d, each]) => {
+    tl.fromTo(q(`.ro-${ring}`), { rotation: from, scale: 0.9, ...O }, { rotation: 0, scale: 1, duration: d + 1.2, ease: "expo.out" }, at)
+      .to(paths(`.ro-${ring}`), { strokeDashoffset: 0, duration: d, ease: "power2.inOut", stagger: each }, at);
+  });
+  tl.to(q(".ro-lit"), { opacity: 1, duration: 2, ease: "power1.inOut" }, 1.9)
+    .to(q(".rosette .tr"), { opacity: 0.9, duration: 2.4, ease: "power1.inOut" }, 2.6);
+
+  // At rest the whole rosette turns very slowly (home.css) while light travels its lines; every few seconds the two
+  // inner rings turn one notch of the pattern against each other and come to rest in the same figure. The heart's light
+  // rises and falls like breath. All of it sleeps while the cover is off screen.
+  const idle = [
+    gsap.timeline({ paused: true, repeat: -1, defaults: { duration: 3.2, ease: "sine.inOut" } })
+      .to(q(".ro-inner"), { rotation: "+=45" }, 6) // six seconds at rest first, every time round
+      .to(q(".ro-middle"), { rotation: "-=45" }, 6),
+    gsap.to(q(".ro-glow"), { paused: true, scale: 1.12, opacity: 0.75, duration: 4.5, ease: "sine.inOut", yoyo: true, repeat: -1 }),
+  ];
+  let awake = true;
+  tl.call(() => idle.forEach((t) => awake && t.play()), [], 3.2);
+  ScrollTrigger.create({
+    trigger: cover, start: "top bottom", end: "bottom top",
+    onToggle: ({ isActive }) => {
+      awake = isActive;
+      cover.classList.toggle("asleep", !isActive);
+      if (tl.progress() === 1) idle.forEach((t) => (isActive ? t.play() : t.pause()));
+    },
+  });
+
+  // the rosette drifts a little against the pointer, as if lit from where it is
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    const x = gsap.quickTo(rosette, "x", { duration: 2, ease: "power2.out" });
+    const y = gsap.quickTo(rosette, "y", { duration: 2, ease: "power2.out" });
+    cover.addEventListener("pointermove", (e) => {
+      const r = cover.getBoundingClientRect();
+      x(((e.clientX - r.left) / r.width - 0.5) * -14);
+      y(((e.clientY - r.top) / r.height - 0.5) * -14);
+    });
+  }
+  // the cover sinks back a little as the page scrolls over it. Only moved, never faded: an ancestor below full opacity
+  // would switch off the console's backdrop blur
+  gsap.to(cover.querySelector(".cover-inner"), {
+    yPercent: 10, ease: "none",
+    scrollTrigger: { trigger: cover, start: "top top", end: "bottom top", scrub: true },
+  });
+} else {
+  cover.querySelectorAll<SVGPathElement>(".rosette path:not(.tr)").forEach((p) => (p.style.strokeDashoffset = "0"));
+}
+// late layout (fonts arriving) moves the trigger points
+document.fonts?.ready.then(() => ScrollTrigger.refresh());
+
 // ---------- the tones ----------
 // The tones' capsule in the header is wired in shell.ts. On a phone it shows only the tone in use, and a tap on it turns
 // to the next. Whenever the tone changes, from there or anywhere else, the rosette answers with a slow turn of one notch,
 // back to the same figure.
-const rosette = document.getElementById("rosette")!;
 const narrow = matchMedia("(max-width: 640px)");
 const toneButtons = [...document.querySelectorAll<HTMLButtonElement>(".cap-tone")];
 let turning = false; // the next tone's own click must not turn again

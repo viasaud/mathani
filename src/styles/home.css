@@ -53,22 +53,15 @@
   width: 100%; max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: center; gap: 40px; padding-block: 40px 96px;
 }
-.cover-copy { display: grid; gap: 22px; align-content: center; width: 100%; max-width: 560px; }
+.cover-copy { display: grid; gap: 24px; align-content: center; width: 100%; max-width: 560px; }
 /* the title: Arabic is never split into letters (that would break its joins), so it is wiped in as one word */
 .cover h1 {
-  margin: 0; padding-block-end: 0.5em; margin-block-end: -0.12em; font-family: var(--f-display); font-weight: 700;
-  font-size: clamp(88px, 12.5vw, 172px); line-height: 1; letter-spacing: -0.01em;
+  margin: 0; padding-block-end: 0.5em; margin-block-end: -0.12em; font-family: var(--f-display); font-weight: 400;
+  font-size: clamp(88px, 12.5vw, 172px); line-height: 1;
 }
-/* the gilt is painted only inside the span's box, so the box reaches past the letters: the tail of ي hangs below the
-   line and out beyond the word's end */
-.cover h1 span {
-  display: inline-block; padding: 0.06em 0.3em 0.42em; margin: -0.06em -0.3em -0.42em;
-  background: linear-gradient(170deg, var(--gilt-hi) 0%, var(--cover-gold) 46%, var(--gilt-lo) 64%, color-mix(in srgb, var(--gilt-hi) 55%, var(--cover-gold)) 82%, var(--cover-gold) 100%);
-  background-size: 100% 220%; background-position: 50% 0%;
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: leaf 9s var(--e-in-out) infinite alternate;
-}
-@keyframes leaf { to { background-position: 50% 100%; } }
+/* the gold is ink, not light. The span's box reaches past the letters (the tail of ي hangs below the line and out
+   beyond the word's end), so the opening's wipe (home.ts) never clips them */
+.cover h1 span { display: inline-block; padding: 0.06em 0.3em 0.42em; margin: -0.06em -0.3em -0.42em; color: var(--cover-gold); }
 /* verse and reference share one baseline: Scheherazade keeps tall room above its letters for the vowel marks, so
    centring the boxes would float the reference above the words */
 .epigraph { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-family: var(--f-quran); font-size: clamp(24px, 2.6vw, 32px); line-height: 1.8; color: var(--gold); }
@@ -76,13 +69,13 @@
 .hero-lead { margin: 0; font-size: 17px; line-height: 1.85; color: var(--ink-2); max-width: 42ch; text-wrap: pretty; }
 
 /* ---------- what to do next: read, or find ---------- */
-.actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 /* reading: one gilt-rimmed pill. The ring (or, for a new reader, the star) at its start, the place, and a round gold
    arrow at its end */
 .resume {
-  position: relative; flex: 0 1 auto; min-width: 0; width: min(100%, 420px); height: 70px; display: flex; align-items: center; gap: 14px;
+  position: relative; flex: 0 1 auto; min-width: 0; width: min(100%, 420px); height: 72px; display: flex; align-items: center; gap: 16px;
   /* liquid glass over the cover (.glass gives the blur and the lens): the gilt lattice shows through */
-  padding: 6px; padding-inline-start: 9px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--cover-ink) 18%, transparent);
+  padding: 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--cover-ink) 18%, transparent);
   background: color-mix(in srgb, var(--cover-2) 24%, transparent);
   box-shadow: 0 26px 56px -26px rgba(0, 0, 0, 0.9);
   transition: transform var(--t-3) var(--e-out), box-shadow var(--t-3) var(--e-out);
@@ -94,15 +87,15 @@
 /* the ring starts at twelve o'clock and fills clockwise, like a clock, in either reading direction */
 .resume-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
 .resume-ring .rt { fill: none; stroke: color-mix(in srgb, var(--cover-gold) 18%, transparent); stroke-width: 2.5; }
-.resume-ring .rb { fill: none; stroke: var(--cover-gold); stroke-width: 2.5; stroke-linecap: round; opacity: 0; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cover-gold) 60%, transparent)); }
-.resume-ring b { display: none; font-size: 12.5px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.resume-ring .rb { fill: none; stroke: var(--cover-gold); stroke-width: 2.5; stroke-linecap: round; opacity: 0; }
+.resume-ring b { display: none; font-size: 13px; font-weight: 500; color: var(--gold); font-variant-numeric: tabular-nums; }
 .resume-star { width: 26px; height: 26px; color: var(--gold); animation: turn 24s linear infinite; }
 .resume-ring.on .rb { opacity: 1; }
 .resume-ring.on b { display: block; }
 .resume-ring.on .resume-star { display: none; }
 .resume-text { flex: 1; min-width: 0; display: grid; line-height: 1.35; }
-.resume-text small { font-size: 12.5px; font-weight: 500; color: var(--gold); }
-.resume-text strong { font-family: var(--f-display); font-weight: 700; font-size: 19px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resume-text small { font-size: 13px; font-weight: 500; color: var(--gold); }
+.resume-text strong { font-family: var(--f-display); font-weight: 400; font-size: 19px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* the way in: a gold disc with an arrow pointing onwards (left, in a right-to-left page). Pointed at, the disc draws
    out into a capsule and the arrow travels forward; no glow */
 .resume-go {
@@ -119,8 +112,6 @@
 /* the rosette: it unfolds from the star at its heart, then rests, its rings turning a notch now and then into the same
    figure, while a beam of light goes slowly round it (motion.ts) */
 .cover-art { position: relative; aspect-ratio: 1; width: 100%; max-width: 560px; justify-self: center; }
-.halo { position: absolute; inset: 14%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--gold) 26%, transparent), transparent 66%); filter: blur(20px); animation: breathe 7s var(--e-in-out) infinite alternate; }
-@keyframes breathe { from { opacity: 0.55; transform: scale(0.98); } to { opacity: 1; transform: scale(1.04); } }
 .ro-stage, .ro-turn { position: absolute; inset: 0; }
 .ro-turn { animation: turn 240s linear infinite; }
 .rosette { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -148,7 +139,7 @@
 .ro-inner .tr { stroke-dasharray: 0.06 0.94; animation-duration: 10s; }
 @keyframes trace { to { stroke-dashoffset: -1; } }
 @media (prefers-reduced-motion: reduce) { .rosette .tr { display: none; } }
-.cover.asleep :is(.ro-turn, .ro-lit, .ro-lit .rosette, .halo, .rosette .tr) { animation-play-state: paused; }
+.cover.asleep :is(.ro-turn, .ro-lit, .ro-lit .rosette, .rosette .tr) { animation-play-state: paused; }
 html.motion .rosette path:not(.tr) { stroke-dasharray: 1; stroke-dashoffset: 1; }
 html.motion .rosette .tr { opacity: 0; }
 html.motion :is(.ro-core, .ro-glow, .ro-lit) { opacity: 0; }
@@ -164,67 +155,61 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 
 /* ---------- sections ---------- */
 .wrap { max-width: 1240px; margin: 0 auto; }
-.section { padding-top: 88px; scroll-margin-top: var(--top); }
-.section-head { position: relative; display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
-.section-head > div { display: grid; gap: 6px; }
-.section-head h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 4.6vw, 58px); line-height: 1.15; letter-spacing: -0.01em; }
-.section-head p { margin: 0; color: var(--muted-text); font-size: 15.5px; }
-/* a large outlined count beside a section title, in gold */
-.big-num {
-  font-family: var(--f-display); font-weight: 700; font-size: clamp(72px, 11vw, 150px); line-height: 0.8; font-variant-numeric: tabular-nums;
-  color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--gold-2) 70%, transparent); user-select: none; margin-bottom: -6px;
-}
+.section { padding-top: 96px; scroll-margin-top: var(--top); }
+.section-head { position: relative; display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+.section-head > div { display: grid; gap: 8px; }
+.section-head h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(34px, 4.6vw, 58px); line-height: 1.15; }
+.section-head p { margin: 0; color: var(--muted-text); font-size: 16px; }
 
 /* ---------- where to begin ---------- */
 .picks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
 /* an illuminated plate: centred, a gilt hairline frame inside the card, the number in the star at the head */
 .pick {
   position: relative; isolation: isolate; display: grid; justify-items: center; align-content: center; gap: 4px; text-align: center;
-  min-height: 248px; padding: 28px 18px 24px; border-radius: 24px; border: 1px solid var(--line);
+  min-height: 248px; padding: 28px 20px 24px; border-radius: 16px; border: 1px solid var(--line);
   background: var(--sheet);
   transition: transform var(--t-3) var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-2) ease;
 }
 .pick::after {
-  content: ""; position: absolute; inset: 8px; z-index: -1; border-radius: 17px; pointer-events: none;
+  content: ""; position: absolute; inset: 8px; z-index: -1; border-radius: 8px; pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--gold-2) 26%, transparent); transition: border-color var(--t-3) ease;
 }
-.pick:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: transparent; }
+.pick:hover { box-shadow: var(--shadow-2); border-color: transparent; }
 .pick:hover::after { border-color: color-mix(in srgb, var(--gold-2) 70%, transparent); }
-.pick:active { transform: translateY(-2px) scale(0.98); }
-.pick:focus-visible { border-radius: 24px; }
+.pick:active { scale: 0.98; }
+.pick:focus-visible { border-radius: 16px; }
 .pick-medal { position: relative; width: 60px; height: 60px; display: grid; place-items: center; margin-bottom: 12px; }
 .pick-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1400ms var(--e-out); }
 .pick:hover .pick-medal svg { transform: rotate(45deg); }
-.pick-medal svg circle { display: none; }
-.pick-medal b { position: relative; font-family: var(--f-display); font-weight: 700; font-size: 15px; color: var(--gold-text); font-variant-numeric: tabular-nums; }
-.pick-name { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.3; }
+.pick-medal b { position: relative; font-family: var(--f-ui); font-weight: 500; font-size: 15px; color: var(--gold-text); font-variant-numeric: tabular-nums; }
+.pick-name { font-family: var(--f-display); font-weight: 400; font-size: 26px; line-height: 1.3; }
 /* the opening words keep to one line, ending in an ellipsis if the card is too narrow for them */
 .pick-verse {
   max-width: 100%; font-family: var(--f-quran); font-size: 18px; line-height: 1.9; color: var(--gold-text); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: opacity var(--t-2) ease;
 }
 .pick:hover .pick-verse { opacity: 1; }
-.pick-sub { margin-top: 10px; padding-top: 10px; min-width: 64%; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted-text); font-variant-numeric: tabular-nums; }
+.pick-sub { margin-top: 12px; padding-top: 12px; min-width: 64%; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted-text); font-variant-numeric: tabular-nums; }
 
 /* ---------- the thirty juz: column counts that divide thirty, so the last row is never a stray pair ---------- */
-.juz-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 16px 8px; }
+.juz-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 12px; }
 /* a juz plate, kin to the surah plates below: its number in gold, the small gilt ornament, and where it begins */
 .juz-tile {
-  position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 132px; padding: 18px 8px 16px;
-  border-radius: 20px; background: var(--sheet); border: 1px solid var(--line); text-align: center;
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 8px; min-height: 132px; padding: 20px 8px 16px;
+  border-radius: 16px; background: var(--sheet); border: 1px solid var(--line); text-align: center;
   transition: transform 600ms var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
 }
-.juz-num { font-family: var(--f-display); font-weight: 700; font-size: 34px; line-height: 1.1; color: var(--gold-text); font-variant-numeric: tabular-nums; }
+.juz-num { font-family: var(--f-display); font-weight: 400; font-size: 34px; line-height: 1.1; color: var(--gold-text); font-variant-numeric: tabular-nums; }
 .juz-from { max-width: 100%; font-size: 12px; color: var(--muted-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .juz-tile .sc-cta { font-size: 12px; }
 @media (hover: hover) {
-  .juz-tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
+  .juz-tile:hover { border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
 }
-.juz-tile:active { transform: translateY(-2px) scale(0.98); }
-.juz-tile:focus-visible { border-radius: 20px; }
+.juz-tile:active { scale: 0.98; }
+.juz-tile:focus-visible { border-radius: 16px; }
 .juz-here { display: none; }
-/* the juz the reader is in (home.ts). Inside, it is laid out exactly like its neighbours, so nothing is crowded: the
-   numeral in gold leaf and a gold frame mark it, «أنت هنا» sits as a small tab on its top edge, and a hairline at its
+/* the juz the reader is in (home.ts). Inside, it is laid out exactly like its neighbours, so nothing is crowded: a
+   gold frame marks it, «أنت هنا» sits as a small tab on its top edge, and a hairline at its
    foot shows how far into this juz they have read (--f) */
 .juz-tile.here {
   --f: 0; overflow: visible;
@@ -234,10 +219,6 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
     var(--sheet);
   border-color: var(--gold-2);
 }
-.juz-tile.here .juz-num {
-  padding-inline: 0.1em; color: transparent; -webkit-background-clip: text; background-clip: text;
-  background-image: linear-gradient(170deg, var(--gold-3), var(--gold-2) 55%, var(--gold));
-}
 .juz-tile.here .juz-here {
   display: block; position: absolute; top: 0; left: 50%; translate: -50% -50%; white-space: nowrap;
   padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; line-height: 1.2; color: var(--gold-text);
@@ -245,30 +226,28 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 }
 
 /* ---------- the surahs ---------- */
-.surah-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.surah-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
 .filters { flex: none; }
-.filters button { display: inline-flex; align-items: center; gap: 6px; padding-inline: 18px; }
+.filters button { display: inline-flex; align-items: center; gap: 6px; padding-inline: 16px; }
 .filters .n { font-size: 12px; color: var(--muted-text); font-variant-numeric: tabular-nums; }
 /* six to a row on a wide screen: 114 surahs make exactly 19 rows */
-.surah-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.surah-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
 /* a miniature illuminated plate: the number in its star, the name, a small gilt ornament, and one quiet line for
    what it is, how long, and where it starts */
 .surah-card {
-  position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 172px; padding: 20px 14px 16px;
-  border-radius: 22px; text-align: center; background: var(--sheet); border: 1px solid var(--line);
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 8px; min-height: 172px; padding: 20px 16px 16px;
+  border-radius: 16px; text-align: center; background: var(--sheet); border: 1px solid var(--line);
   transition: transform 600ms var(--e-out), box-shadow var(--t-3) var(--e-out), border-color var(--t-3) ease;
 }
 /* while the filter settles the cards, their own transitions stand aside (home.ts) */
 .settling .surah-card { transition: none !important; }
 .sc-medal { position: relative; width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 2px; }
-.sc-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1400ms var(--e-out); }
-.sc-medal svg g { transition: fill var(--t-3) ease; }
-.sc-medal svg circle { display: none; }
-.sc-medal b { position: relative; font-size: 13px; font-weight: 700; color: var(--gold-text); font-variant-numeric: tabular-nums; }
+.sc-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--gold-2); transition: transform 1400ms var(--e-out), fill var(--t-3) ease; }
+.sc-medal b { position: relative; font-size: 13px; font-weight: 500; color: var(--gold-text); font-variant-numeric: tabular-nums; }
 /* one-line names clip what runs past their end, which would also cut the tails of letters like ج and ي below the
    line: the clipping box reaches above and below the line without moving it */
 .surah-card .nm, .resume-text strong { padding-block: 0.2em 0.4em; margin-block: -0.2em -0.4em; }
-.surah-card .nm { max-width: 100%; font-family: var(--f-display); font-weight: 700; font-size: 24px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.surah-card .nm { max-width: 100%; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* the ornament: a diamond between two hairlines */
 .sc-rule { display: flex; align-items: center; gap: 6px; height: 8px; }
 .sc-rule::before, .sc-rule::after { content: ""; width: 14px; height: 1px; background: color-mix(in srgb, var(--gold-2) 55%, transparent); transition: width 600ms var(--e-out); }
@@ -279,20 +258,20 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
 .surah-card .meta { max-width: 100%; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sc-cta { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--gold-text); transform: translateY(100%); filter: blur(4px); }
 .sc-cta svg { transition: transform var(--t-3) var(--e-out); }
-/* hover: the plate lifts and its rim turns gold, the star turns and fills, the ornament draws out, the details roll
+/* hover: the plate's rim turns gold, the star turns and fills, the ornament draws out, the details roll
    away for the invitation. Everything stays on the card: no glow, nothing following the pointer */
 @media (hover: hover) {
   .surah-card:hover .sc-medal svg { transform: rotate(45deg); }
-  .surah-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
-  .surah-card:hover .sc-medal svg g { fill: color-mix(in srgb, var(--gold-soft) 85%, transparent); }
+  .surah-card:hover { border-color: color-mix(in srgb, var(--gold-2) 75%, transparent); box-shadow: var(--shadow-2); }
+  .surah-card:hover .sc-medal svg { fill: color-mix(in srgb, var(--gold-soft) 85%, transparent); }
   :is(.surah-card, .juz-tile):hover .sc-rule::before, :is(.surah-card, .juz-tile):hover .sc-rule::after { width: 30px; }
   :is(.surah-card, .juz-tile):hover .sc-rule i { rotate: 225deg; background: var(--gold-2); }
   :is(.surah-card, .juz-tile):hover .sc-roll > :first-child { transform: translateY(-100%); filter: blur(4px); }
   :is(.surah-card, .juz-tile):hover .sc-cta { transform: none; filter: none; }
   :is(.surah-card, .juz-tile):hover .sc-cta svg { transform: translateX(-3px); }
 }
-.surah-card:active { transform: translateY(-2px) scale(0.98); }
-.surah-card:focus-visible { border-radius: 22px; }
+.surah-card:active { scale: 0.98; }
+.surah-card:focus-visible { border-radius: 16px; }
 
 .page-end { display: flex; justify-content: center; padding-top: 56px; }
 .to-top {
@@ -328,35 +307,29 @@ html.motion [data-hero], html.motion [data-hero-title] span { opacity: 0; }
   .scroll-cue { display: none; }
 }
 @media (max-width: 640px) {
-  .cover-copy { gap: 18px; }
   .cover h1 { font-size: clamp(84px, 26vw, 120px); }
   .actions { gap: 10px; }
-  .resume { flex: 1; height: 64px; gap: 12px; }
+  .resume { flex: 1; }
   .resume-ring { width: 48px; height: 48px; }
   .resume-go { width: 50px; height: 50px; }
   .resume:hover .resume-go { width: 50px; }
   .resume-text strong { font-size: 17px; }
-  .section { padding-top: 64px; }
-  .section-head { margin-bottom: 20px; }
-  /* no room for the large count beside the heading on a phone, and the heading already says the number */
-  .big-num { display: none; }
   /* the picks become a row to flick through */
-  .picks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin-inline: -16px; padding: 4px 16px 12px; scroll-padding-inline: 16px; scrollbar-width: none; }
+  .picks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding: 4px 16px 12px; scroll-padding-inline: 16px; scrollbar-width: none; }
   .picks::-webkit-scrollbar { display: none; }
   .pick { flex: none; width: 60vw; max-width: 240px; min-height: 230px; scroll-snap-align: start; }
   .surah-tools { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 66px); z-index: 5; justify-content: center; }
   .surah-tools .seg { box-shadow: var(--shadow-1); }
-  .juz-tile { min-height: 116px; padding: 14px 6px 14px; }
-  .surah-card { min-height: 150px; padding: 16px 10px 12px; }
+  .juz-tile { min-height: 116px; }
+  .surah-card { min-height: 150px; }
   .surah-card .nm { font-size: 21px; }
   .sc-medal { width: 42px; height: 42px; }
   .juz-num { font-size: 30px; }
 }
-/* the narrowest phones: a little less padding so the details and the place the reader stopped are not cut short (under
-   :root to outrank unslop.css) */
+/* the narrowest phones: a little less padding so the details and the place the reader stopped are not cut short */
 @media (max-width: 340px) {
-  :root .resume { gap: 10px; }
-  :root .resume-text strong { font-size: 15.5px; }
-  :root .surah-card { padding-inline: 6px; }
-  :root .juz-tile { padding-inline: 3px; }
+  .resume { gap: 10px; }
+  .resume-text strong { font-size: 15.5px; }
+  .surah-card { padding-inline: 6px; }
+  .juz-tile { padding-inline: 3px; }
 }

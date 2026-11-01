@@ -1,7 +1,6 @@
 ---
 import "@fontsource/scheherazade-new/400.css";
 import "../styles/global.css";
-import "../styles/unslop.css";
 import Star from "../components/Star.astro";
 import Footer from "../components/Footer.astro";
 import { DEFAULT_DESCRIPTION, HOME_TITLE, OG_SIZE, SITE_NAME, graph, ogHome, website } from "../lib/seo";
@@ -129,9 +128,17 @@ const map = (axis: "x" | "y", edge: number) => {
     <slot name="head" />
   </head>
   <body class={reader ? "is-reader" : undefined}>
-    <svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
-      {/* capsules: the bend reaches well in from the ends; panels: only a thin band at each rim, so what lies under
-           their options is not distorted */}
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+      {/* the star (components/Star.astro, STAR_SVG in lib/ui.ts): no fill of its own, so each use sets it */}
+      <symbol id="star" viewBox="0 0 48 48">
+        <g stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="10.5" y="10.5" width="27" height="27"></rect><rect x="10.5" y="10.5" width="27" height="27" transform="rotate(45 24 24)"></rect></g>
+      </symbol>
+      <symbol id="star-ring" viewBox="0 0 48 48">
+        <use href="#star"></use>
+        <circle cx="24" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.7"></circle>
+      </symbol>
+      {/* the liquid glass's lens. Capsules: the bend reaches well in from the ends; panels: only a thin band at each rim,
+           so what lies under their options is not distorted */}
       {([["lg", 16, 34, 22], ["lg-panel", 5, 5, 16]] as const).map(([id, ex, ey, scale]) => (
         <filter id={id} x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
           <feImage href={map("x", ex)} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="mx" />

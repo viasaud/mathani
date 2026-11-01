@@ -101,7 +101,6 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
           </div>
         </div>
         <div class="cover-art" aria-hidden="true">
-          <div class="halo"></div>
           {/* the rosette twice over: as drawn, and again in bright gilt seen only through a beam of light that goes
                round it (home.css), so the gold seems to catch the light as it turns. The whole of it turns very slowly */}
           <div class="ro-stage" id="rosette"><div class="ro-turn">
@@ -136,14 +135,13 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
       <section class="section" aria-labelledby="picks-title">
         <div class="section-head" data-reveal>
           <div>
-            <span class="eyebrow">وصول سريع</span>
             <h2 id="picks-title">من أين تبدأ</h2>
           </div>
         </div>
         <div class="picks">
           {picks.map((p) => (
             <a class="pick" href={p.href} data-reveal>
-              <span class="pick-medal" aria-hidden="true"><Star /><b>{ar(p.n)}</b></span>
+              <span class="pick-medal" aria-hidden="true"><Star plain /><b>{ar(p.n)}</b></span>
               <span class="pick-name">{p.name}</span>
               <span class="pick-verse" aria-hidden="true">{p.verse}</span>
               <span class="pick-sub">{p.sub}</span>
@@ -156,11 +154,9 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
       <section class="section" aria-labelledby="juz-title">
         <div class="section-head" data-reveal>
           <div>
-            <span class="eyebrow">الأجزاء</span>
             <h2 id="juz-title">ثلاثون جزءًا</h2>
             <p>تحت كل رقم السورة والآية التي يبدأ بها الجزء</p>
           </div>
-          <span class="big-num" aria-hidden="true" data-count="30">{ar(30)}</span>
         </div>
         <div class="juz-grid" id="juz-grid">
           {starts.map((s, i) => (
@@ -182,11 +178,9 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
       <section class="section" aria-labelledby="surah-title">
         <div class="section-head" data-reveal>
           <div>
-            <span class="eyebrow">السور</span>
             <h2 id="surah-title">مئة وأربع عشرة سورة</h2>
             <p>بترتيب المصحف</p>
           </div>
-          <span class="big-num" aria-hidden="true" data-count="114">{ar(114)}</span>
         </div>
         <div class="surah-tools" data-reveal>
           <div class="filters seg" role="group" aria-label="تصفية السور">
@@ -199,7 +193,7 @@ const madani = chapters.filter((c) => c.place === "madinah").length;
         <div class="surah-grid" id="surah-grid">
           {chapters.map((c, i) => (
             <a class="surah-card" href={`/surah/${c.id}`} data-place={c.place} data-reveal>
-              <span class="sc-medal" aria-hidden="true"><Star /><b>{ar(c.id)}</b></span>
+              <span class="sc-medal" aria-hidden="true"><Star plain /><b>{ar(c.id)}</b></span>
               <span class="nm">{c.name}</span>
               <span class="sc-rule" aria-hidden="true"><i></i></span>
               {/* the details, and in their place on hover an invitation to read: the two roll past each other */}

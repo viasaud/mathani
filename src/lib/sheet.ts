@@ -28,9 +28,6 @@ let marked: HTMLElement[] = [];
 const doc = document.documentElement;
 let room = 0;
 const setRoom = (px: number) => { room = px; document.body.style.paddingBottom = px ? `${px}px` : ""; };
-// The pages view doesn't scroll: there the page itself is lifted clear of the sheet, and set back down after.
-let lift = 0;
-const lifter = () => document.querySelector<HTMLElement>("[data-fit-shift]");
 
 // Where the marked verse sits: its top and bottom, how far down the room above the sheet reaches, and where the
 // top controls end.
@@ -48,17 +45,9 @@ function mark(els: HTMLElement[]) {
   marked.forEach((m) => m.classList.remove("sel"));
   marked = els;
   els.forEach((m) => m.classList.add("sel"));
-  const fit = lifter();
-  if (fit) {
-    if (els.length) {
-      const { top, bottom, free, hd } = measure(els);
-      // up as far as needed, but never so far that the verse's first line goes under the top controls
-      if (bottom > free) lift += Math.min(bottom - free, top - hd - 12);
-      else if (top < hd + 8) lift = Math.max(0, lift - (hd + 24 - top));
-    } else lift = 0;
-    fit.style.transform = lift > 0 ? `translateY(${-lift}px)` : "";
-    return;
-  }
+  // The pages view doesn't scroll, and its page stays where it is: the verse is marked in gold and the sheet rises
+  // over the page rather than pushing it up under the header.
+  if (document.querySelector("#mushaf .stage")) return;
   if (!els.length) {
     if (!room) return;
     // let the page settle back down as the sheet leaves, then take the extra room away

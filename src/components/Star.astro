@@ -1,16 +1,13 @@
 ---
-// The eight-pointed star of the rub' al-hizb (۞): the site's mark, and the frame of every number badge.
+// The eight-pointed star of the rub' al-hizb (۞): the site's mark, and the frame of every number badge. Drawn once in
+// the layout's sprite (Base.astro) and referenced here, so a page of a hundred badges carries one copy of the paths.
+// plain: without the small ring at its heart, for a star a number sits in; filled: solid gold.
 interface Props {
   class?: string;
+  plain?: boolean;
   filled?: boolean;
 }
-const { class: cls, filled = false } = Astro.props;
+const { class: cls, plain = false, filled = false } = Astro.props;
 ---
 
-<svg class={cls} viewBox="0 0 48 48" aria-hidden="true">
-  <g fill={filled ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
-    <rect x="10.5" y="10.5" width="27" height="27"></rect>
-    <rect x="10.5" y="10.5" width="27" height="27" transform="rotate(45 24 24)"></rect>
-  </g>
-  {!filled && <circle cx="24" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.7"></circle>}
-</svg>
+<svg class={cls} viewBox="0 0 48 48" fill={filled ? "currentColor" : "none"} aria-hidden="true"><use href={plain || filled ? "#star" : "#star-ring"}></use></svg>

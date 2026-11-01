@@ -124,7 +124,7 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
          heading in words, and a way to the same surah as text with its tafsir */}
     <h1 class="sr-only">صفحة {ar(n)} من القرآن الكريم، سورة {surahName}</h1>
     <p class="sr-only"><a href={`/surah/${first.s}`}>سورة {surahName} مكتوبة مع التفسير الميسّر</a></p>
-    <div class="stage" data-fit-shift>
+    <div class="stage">
       {spread.map((pg) => {
         const h = headOf(pg);
         const here = pg.page === n;
@@ -156,7 +156,7 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
                 ),
               )}
             </div>
-            <div class="mfoot"><span><Star />{ar(pg.page)}</span></div>
+            <div class="mfoot"><span><Star plain />{ar(pg.page)}</span></div>
           </article>
         );
       })}
