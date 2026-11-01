@@ -744,7 +744,8 @@ body:has(.vsheet.on) .toast { bottom: auto; top: calc(16px + env(safe-area-inset
 .search-page { padding-bottom: 24px; }
 .search-hero { position: relative; max-width: 860px; margin: 0 auto; padding-block: 56px 12px; display: grid; gap: 16px; }
 .search-hero .eyebrow { margin-bottom: -4px; }
-.search-hero h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(44px, 7vw, 84px); line-height: 1.1; }
+/* the tail and dots of ي in «في» hang far below the line, so the title keeps room under it or the field covers them */
+.search-hero h1 { margin: 0; padding-block-end: 0.3em; font-family: var(--f-display); font-weight: 400; font-size: clamp(44px, 7vw, 84px); line-height: 1.1; }
 .big-field input { height: 66px; font-size: 19px; border-radius: 999px; background: var(--sheet); padding-right: 56px; box-shadow: var(--shadow-1); }
 .big-field input:focus { box-shadow: 0 0 0 5px var(--gold-soft), var(--shadow-2); }
 .big-field svg { right: 20px; color: var(--gold); }
