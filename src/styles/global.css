@@ -697,6 +697,12 @@ input[type="range"].range {
 .vs-handle { width: 44px; height: 5px; border-radius: 5px; background: var(--line-2); margin: 10px auto 2px; flex: none; cursor: grab; transition: width var(--t-2) var(--e-out), background-color var(--t-1) ease; }
 .vsheet:hover .vs-handle, .vsheet.dragging .vs-handle { width: 56px; background: var(--gold-2); }
 .vs-head { display: flex; align-items: center; gap: 8px; padding: 6px 11px 10px; padding-inline-start: 22px; }
+/* the handle is for pulling the sheet down by touch; with a mouse it would promise a drag that isn't there, so the
+   header takes its place, its buttons as far from the top edge as from the side */
+@media (hover: hover) and (pointer: fine) {
+  .vs-handle { display: none; }
+  .vs-head { padding-top: 11px; }
+}
 .vs-ref { flex: 1; font-weight: 500; font-size: 15px; }
 .vs-ref .r-s { font-family: var(--f-display); font-weight: 700; font-size: 18px; }
 .vs-ref .r-s::after { content: "،"; }
