@@ -452,27 +452,24 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
 
 /* ---------- the binding's tooling ----------
    The site's signature, in all three tones: the rose-gold work of a leather binding, carried by every reading surface
-   alike. Inside each page's gilt edge runs a fine fillet with a small stamp at each corner, running into the spine on
-   an open spread; the pages lie in a leather board; the folio sits on a ruled line; the text view's sheet takes the
+   alike. Inside each page's gilt edge runs a fine fillet, its corners rounded to follow the edge's, running into the
+   spine on an open spread; the pages lie in a leather board; the folio sits on a ruled line; the text view's sheet takes the
    same frame. The plate's diamonds are inlaid solid rose gold, a chosen verse is marked by a tooled rule beside it
    rather than looking like a hover, and the two glows that survived the polish pass stand down. */
 :root .mpage::before {
-  content: ""; position: absolute; inset: 4px; z-index: 1; pointer-events: none;
+  content: ""; position: absolute; inset: 4px; z-index: 1; pointer-events: none; border-radius: 4px; /* the page's 8, less the inset */
   border: 1px solid color-mix(in srgb, var(--gold-2) 36%, transparent);
-  --k: linear-gradient(var(--gold-2), var(--gold-2));
-  background: var(--k) 0 0 / 4px 4px, var(--k) 100% 0 / 4px 4px, var(--k) 0 100% / 4px 4px, var(--k) 100% 100% / 4px 4px;
-  background-repeat: no-repeat; background-origin: border-box;
 }
+@media (max-width: 640px) { :root .mpage::before { border-radius: 2px; } } /* the phone's page is rounded 6 */
 @container (min-width: 700px) and (min-aspect-ratio: 11 / 10) {
-  /* the right page: its spine is on its left, so the fillet runs to the spine line with no corner stamps there */
+  /* the right page: its spine is on its left, so the fillet runs square into the spine line and is rounded only at
+     the outer edge, like the page */
   :root[data-spread="on"] .fit :is(.stage > .mpage:first-child, .flip .mpage[data-side="right"])::before {
-    left: 0; border-left-width: 0;
-    background: var(--k) 100% 0 / 4px 4px, var(--k) 100% 100% / 4px 4px; background-repeat: no-repeat; background-origin: border-box;
+    left: 0; border-left-width: 0; border-radius: 0 4px 4px 0;
   }
   /* the left page: its spine is on its right */
   :root[data-spread="on"] .fit :is(.stage > .mpage:last-child, .flip .mpage[data-side="left"])::before {
-    right: 0; border-right-width: 0;
-    background: var(--k) 0 0 / 4px 4px, var(--k) 0 100% / 4px 4px; background-repeat: no-repeat; background-origin: border-box;
+    right: 0; border-right-width: 0; border-radius: 4px 0 0 4px;
   }
 }
 /* the surah band's cartouche filled with a leather onlay, a shade lighter than the page, following its rounded ends */
@@ -493,14 +490,11 @@ html[data-tajweed="on"] .tj-gh, .chipc.tj-gh { color: var(--tj-ghunna); }
   --fr: color-mix(in srgb, var(--gold-2) 32%, transparent);
   background: linear-gradient(90deg, var(--fr) 0 calc(50% - 6.4cqi), transparent 0 calc(50% + 6.4cqi), var(--fr) 0 100%);
 }
-/* the text view's sheet: the page's gilt edge and the same fillet with its corner stamps */
+/* the text view's sheet: the page's gilt edge and the same fillet, its corners following the sheet's */
 :root .text-sheet { border: 1px solid color-mix(in srgb, var(--gold-2) 55%, transparent); border-radius: 16px; }
 :root .text-sheet::before {
-  inset: 8px; border-radius: 0; box-shadow: none;
+  inset: 8px; border-radius: 8px; box-shadow: none;
   border: 1px solid color-mix(in srgb, var(--gold-2) 36%, transparent);
-  --k: linear-gradient(var(--gold-2), var(--gold-2));
-  background: var(--k) 0 0 / 4px 4px, var(--k) 100% 0 / 4px 4px, var(--k) 0 100% / 4px 4px, var(--k) 100% 100% / 4px 4px;
-  background-repeat: no-repeat; background-origin: border-box;
 }
 @media (max-width: 640px) {
   :root .text-sheet { border: 0; border-radius: 0; }
