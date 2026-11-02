@@ -3,6 +3,8 @@ import "@fontsource/scheherazade-new/400.css";
 import "../styles/global.css";
 import Star from "../components/Star.astro";
 import Footer from "../components/Footer.astro";
+import Analytics from "@vercel/analytics/astro";
+import SpeedInsights from "@vercel/speed-insights/astro";
 import { DEFAULT_DESCRIPTION, HOME_TITLE, OG_SIZE, SITE_NAME, graph, ogHome, website } from "../lib/seo";
 
 interface Props {
@@ -357,5 +359,8 @@ const map = (axis: "x" | "y", edge: number) => {
       import "../scripts/shell.ts";
       import "../scripts/motion.ts";
     </script>
+    {/* Vercel's visitor counts and Core Web Vitals; they only report from a Vercel deployment */}
+    <Analytics />
+    <SpeedInsights />
   </body>
 </html>
