@@ -165,10 +165,19 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
 
   {/* Bottom controls across the whole width: the previous and next page at the ends, and between them the mushaf as a
        row of lines, one per surah, all alike, all 114 at once (the first on the right); the line of the surah being
-       read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts). */}
+       read is gold, its name on a gold tag pointing down at it. Drag along it to scrub, tap a line, or step with the keys or wheel (page.ts).
+       On a phone the row gives way to a wheel of the same 114 lines, turned under the thumb (dial.ts). */}
   <div class="dock-row" id="dock">
     <nav class="dock" aria-label="التنقل في المصحف">
       <a class="dround glass" id="prev" data-lean aria-label="الصفحة السابقة" {...(n > 1 ? { href: `/page/${n - 1}` } : { "aria-disabled": "true" })} set:html={chev("m9 6 6 6-6 6") + cap("الصفحة السابقة")} />
+      <span class="cap-div dock-div" aria-hidden="true"></span>
+      <div class="dial" id="dial" role="slider" tabindex="0" aria-label="انتقل إلى سورة" aria-valuemin="1" aria-valuemax="114" aria-valuenow={first.s} aria-valuetext={`سورة ${surahName}`}>
+        <div class="rl-label" aria-hidden="true"><b class="dial-tag">سورة {surahName}</b></div>
+        <span class="rl-link" aria-hidden="true"></span>
+        <canvas aria-hidden="true"></canvas>
+        <i class="dial-needle" aria-hidden="true"></i>
+      </div>
+      <span class="cap-div dock-div" aria-hidden="true"></span>
       <div class="ruler" id="ruler">
         <div class="rl-label" aria-hidden="true"><b id="rl-name">سورة {surahName}</b></div>
         <span class="rl-link" aria-hidden="true"></span>

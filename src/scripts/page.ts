@@ -6,6 +6,7 @@ import { ar } from "../lib/arabic";
 import { closeSheet, initSheet, openSheet, sheetOpen } from "../lib/sheet";
 import { load, save } from "../lib/storage";
 import { $, flash, isTyping, toast } from "../lib/ui";
+import { initDial } from "./dial";
 import { moving } from "./motion";
 
 type PageData = { verses: Record<string, [text: string, label: string, tafsir: string]>; names: Record<string, string> };
@@ -131,6 +132,8 @@ const rlLabel = ruler.querySelector<HTMLElement>(".rl-label")!;
 const ticks = [...track.querySelectorAll<HTMLElement>("i")];
 let rulerAt = 0; // the surah whose line is lit
 let chosen = 0; // the surah the reader last picked on the ruler
+// on a phone the ruler gives way to the wheel (dial.ts): the same surahs, and choosing one means the same (commit)
+const dial = initDial($("dial"), ticks.map((t) => t.dataset.name!), firstS, (s) => commit(s));
 // Put the name tag over a surah's line: --tx is the line, which the tag's point aims at, and --lx the tag, kept
 // inside the ruler at either end.
 function pillTo(s: number) {
@@ -193,6 +196,7 @@ function layout() {
   const at = chosen && here.has(chosen) ? chosen : Number(lead.dataset.sno);
   rlName.textContent = `سورة ${ticks[at - 1].dataset.name}`;
   rulerTo(at);
+  dial.sync(at);
 }
 layout();
 new ResizeObserver(layout).observe(root);
@@ -542,9 +546,13 @@ function fromHash() {
 window.addEventListener("hashchange", fromHash);
 if (!fromHash()) remember(firstS, firstA);
 
-// ---------- the first visit: say once that every word opens its verse ----------
+// ---------- the first visit: say that every word opens its verse, once for good ----------
 if (!load("tapped", false)) {
   stage.addEventListener("click", () => save("tapped", true), { once: true });
   // not over the index or the settings, which the hint would cover on a phone
-  setTimeout(() => load("tapped", false) || sheetOpen() || document.querySelector(".drawer.on, #settings:not([hidden])") || toast("اضغط أي كلمة لتقرأ آيتها وتفسيرها", 4200), 1400);
+  setTimeout(() => {
+    if (load("tapped", false) || sheetOpen() || document.querySelector(".drawer.on, #settings:not([hidden])")) return;
+    save("tapped", true); // having been said, it is not said again, whether or not a word was tapped
+    toast("اضغط أي كلمة لتقرأ آيتها وتفسيرها", 4200);
+  }, 1400);
 }

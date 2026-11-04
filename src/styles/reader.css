@@ -4,11 +4,18 @@
    controls, so it never scrolls. Every page has the printed proportion, 1 : 1.6, and its fifteen lines share the
    height evenly. */
 html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
+/* The body is exactly the visible height. Its usual min-height of 100vh is, on iOS, the height with the browser's bars
+   gone: taller than the screen while they show, and that much room is enough for a swipe to slide the page up under the
+   header, whatever the html's overflow says. */
+html:has(#mushaf.fit) body { min-height: 0; height: 100dvh; overflow: clip; }
+/* Where the system claims the screen's foot (a home bar, Safari's address pill) the dock stands a little clear of it;
+   elsewhere this is 0 and the surah lines stand on the screen's edge. */
+:root { --dock-lift: min(8px, calc(env(safe-area-inset-bottom, 0px) * 100)); }
 .reader-main.fit {
   --r: 1.6; --r-max: 1.8; /* the printed 1 : 1.6, let out to 1 : 1.8 on tall phone screens so the lines breathe instead of leaving bands of empty paper */
   --dock-h: 82px; /* the space the bottom controls take, with as much clear space above the surah tag as below the header */
   position: relative; perspective: 1600px;
-  height: calc(100dvh - var(--top)); padding-block: 0 calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh - var(--top)); padding-block: 0 calc(var(--dock-h) + var(--dock-lift) + env(safe-area-inset-bottom, 0px));
   display: grid; place-items: center; container-type: size;
 }
 .stage {
@@ -111,7 +118,7 @@ html:has(#mushaf.fit) { overflow: hidden; overscroll-behavior: none; }
    the surah being read (its number in the rub' star) with the page and juz under it and, along its foot, how far
    into the mushaf this page is. Tapping the surah opens the surah strip. */
 .dock-row {
-  position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0px); z-index: 40; /* the lines stand on the screen's edge */
+  position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-lift)); z-index: 40;
   padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); /* the header's gutter */
   display: flex; justify-content: center; pointer-events: none;
   transition: opacity var(--t-2) ease, transform var(--t-3) var(--e-out);
@@ -147,6 +154,45 @@ html.side-arrows .dcap {
   font-family: var(--f-display); font-weight: 700; font-size: 13px; line-height: 1.3; color: var(--muted); transition: color var(--t-2) ease;
 }
 .dround:not([aria-disabled]):hover .dcap { color: var(--gold-text); }
+
+/* ---------- the wheel ----------
+   On a phone in the hand the ruler's 114 hairlines are finer than a fingertip, so the row becomes a ring of those same
+   surahs, one line each and all alike, turned under the thumb like a watch's bezel (dial.ts draws it). It is built as the header is: one 48px glass
+   capsule on the same gutter, its arrows 44px circles 2px in, set off by the same hairlines, and over it the ruler's own
+   gold tag, pointing down at a still needle. */
+.dial, .dock-div { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {
+  :root { --dock-lift: 10px; } /* a capsule floats as far from the screen's foot as the header's from its top, home bar or none */
+  .reader-main.fit { --dock-h: 94px; } /* the capsule, its tag above it, and the same clear space above the tag */
+  .ruler { display: none; }
+  :root .dock {
+    gap: 0; height: var(--cap); padding: 1px; border-radius: 999px;
+    background: var(--glass); border: 1px solid var(--glass-edge); box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(9px) saturate(1.9) brightness(1.04); backdrop-filter: blur(9px) saturate(1.9) brightness(1.04);
+    transition: background-color var(--t-3) var(--e-out), border-color var(--t-3) ease, box-shadow var(--t-3) ease;
+  }
+  html.lg .dock { backdrop-filter: url(#lg) blur(7px) saturate(1.9) brightness(1.04); }
+  .dock-div { display: block; margin-inline: 2px; } /* as in the header, where the same line stands at the same place */
+  /* inside the capsule the arrows need no glass of their own */
+  :root .dock .dround.glass { width: 44px; height: 44px; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; color: var(--gold); }
+  /* the header's icons: the same size, weight and metal */
+  :root .dock .dround svg { width: 18px; height: 18px; stroke-width: 2; }
+  .dial {
+    --lx: 50%; --tx: 50%; --pill: 26px;
+    position: relative; flex: 1; min-width: 0; height: 44px; display: block;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab; outline: none;
+  }
+  .dial.held { cursor: grabbing; }
+  /* a thumb lands wider than the lines: the wheel answers a little above and below the capsule too */
+  .dial::after { content: ""; position: absolute; inset: -12px 0 -10px; }
+  .dial canvas { display: block; width: 100%; height: 100%; }
+  /* the tag stands 6px off the capsule, its point just reaching the capsule's edge (the dial starts 2px inside it) */
+  .dial .rl-label { top: auto; bottom: calc(100% + 8px); }
+  .dial .rl-link { top: auto; bottom: calc(100% + 4px); }
+  /* the needle: the one thing that stays still */
+  .dial-needle { position: absolute; top: 6px; bottom: 6px; left: 50%; width: 2px; translate: -50% 0; border-radius: 1px; background: var(--gold-2); pointer-events: none; }
+  .dial:focus-visible .dial-needle { outline: 2px solid var(--accent); outline-offset: 2px; }
+}
 
 /* ---------- the line of surahs ----------
    No box. One line per surah, all the same size and colour but the line of the surah being read, which is gold, and
