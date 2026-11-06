@@ -294,7 +294,9 @@ body:has(.vsheet.on, .drawer.on) .dock-row { opacity: 0; transform: translateY(2
 .text-sheet {
   position: relative; background: var(--page); border-radius: var(--r-lg); box-shadow: var(--shadow-page); padding: clamp(24px, 5.4vw, 60px); margin-top: 24px;
   animation: rise-in 900ms var(--e-out) 260ms both;
+  display: flex; flex-direction: column;
 }
+.text-sheet > .legend { order: -1; } /* the tajweed key sits last in the source and shows first */
 .text-sheet::before { /* the same gilt double rule as a mushaf page */
   content: ""; position: absolute; inset: 10px; pointer-events: none; border-radius: calc(var(--r-lg) - 8px);
   border: 1px solid color-mix(in srgb, var(--gold-2) 40%, transparent);

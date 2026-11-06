@@ -23,7 +23,6 @@ const startsRub = (i: number) => rubStarts.has(`${c.id}:${i + 1}`);
     <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></g></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></g></symbol>
   </svg>
-  <TajweedLegend />
   {c.bism && <div class="bism">{BISMILLAH}</div>}
 
   <div class="flow flow-view">
@@ -64,4 +63,6 @@ const startsRub = (i: number) => rubStarts.has(`${c.id}:${i + 1}`);
       );
     })}
   </div>
+  {/* shown above the text (reader.css), but after it in the source, so the page's text opens with the surah */}
+  <TajweedLegend />
 </article>

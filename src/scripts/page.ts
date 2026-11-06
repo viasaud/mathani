@@ -23,6 +23,16 @@ let [firstS, firstA] = root.dataset.first!.split(":").map(Number);
 const shown = () => articles.filter((a) => a.getClientRects().length);
 const spreadOn = () => shown().length === 2;
 const glyphsOf = (key: string) => shown().flatMap((a) => [...a.querySelectorAll<HTMLElement>(`.g[data-v="${key}"]`)]);
+// A facing page comes without its plain text ([n].astro): written here the first time it is on screen, for screen readers.
+function writeText(a: HTMLElement) {
+  const box = a.querySelector<HTMLElement>(".sr-only")!;
+  if (box.childElementCount) return;
+  for (const key of new Set([...a.querySelectorAll<HTMLElement>(".g")].map((g) => g.dataset.v!))) {
+    const p = document.createElement("p");
+    p.append(Object.assign(document.createElement("a"), { href: `/surah/${key.replace(":", "/")}`, tabIndex: -1, textContent: data.verses[key][0] }));
+    box.append(p);
+  }
+}
 // the verses on screen, in reading order (the right page first)
 const keys = () => [...new Set(shown().flatMap((a) => [...a.querySelectorAll<HTMLElement>(".g")].map((g) => g.dataset.v!)))];
 const keyOf = (el: Element | null) => el?.closest<HTMLElement>(".g")?.dataset.v ?? null;
@@ -179,6 +189,7 @@ function layout() {
   document.documentElement.classList.toggle("spread", two);
   // the facing page is hidden from screen readers only while it is not on screen
   const on = shown();
+  on.forEach(writeText);
   articles.forEach((a) => (on.includes(a) ? a.removeAttribute("aria-hidden") : a.setAttribute("aria-hidden", "true")));
   const first = firstOf(pageNo, two);
   point(prevLink, first - step(two));

@@ -6,7 +6,9 @@ import "../../../styles/reader.css";
 import TajweedLegend from "../../../components/TajweedLegend.astro";
 import { ar, JUZ_NAMES, QUARTERS, verseName } from "../../../lib/arabic";
 import { getChapters, getNav, getTafsirSpans, getVerses, verseHtml, type Chapter } from "../../../lib/quran";
-import { breadcrumbs, clip, ogSurah } from "../../../lib/seo";
+import { breadcrumbs, clip, ogSurah, quranBook } from "../../../lib/seo";
+// the verse's own face, preloaded: it is what this page is for, and the page paints sooner with it on the way
+import quranFont from "@fontsource/scheherazade-new/files/scheherazade-new-arabic-400-normal.woff2?url";
 
 export function getStaticPaths() {
   return getChapters().flatMap((chapter) =>
@@ -46,6 +48,7 @@ const site = Astro.site!;
 const surahUrl = new URL(`/surah/${c.id}`, site).href;
 const url = new URL(`/surah/${c.id}/${a}`, site).href;
 const schema = [
+  quranBook(site), // the Chapter below is part of it; a reader of this page alone can't follow the @id otherwise
   {
     "@type": "Chapter",
     "@id": `${surahUrl}#surah`,
@@ -82,12 +85,13 @@ const schema = [
   schema={schema}
   current={c.id}
 >
+  <link slot="head" rel="preload" href={quranFont} as="font" type="font/woff2" crossorigin />
   <main class="read gutter verse-page" id="verse" data-s={c.id} data-a={a} data-name={c.name}>
     <header class="surah-head">
       <div class="plate">
         <i></i><i></i><i></i><i></i>
         <span class="plate-side"><small>الآية</small><b>{ar(a)}</b></span>
-        <h1>سورة {c.name}<span class="sr-only">، الآية {ar(a)}</span></h1>
+        <h1>سورة {c.name}<span class="sr-only">، الآية {ar(a)}{named && `، ${named}`}</span></h1>
         <span class="plate-side"><small>من</small><b>{ar(c.n)}</b></span>
       </div>
       <p class="surah-meta">
@@ -99,7 +103,6 @@ const schema = [
     </header>
 
     <article class="text-sheet">
-      <TajweedLegend />
       {/* the verse alone, across the whole sheet and larger than in the surah's flow; above it, where it opens a
            quarter, and the copy tools at the far side */}
       <section class="vp-verse" aria-label={`سورة ${c.name}، الآية ${ar(a)}`}>
@@ -130,6 +133,8 @@ const schema = [
           </nav>
         )}
       </section>
+      {/* shown above the verse (reader.css), but after it in the source, so the text opens with the verse */}
+      <TajweedLegend />
     </article>
 
     <nav class="pager" aria-label="التنقل بين الآيات">

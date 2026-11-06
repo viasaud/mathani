@@ -203,7 +203,7 @@ const map = (axis: "x" | "y", edge: number) => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path class="k1" d="M4 7h9M17 7h3"></path><path class="k2" d="M4 17h3M11 17h9"></path><circle class="k1" cx="15" cy="7" r="2"></circle><circle class="k2" cx="9" cy="17" r="2"></circle></svg>
           </button>
           <div class="settings glass glass-panel" id="settings" hidden role="dialog" aria-label="إعدادات القراءة">
-            <h3>طريقة العرض</h3>
+            <div class="set-h">طريقة العرض</div>
             <div class="mode-row">
               <div class="seg" role="group" aria-label="طريقة العرض">
                 {modes.map(([m, label]) => <button data-mode-btn={m} aria-pressed="false">{label}</button>)}
@@ -212,7 +212,7 @@ const map = (axis: "x" | "y", edge: number) => {
             {/* the pages view fits the screen, so it offers one page or two instead of a text size */}
             <div class="set-pages">
               <div class="set-sep"></div>
-              <h3>الصفحات <small>تظهر صفحتان حين تتسع الشاشة لهما</small></h3>
+              <div class="set-h">الصفحات <small>تظهر صفحتان حين تتسع الشاشة لهما</small></div>
               <div class="mode-row">
                 <div class="seg" role="group" aria-label="عدد الصفحات">
                   <button data-spread-btn="off" aria-pressed="false">صفحة واحدة</button>
@@ -221,14 +221,14 @@ const map = (axis: "x" | "y", edge: number) => {
               </div>
             </div>
             <div class="set-sep set-text"></div>
-            <h3 class="set-text">حجم الخط</h3>
+            <div class="set-h set-text">حجم الخط</div>
             <div class="size-row set-text">
               <span class="aa sm">ب</span>
               <input class="range" id="size" type="range" min="20" max="44" step="1" aria-label="حجم الخط" />
               <span class="aa lg">ب</span>
             </div>
             <div class="set-sep"></div>
-            <h3>المظهر</h3>
+            <div class="set-h">المظهر</div>
             <div class="themes" role="group" aria-label="المظهر">
               <button class="theme-opt" data-theme-btn="light"><i></i>فاتح</button>
               <button class="theme-opt" data-theme-btn="mid"><i></i>متوسط</button>

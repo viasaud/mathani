@@ -58,7 +58,7 @@ const headOf = (pg: MushafPage) => {
   const g = wordsOf(pg)[0];
   return { s: g.s, surah: chapters[g.s - 1].name, juz: getVerses(g.s)[g.a - 1][2] };
 };
-const pageVerses = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s}:${g.a}`))].map((k) => verses[k][0]);
+const pageKeys = (pg: MushafPage) => [...new Set(wordsOf(pg).map((g) => `${g.s}:${g.a}`))];
 const names = Object.fromEntries(surahsHere.map((s) => [s, chapters[s - 1].name]));
 const surahName = chapters[first.s - 1].name;
 
@@ -74,8 +74,7 @@ const startsHere = keysHere.find(([s, a]) => getVerses(s)[a - 1][1] === n);
 const firstWords = startsHere ? getVerses(startsHere[0])[startsHere[1] - 1][0].replace(/[\u06DE\u06E9]/g, "").trim().split(/\s+/).filter((w) => /[\u0621-\u064A]/.test(w)) : []; // the hizb sign opening some verses, and the pause marks between words, are no words
 const openingWords = firstWords.slice(0, 6).join(" ") + (firstWords.length > 6 ? "…" : "");
 const pageDescription = `الصفحة ${ar(n)} من مصحف المدينة النبوية، في الجزء ${juzGenitive(juzHere)}: ${range}.` +
-  (openingWords ? ` ${startsHere === keysHere[0] ? "أولها" : "وفيها"}: ﴿${openingWords}﴾.` : "") +
-  " المس أي كلمة لقراءة الآية وتفسيرها الميسّر.";
+  (openingWords ? ` ${startsHere === keysHere[0] ? "أولها" : "وفيها"}: ﴿${openingWords}﴾.` : "");
 const schema = [
   breadcrumbs(Astro.site!, [
     { name: "مثاني", path: "/" },
@@ -135,8 +134,15 @@ const cap = (what: string) => `<span class="dcap" aria-hidden="true">${what}</sp
               <span>سورة {h.surah}</span>
               <span>الجزء {JUZ_NAMES[h.juz]}</span>
             </div>
-            {/* The page font maps private code points to whole words, so screen readers get the plain text instead. */}
-            <div class="sr-only">{pageVerses(pg).map((text) => <p>{text}</p>)}</div>
+            {/* The page font maps private code points to whole words, so screen readers get the plain text instead, each
+                 verse a way to its own page. Only this page's: the facing page has its own address and its own text, so
+                 page.ts writes that in once it is on screen. */}
+            <div class="sr-only">
+              {here && pageKeys(pg).map((k) => {
+                const [s, a] = k.split(":");
+                return <p><a href={`/surah/${s}/${a}`} tabindex="-1">{verses[k][0]}</a></p>;
+              })}
+            </div>
             <div class="mlines" aria-hidden="true">
               {pg.lines.map((line) =>
                 line.kind === "surah" ? (

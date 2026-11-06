@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/reader.css";
 import SurahText from "../../components/SurahText.astro";
 import VerseSheet from "../../components/VerseSheet.astro";
-import { ar, ayahs, placeLabel } from "../../lib/arabic";
+import { ar, ayahs, JUZ_NAMES, placeLabel } from "../../lib/arabic";
 import { getChapters, getVerses, type Chapter } from "../../lib/quran";
 import { breadcrumbs, ogSurah, quranBook } from "../../lib/seo";
 
@@ -23,6 +23,9 @@ const next = chapters[chapter.id];
 const first = verses[0][1];
 const last = verses[verses.length - 1][1];
 const pagesLabel = first === last ? `صفحة ${ar(first)}` : `الصفحات ${ar(first)}–${ar(last)}`;
+// the juz it sits in, or for a surah that spans several, the one it opens in
+const firstJuz = verses[0][2];
+const juzLabel = `${firstJuz === verses[verses.length - 1][2] ? "" : "من "}الجزء ${JUZ_NAMES[firstJuz]}`;
 // what a search result shows: what the page holds, then the facts people look for, then the words it opens with
 const words = verses[0][0].trim().split(/\s+/);
 const opening = words.slice(0, 6).join(" ") + (words.length > 6 ? "…" : "");
@@ -96,7 +99,11 @@ const schema = [
         <h1>سورة {chapter.name}</h1>
         <span class="plate-side"><small>آياتها</small><b>{ar(chapter.n)}</b></span>
       </div>
-      <p class="surah-meta">{placeLabel(chapter.place)}<span aria-hidden="true">·</span>{pagesLabel}</p>
+      <p class="surah-meta">
+        {placeLabel(chapter.place)}<span aria-hidden="true">·</span>
+        <a href={`/page/${first}`}>{pagesLabel}</a><span aria-hidden="true">·</span>
+        <a href={`/juz/${firstJuz}`}>{juzLabel}</a>
+      </p>
     </header>
 
     <SurahText chapter={chapter} verses={verses} />
